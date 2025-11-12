@@ -5,46 +5,47 @@ import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Create custom red needle pin icon with priority highlighting
 const createRedNeedleIcon = (severity: string) => {
-  const isCritical = severity === "Critical";
-  const isHigh = severity === "High";
+  const severityColors = {
+    'Critical': '#DC2626',
+    'High': '#EA580C',
+    'Moderate': '#F59E0B',
+    'Low': '#10B981'
+  };
+
+  const color = severityColors[severity as keyof typeof severityColors] || '#6B7280';
+  const isCritical = severity === 'Critical';
 
   return L.divIcon({
-    className: isCritical ? "custom-needle-marker critical-marker" : "custom-needle-marker",
+    className: 'custom-needle-marker',
     html: `
       <div style="position: relative;">
         ${isCritical ? `
-          <div style="position: absolute; top: -5px; left: -5px; width: 50px; height: 50px; background: rgba(220, 38, 38, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
+          <div style="position: absolute; top: -3px; left: -3px; width: 26px; height: 26px; background: ${color}33; border-radius: 50%; animation: pulse 2s infinite;"></div>
           <style>
             @keyframes pulse {
-              0%, 100% { transform: scale(1); opacity: 0.5; }
-              50% { transform: scale(1.2); opacity: 0.8; }
+              0%, 100% { transform: scale(1); opacity: 0.4; }
+              50% { transform: scale(1.3); opacity: 0.7; }
             }
           </style>
         ` : ''}
-        <svg width="40" height="50" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="20" cy="48" rx="6" ry="2" fill="black" opacity="0.2"/>
-          <line x1="20" y1="15" x2="20" y2="48" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-          <line x1="20" y1="15" x2="20" y2="48" stroke="#AAA" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="20" cy="10" r="${isCritical ? '11' : isHigh ? '10' : '9'}" fill="${isCritical ? '#DC2626' : '#B91C1C'}"/>
-          <circle cx="20" cy="10" r="${isCritical ? '11' : isHigh ? '10' : '9'}" fill="url(#redGradient)"/>
-          <ellipse cx="17" cy="7" rx="3" ry="4" fill="white" opacity="0.4"/>
-          <ellipse cx="17.5" cy="6.5" rx="1.5" ry="2" fill="white" opacity="0.7"/>
-          ${isCritical ? '<circle cx="20" cy="10" r="12" fill="none" stroke="#DC2626" stroke-width="2" opacity="0.6"/>' : ''}
+        <svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+          <line x1="10" y1="10" x2="10" y2="28" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="10" cy="8" r="6" fill="${color}"/>
+          <circle cx="10" cy="8" r="6" fill="url(#grad)" opacity="0.8"/>
+          <ellipse cx="8" cy="6" rx="2" ry="2.5" fill="white" opacity="0.5"/>
           <defs>
-            <radialGradient id="redGradient">
-              <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
-              <stop offset="70%" style="stop-color:#B91C1C;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#7F1D1D;stop-opacity:1" />
+            <radialGradient id="grad">
+              <stop offset="30%" stop-color="white" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.9"/>
             </radialGradient>
           </defs>
         </svg>
       </div>
     `,
-    iconSize: [40, 50],
-    iconAnchor: [20, 48],
-    popupAnchor: [0, -48],
+    iconSize: [20, 30],
+    iconAnchor: [10, 28],
+    popupAnchor: [0, -28],
   });
 };
 
@@ -127,10 +128,11 @@ export default function MapComponent() {
     mockAccidents.forEach((accident) => {
       iconMap.set(accident.id, createRedNeedleIcon(accident.severity));
     });
-    setIcons(iconMap);
+    setTimeout(() => {
+      setIcons(iconMap);
+    }, 0);
   }, []);
 
-  // Function to open Google Maps directions
   const openDirections = (lat: number, lng: number, location: string) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     window.open(url, '_blank');
@@ -163,7 +165,6 @@ export default function MapComponent() {
         >
           <Popup maxWidth={320} className="custom-popup">
             <div className="w-[280px] font-sans">
-              {/* Priority Alert for Critical */}
               {accident.severity === "Critical" && (
                 <div className="bg-red-50 border-l-4 border-red-600 p-3 mb-3 rounded">
                   <div className="flex items-center">
