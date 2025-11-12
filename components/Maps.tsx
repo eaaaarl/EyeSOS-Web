@@ -5,50 +5,50 @@ import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Create custom red needle pin icon with priority highlighting
 const createRedNeedleIcon = (severity: string) => {
-  const isCritical = severity === "Critical";
-  const isHigh = severity === "High";
+  const severityColors = {
+    'Critical': '#DC2626',
+    'High': '#EA580C',
+    'Moderate': '#F59E0B',
+    'Low': '#10B981'
+  };
+
+  const color = severityColors[severity as keyof typeof severityColors] || '#6B7280';
+  const isCritical = severity === 'Critical';
 
   return L.divIcon({
-    className: isCritical ? "custom-needle-marker critical-marker" : "custom-needle-marker",
+    className: 'custom-needle-marker',
     html: `
       <div style="position: relative;">
         ${isCritical ? `
-          <div style="position: absolute; top: -5px; left: -5px; width: 50px; height: 50px; background: rgba(220, 38, 38, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
+          <div style="position: absolute; top: -3px; left: -3px; width: 26px; height: 26px; background: ${color}33; border-radius: 50%; animation: pulse 2s infinite;"></div>
           <style>
             @keyframes pulse {
-              0%, 100% { transform: scale(1); opacity: 0.5; }
-              50% { transform: scale(1.2); opacity: 0.8; }
+              0%, 100% { transform: scale(1); opacity: 0.4; }
+              50% { transform: scale(1.3); opacity: 0.7; }
             }
           </style>
         ` : ''}
-        <svg width="40" height="50" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="20" cy="48" rx="6" ry="2" fill="black" opacity="0.2"/>
-          <line x1="20" y1="15" x2="20" y2="48" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-          <line x1="20" y1="15" x2="20" y2="48" stroke="#AAA" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="20" cy="10" r="${isCritical ? '11' : isHigh ? '10' : '9'}" fill="${isCritical ? '#DC2626' : '#B91C1C'}"/>
-          <circle cx="20" cy="10" r="${isCritical ? '11' : isHigh ? '10' : '9'}" fill="url(#redGradient)"/>
-          <ellipse cx="17" cy="7" rx="3" ry="4" fill="white" opacity="0.4"/>
-          <ellipse cx="17.5" cy="6.5" rx="1.5" ry="2" fill="white" opacity="0.7"/>
-          ${isCritical ? '<circle cx="20" cy="10" r="12" fill="none" stroke="#DC2626" stroke-width="2" opacity="0.6"/>' : ''}
+        <svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+          <line x1="10" y1="10" x2="10" y2="28" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="10" cy="8" r="6" fill="${color}"/>
+          <circle cx="10" cy="8" r="6" fill="url(#grad)" opacity="0.8"/>
+          <ellipse cx="8" cy="6" rx="2" ry="2.5" fill="white" opacity="0.5"/>
           <defs>
-            <radialGradient id="redGradient">
-              <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
-              <stop offset="70%" style="stop-color:#B91C1C;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#7F1D1D;stop-opacity:1" />
+            <radialGradient id="grad">
+              <stop offset="30%" stop-color="white" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.9"/>
             </radialGradient>
           </defs>
         </svg>
       </div>
     `,
-    iconSize: [40, 50],
-    iconAnchor: [20, 48],
-    popupAnchor: [0, -48],
+    iconSize: [20, 30],
+    iconAnchor: [10, 28],
+    popupAnchor: [0, -28],
   });
 };
 
-// Mock road accident data
 const mockAccidents = [
   {
     id: 1,
@@ -127,10 +127,11 @@ export default function MapComponent() {
     mockAccidents.forEach((accident) => {
       iconMap.set(accident.id, createRedNeedleIcon(accident.severity));
     });
-    setIcons(iconMap);
+    setTimeout(() => {
+      setIcons(iconMap);
+    }, 0);
   }, []);
 
-  // Function to open Google Maps directions
   const openDirections = (lat: number, lng: number, location: string) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     window.open(url, '_blank');
@@ -145,103 +146,144 @@ export default function MapComponent() {
   }
 
   return (
-    <MapContainer
-      center={[8.6301417, 126.0932737]}
-      zoom={14}
-      className="h-full w-full z-0"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div className="h-screen w-screen relative">
+      <style>{`
+        .leaflet-control-zoom {
+          margin-top: 90px !important;
+          margin-left: 16px !important;
+        }
+        .leaflet-control-zoom a {
+          border-radius: 8px !important;
+        }
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+        }
+        .leaflet-control-zoom a:first-child {
+          border-radius: 8px 8px 0 0 !important;
+        }
+        .leaflet-control-zoom a:last-child {
+          border-radius: 0 0 8px 8px !important;
+        }
+      `}</style>
 
-      {mockAccidents.map((accident) => (
-        <Marker
-          key={accident.id}
-          position={[accident.lat, accident.lng]}
-          icon={icons.get(accident.id)!}
-        >
-          <Popup maxWidth={320} className="custom-popup">
-            <div className="w-[280px] font-sans">
-              {/* Priority Alert for Critical */}
-              {accident.severity === "Critical" && (
-                <div className="bg-red-50 border-l-4 border-red-600 p-3 mb-3 rounded">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-2">🚨</span>
-                    <div>
-                      <p className="text-sm font-bold text-red-900">URGENT RESPONSE NEEDED</p>
-                      <p className="text-xs text-red-700">High priority accident requiring immediate attention</p>
+      {/* Map - Full screen background */}
+      <MapContainer
+        center={[8.6301417, 126.0932737]}
+        zoom={14}
+        className="h-full w-full z-0"
+        zoomControl={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {mockAccidents.map((accident) => (
+          <Marker
+            key={accident.id}
+            position={[accident.lat, accident.lng]}
+            icon={icons.get(accident.id)!}
+          >
+            <Popup maxWidth={320} className="custom-popup">
+              <div className="w-[280px] font-sans">
+                {accident.severity === "Critical" && (
+                  <div className="bg-red-50 border-l-4 border-red-600 p-3 mb-3 rounded-lg">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-2">🚨</span>
+                      <div>
+                        <p className="text-sm font-bold text-red-900">URGENT RESPONSE NEEDED</p>
+                        <p className="text-xs text-red-700">High priority accident requiring immediate attention</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Header */}
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Road Accident Report
-                  </h3>
-                  <span className={`${getSeverityColor(accident.severity)} text-white px-2 py-1 rounded text-xs font-semibold`}>
-                    {accident.severity.toUpperCase()}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600">
-                  Report ID: #{accident.id} • {accident.time}
-                </p>
-              </div>
-
-              {/* Image */}
-              <img
-                src={accident.image}
-                alt="Accident scene"
-                className="w-full h-40 object-cover rounded-lg mb-3"
-              />
-
-              {/* Description */}
-              <div className="mb-3">
-                <p className="text-sm leading-relaxed text-gray-700">
-                  {accident.description}
-                </p>
-              </div>
-
-              {/* Details */}
-              <div className="bg-gray-50 p-3 rounded-md mb-3">
-                <div className="mb-2">
-                  <p className="text-xs text-gray-600 font-semibold">
-                    📍 LOCATION
-                  </p>
-                  <p className="text-sm text-gray-900 mt-1">
-                    {accident.location}
+                {/* Header */}
+                <div className="mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Road Accident Report
+                    </h3>
+                    <span className={`${getSeverityColor(accident.severity)} text-white px-2 py-1 rounded-md text-xs font-semibold`}>
+                      {accident.severity.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    Report ID: #{accident.id} • {accident.time}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">
-                    👤 REPORTED BY
-                  </p>
-                  <p className="text-sm text-gray-900 mt-1">
-                    {accident.reportedBy}
+
+                {/* Image with rounded corners */}
+                <img
+                  src={accident.image}
+                  alt="Accident scene"
+                  className="w-full h-40 object-cover rounded-xl mb-3"
+                />
+
+                {/* Description */}
+                <div className="mb-3">
+                  <p className="text-sm leading-relaxed text-gray-700">
+                    {accident.description}
                   </p>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => openDirections(accident.lat, accident.lng, accident.location)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  <span>🗺️</span>
-                  Get Directions (Google Maps)
-                </button>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition-colors">
-                  View Full Details
-                </button>
+                {/* Details */}
+                <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-600 font-semibold">
+                      📍 LOCATION
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {accident.location}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">
+                      👤 REPORTED BY
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {accident.reportedBy}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2">
+                  <button
+                    onClick={() => openDirections(accident.lat, accident.lng, accident.location)}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span>🗺️</span>
+                    Get Directions (Google Maps)
+                  </button>
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors">
+                    View Full Details
+                  </button>
+                </div>
               </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+
+      {/* Floating Navbar */}
+      <nav className="absolute top-4 left-4 right-4 bg-white shadow-lg px-6 py-3 flex items-center justify-between z-1000 rounded-lg">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold">
+            <span className="text-red-600">Eye</span>
+            <span className="text-blue-600">SOS</span>
+          </span>
+          <span className="text-sm text-gray-600 ml-4">
+            {mockAccidents.length} active emergency cases
+          </span>
+        </div>
+        <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </nav>
+    </div>
   );
 }
