@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 
-// Import map component dynamically to avoid SSR issues
 const MapComponent = dynamic(() => import("@/components/Maps"), {
   ssr: false,
   loading: () => (
