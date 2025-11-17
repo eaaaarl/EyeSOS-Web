@@ -7,9 +7,11 @@ import "leaflet/dist/leaflet.css";
 import { mockAccidents } from "@/data/mockData";
 import { createRedNeedleIcon } from "@/features/maps/components/marker";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 export default function MapComponent() {
   const [icons, setIcons] = useState<Map<number, L.DivIcon>>(new Map());
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const iconMap = new Map<number, L.DivIcon>();
@@ -155,7 +157,7 @@ export default function MapComponent() {
         ))}
       </MapContainer>
 
-      <nav className="absolute top-4 left-4 right-4 bg-white shadow-lg px-6 py-4 flex items-center justify-between z-1000 rounded-xl border border-gray-200">
+      <nav className="absolute top-4 left-4 right-4 bg-white shadow-lg px-6 py-4 flex items-center justify-between  rounded-xl border border-gray-200">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 pr-6 border-r border-gray-200">
             <span className="text-xl font-bold">
@@ -204,12 +206,56 @@ export default function MapComponent() {
             </div>
           </div>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+
+        <button
+          onClick={() => setIsOpen(true)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
           <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
       </nav>
+
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Accident Reports</SheetTitle>
+            <SheetDescription>
+              View all active accident reports and their details
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {mockAccidents.map((accident) => (
+              <div key={accident.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Report #{accident.id}</h4>
+                    <p className="text-xs text-gray-500">{accident.time}</p>
+                  </div>
+                  <span className={`${getSeverityColor(accident.severity)} text-white px-2 py-1 rounded text-xs font-semibold`}>
+                    {accident.severity}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 mb-2">{accident.description}</p>
+                <div className="text-xs text-gray-600">
+                  <p className="mb-1">📍 {accident.location}</p>
+                  <p>👤 {accident.reportedBy}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    openDirections(accident.lat, accident.lng, accident.location);
+                    setIsOpen(false);
+                  }}
+                  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  View on Map
+                </button>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
