@@ -10,6 +10,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useSignInMutation } from "../api/authApi"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export const formSchema = z.object({
   email: z.string().min(2, {
@@ -24,6 +25,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,6 +41,8 @@ export function LoginForm({
       const res = await signIn(payload)
 
       console.log(JSON.stringify(res, null, 2))
+
+      router.replace('/map')
     } catch (error) {
       console.log(error)
     }
