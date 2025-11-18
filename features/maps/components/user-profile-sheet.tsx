@@ -1,11 +1,16 @@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { UserGetProfileQueryResponse } from "@/features/auth/api/interface";
+import { supabase } from "@/lib/supabase";
 
 interface UserProfileSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  profile?: UserGetProfileQueryResponse
 }
 
-export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps) {
+export function UserProfileSheet({ isOpen, onOpenChange, profile }: UserProfileSheetProps) {
+
+  console.log('profile', profile)
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col">
@@ -23,9 +28,9 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
               JD
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900 text-lg">Juan Dela Cruz</h3>
+              <h3 className="font-bold text-gray-900 text-lg">{profile?.profile.name}</h3>
               <p className="text-sm text-gray-600">Response Team Lead</p>
-              <p className="text-xs text-gray-500 mt-1">ID: RT-2024-001</p>
+              <p className="text-xs text-gray-500 mt-1">ID: {profile?.profile.id}</p>
             </div>
           </div>
 
@@ -55,17 +60,14 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
             <h4 className="font-semibold text-gray-900 mb-3">Contact Information</h4>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-gray-700">
-                <span>📞</span>
-                <span>+63 912 345 6789</span>
+                <span>{profile?.profile.mobileNo}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-700">
-                <span>📧</span>
-                <span>juan.delacruz@mdrrmc.gov.ph</span>
+                <span>{profile?.profile.email}</span>
               </div>
             </div>
           </div>
 
-          {/* Statistics */}
           <div className="border-t border-gray-200 pt-4">
             <h4 className="font-semibold text-gray-900 mb-3">Response Statistics</h4>
             <div className="grid grid-cols-2 gap-3">
@@ -80,25 +82,19 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-2 border-t border-gray-200 pt-4 mb-4">
             <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
-              <span>⚙️</span>
               Settings
             </button>
             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
-              <span>📋</span>
               View All Reports
             </button>
             <button
-              onClick={() => {
-                if (confirm('Are you sure you want to logout?')) {
-                  alert('Logging out...');
-                }
+              onClick={async () => {
+                await supabase.auth.signOut()
               }}
               className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
             >
-              <span>🚪</span>
               Logout
             </button>
           </div>

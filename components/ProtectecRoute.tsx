@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const router = useRouter()
   useEffect(() => {
     if (!user) {
-      router.replace('/login')
+      router.replace('/')
     }
   }, [router, user])
 
