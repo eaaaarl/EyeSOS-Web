@@ -9,11 +9,19 @@ import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { UserProfileSheet } from "./user-profile-sheet";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 export function MapContainerComponent() {
+  const auth = useAppSelector((state) => state.auth)
   const icons = useMapIcons();
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
+  const userId = auth.user?.id;
+  const { data: profile } = useGetUserProfileQuery(
+    userId ? { user_id: userId } : skipToken
+  );
 
   if (icons.size === 0) {
     return (
@@ -68,7 +76,7 @@ export function MapContainerComponent() {
       </MapContainer>
 
       <MapNavigation onMenuClick={() => setIsOpen(true)} />
-      <UserProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <UserProfileSheet profile={profile} isOpen={isOpen} onOpenChange={setIsOpen} />
     </div>
   );
 }
