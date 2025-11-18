@@ -8,6 +8,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form"
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useSignInMutation } from "../api/authApi"
+import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export const formSchema = z.object({
   email: z.string().min(2, {
@@ -22,6 +25,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,8 +34,18 @@ export function LoginForm({
     }
   })
 
-  const handleLogin = (payload: z.infer<typeof formSchema>) => {
-    console.log('payload', payload)
+  const [signIn, { isLoading }] = useSignInMutation()
+
+  const handleLogin = async (payload: z.infer<typeof formSchema>) => {
+    try {
+      const res = await signIn(payload)
+
+      console.log(JSON.stringify(res, null, 2))
+
+      router.replace('/map')
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -84,7 +98,13 @@ export function LoginForm({
                   )}
                 />
 
-                <Button type="submit" className="w-full">Login</Button>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Login'}
+                </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
                   Don&apos;t have an account?{" "}
