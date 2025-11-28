@@ -1,27 +1,28 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { mockAccidents } from "@/data/mockData";
 import { useMapIcons } from "../hooks/use-map-icons";
 import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { UserProfileSheet } from "./user-profile-sheet";
-import { useAppSelector } from "@/lib/redux/hooks";
-import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
-import { skipToken } from "@reduxjs/toolkit/query";
+import { useGetAllReportsBystanderQuery } from "../api/mapApi";
+import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
 
 export function MapContainerComponent() {
-  const auth = useAppSelector((state) => state.auth)
   const icons = useMapIcons();
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
-  const userId = auth.user?.id;
-  const { data: profile } = useGetUserProfileQuery(
-    userId ? { user_id: userId } : skipToken
-  );
+
+  // Query for to get all the reports send by the bystander
+  const { data: allReports } = useGetAllReportsBystanderQuery();
+
+  // Group markers by location to handle overlapping
+  const groupedMarkers = useMemo(() => {
+    if (!allReports?.reports) return [];
+    return groupMarkersByLocation(allReports.reports);
+  }, [allReports]);
 
   if (icons.size === 0) {
     return (
@@ -64,20 +65,24 @@ export function MapContainerComponent() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {mockAccidents.map((accident) => (
+        {groupedMarkers.map((group, index) => (
           <Marker
-            key={accident.id}
-            position={[accident.lat, accident.lng]}
-            icon={icons.get(accident.id)!}
+            key={`marker-${index}-${group.lat}-${group.lng}`}
+            position={[group.lat, group.lng]}
+            icon={createDotMarkerIcon(group.severity, group.count)}
           >
-            <MapPopup accident={accident} onGetDirections={openDirections} />
+            <MapPopup
+              accident={group.primaryReport}
+              onGetDirections={openDirections}
+              additionalReports={group.count > 1 ? group.reports : undefined}
+              totalCount={group.count}
+            />
           </Marker>
         ))}
       </MapContainer>
 
       <MapNavigation onMenuClick={() => setIsOpen(true)} />
-      <UserProfileSheet profile={profile} isOpen={isOpen} onOpenChange={setIsOpen} />
+      <UserProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
     </div>
   );
 }
-
