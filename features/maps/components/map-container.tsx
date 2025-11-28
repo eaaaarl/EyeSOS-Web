@@ -6,9 +6,9 @@ import { useMapIcons } from "../hooks/use-map-icons";
 import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
-import { UserProfileSheet } from "./user-profile-sheet";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
 import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
+import { ReportSheet } from "./report-sheet";
 
 export function MapContainerComponent() {
   const icons = useMapIcons();
@@ -23,6 +23,8 @@ export function MapContainerComponent() {
     if (!allReports?.reports) return [];
     return groupMarkersByLocation(allReports.reports);
   }, [allReports]);
+
+  const reports = allReports?.reports || []
 
   if (icons.size === 0) {
     return (
@@ -81,8 +83,8 @@ export function MapContainerComponent() {
         ))}
       </MapContainer>
 
-      <MapNavigation onMenuClick={() => setIsOpen(true)} />
-      <UserProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
+      <ReportSheet isOpen={isOpen} onOpenChange={setIsOpen} />
     </div>
   );
 }

@@ -9,11 +9,11 @@ interface ReportDetailsDialogProps {
   onGetDirections: (lat: number, lng: number) => void;
 }
 
-export function ReportDetailsDialog({ 
-  report, 
-  isOpen, 
+export function ReportDetailsDialog({
+  report,
+  isOpen,
   onOpenChange,
-  onGetDirections 
+  onGetDirections
 }: ReportDetailsDialogProps) {
   if (!report) return null;
 
@@ -32,7 +32,6 @@ export function ReportDetailsDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Critical Alert */}
           {report.severity === "Critical" && (
             <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded-lg">
               <div className="flex items-center">
@@ -45,12 +44,10 @@ export function ReportDetailsDialog({
             </div>
           )}
 
-          {/* Report Info */}
           <div className="text-xs text-gray-600">
             Report ID: #{report.report_number} • {new Date(report.created_at).toLocaleString()}
           </div>
 
-          {/* Image */}
           {imageUrl && (
             <img
               src={imageUrl}
@@ -59,7 +56,6 @@ export function ReportDetailsDialog({
             />
           )}
 
-          {/* Description */}
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-2">Description:</p>
             <p className="text-sm leading-relaxed text-gray-700">
@@ -67,7 +63,6 @@ export function ReportDetailsDialog({
             </p>
           </div>
 
-          {/* Details */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-3">
             <div>
               <p className="text-xs text-gray-600 font-semibold mb-1">
@@ -109,7 +104,6 @@ export function ReportDetailsDialog({
             )}
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-2 pt-2">
             <button
               onClick={() => {
@@ -121,7 +115,7 @@ export function ReportDetailsDialog({
               <span>🗺️</span>
               Get Directions (Google Maps)
             </button>
-            <button 
+            <button
               onClick={() => onOpenChange(false)}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors"
             >

@@ -6,12 +6,12 @@ import { useState } from "react";
 import { ReportDetailsDialog } from "./report-details-dialog";
 import { useDirections } from "../hooks/use-directions";
 
-interface UserProfileSheetProps {
+interface ReportSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps) {
+export function ReportSheet({ isOpen, onOpenChange }: ReportSheetProps) {
   const { data: allReports, isLoading } = useGetAllReportsBystanderQuery();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,9 +43,8 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
             </SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 overflow-y-auto flex-1 px-4 mt-4">
-            {/* Statistics Summary */}
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-4 overflow-y-auto flex-1 px-4">
+            {/* <div className="grid grid-cols-2 gap-2">
               <div className="p-3 bg-red-50 rounded-lg border border-red-200 text-center">
                 <p className="text-2xl font-bold text-red-700">{criticalCount}</p>
                 <p className="text-xs text-red-600 mt-1 font-medium">Critical</p>
@@ -62,14 +61,13 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
                 <p className="text-2xl font-bold text-green-700">{minorCount}</p>
                 <p className="text-xs text-green-600 mt-1 font-medium">Minor</p>
               </div>
-            </div>
+            </div> */}
 
-            {/* Reports List */}
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               <h3 className="font-semibold text-gray-900 text-sm">
                 Total Reports: {reports.length}
               </h3>
-              
+
               {isLoading ? (
                 <div className="text-center py-8 text-gray-500">
                   Loading reports...
@@ -83,7 +81,7 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
                   {reports.map((report) => {
                     const severity = report.severity?.toLowerCase() || 'minor';
                     const imageUrl = Array.isArray(report.imageUrl) ? report.imageUrl[0] : report.imageUrl;
-                    
+
                     return (
                       <button
                         key={report.id}
@@ -108,7 +106,7 @@ export function UserProfileSheet({ isOpen, onOpenChange }: UserProfileSheetProps
                               </span>
                             </div>
                             <p className="text-sm font-semibold text-gray-900 truncate">
-                              Report #{report.report_number}
+                              ID: {report.report_number}
                             </p>
                             <p className="text-xs text-gray-600 truncate mt-1">
                               {report.location_address}
