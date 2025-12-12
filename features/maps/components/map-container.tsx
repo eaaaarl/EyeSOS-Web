@@ -8,6 +8,7 @@ import { MapNavigation } from "./map-navigation";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
 import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
 import { ProfileSheet } from "./profile-sheet";
+import BottomReports from "./bottom-reports";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
@@ -64,7 +65,7 @@ export function MapContainerComponent() {
 
       <MapContainer
         center={[8.6301417, 126.0932737]}
-        zoom={14}
+        zoom={12}
         className="h-full w-full z-0"
         zoomControl={false}
       >
@@ -91,6 +92,7 @@ export function MapContainerComponent() {
 
       <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
       <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <BottomReports />
     </div>
   );
 }
