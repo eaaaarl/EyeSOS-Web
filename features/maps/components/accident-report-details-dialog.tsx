@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
   Camera,
 } from "lucide-react";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
+import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
 
 interface AccidentReportDetailsDialogProps {
   isOpen: boolean;
@@ -50,8 +52,25 @@ export function AccidentReportDetailsDialog({
   report,
   onGetDirections,
 }: AccidentReportDetailsDialogProps) {
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  const handleGetDirectionsClick = (lat: number, lng: number) => {
+    setPendingCoordinates({ lat, lng });
+    setIsConfirmationOpen(true);
+  };
+
+  const handleConfirmResponse = () => {
+    if (pendingCoordinates) {
+      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+      setPendingCoordinates(null);
+      onOpenChange(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center justify-between text-base">
@@ -214,10 +233,7 @@ export function AccidentReportDetailsDialog({
           {/* Action Button */}
           <div className="pt-2 border-t">
             <button
-              onClick={() => {
-                onGetDirections(report.latitude, report.longitude);
-                onOpenChange(false);
-              }}
+              onClick={() => handleGetDirectionsClick(report.latitude, report.longitude)}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
             >
               <Navigation className="w-3.5 h-3.5" />
@@ -227,5 +243,11 @@ export function AccidentReportDetailsDialog({
         </div>
       </DialogContent>
     </Dialog>
+    <ResponderConfirmationDialog
+      isOpen={isConfirmationOpen}
+      onOpenChange={setIsConfirmationOpen}
+      onConfirm={handleConfirmResponse}
+    />
+    </>
   );
 }

@@ -13,6 +13,7 @@ import {
   Eye,
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
+import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
 
 interface MapPopupProps {
   accident: Report;
@@ -29,7 +30,21 @@ export function MapPopup({
 }: MapPopupProps) {
   const [selectedReport, setSelectedReport] = useState<Report>(accident);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
+
+  const handleGetDirectionsClick = (lat: number, lng: number) => {
+    setPendingCoordinates({ lat, lng });
+    setIsConfirmationOpen(true);
+  };
+
+  const handleConfirmResponse = () => {
+    if (pendingCoordinates) {
+      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+      setPendingCoordinates(null);
+    }
+  };
 
   return (
     <Popup maxWidth={280} className="custom-popup">
@@ -174,7 +189,7 @@ export function MapPopup({
         {/* Action Buttons */}
         <div className="space-y-1.5">
           <button
-            onClick={() => onGetDirections(selectedReport.latitude, selectedReport.longitude)}
+            onClick={() => handleGetDirectionsClick(selectedReport.latitude, selectedReport.longitude)}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
           >
             <Navigation className="w-3.5 h-3.5" />
@@ -194,7 +209,12 @@ export function MapPopup({
         isOpen={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         report={selectedReport}
-        onGetDirections={onGetDirections}
+        onGetDirections={handleGetDirectionsClick}
+      />
+      <ResponderConfirmationDialog
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        onConfirm={handleConfirmResponse}
       />
     </Popup>
   );
