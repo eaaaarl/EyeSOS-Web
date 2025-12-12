@@ -127,8 +127,8 @@ export const createDotMarkerIcon = (severity: string, count: number = 1) => {
   const color = severityColors[normalizedSeverity as keyof typeof severityColors] || '#6B7280';
   const isCritical = normalizedSeverity === 'critical';
   const hasMultiple = count > 1;
-  const baseSize = 32; // Increased from 16px to 32px for better visibility
-  const borderWidth = 4; // Increased border for better visibility
+  const baseSize = 20; // Medium size for better balance
+  const borderWidth = 3; // Adjusted border for medium size
 
   return L.divIcon({
     className: 'custom-dot-marker',
