@@ -1,22 +1,22 @@
 "use client";
+import Image from "next/image";
 import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useMapIcons } from "../hooks/use-map-icons";
 import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
 import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
-import { ReportSheet } from "./report-sheet";
+import { ProfileSheet } from "./profile-sheet";
+import BottomReports from "./bottom-reports";
 
 export function MapContainerComponent() {
-  const icons = useMapIcons();
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
 
   // Query for to get all the reports send by the bystander
-  const { data: allReports } = useGetAllReportsBystanderQuery();
+  const { data: allReports, isLoading, isError } = useGetAllReportsBystanderQuery();
 
   // Group markers by location to handle overlapping
   const groupedMarkers = useMemo(() => {
@@ -26,10 +26,26 @@ export function MapContainerComponent() {
 
   const reports = allReports?.reports || []
 
-  if (icons.size === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-white">
+        <div className="relative h-full w-full">
+          <Image
+            src="/logo.png"
+            alt="EyeSOS logo"
+            fill
+            priority
+            className="object-contain"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-zinc-100">
-        <p className="text-lg text-zinc-600">Loading map...</p>
+        <p className="text-lg text-red-600">Error loading map data. Please try again.</p>
       </div>
     );
   }
@@ -58,7 +74,7 @@ export function MapContainerComponent() {
 
       <MapContainer
         center={[8.6301417, 126.0932737]}
-        zoom={14}
+        zoom={11}
         className="h-full w-full z-0"
         zoomControl={false}
       >
@@ -84,7 +100,8 @@ export function MapContainerComponent() {
       </MapContainer>
 
       <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
-      <ReportSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <BottomReports reports={reports} onGetDirections={openDirections} />
     </div>
   );
 }
