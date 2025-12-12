@@ -65,7 +65,6 @@ export function MapPopup({
           </div>
         )}
 
-        {/* Critical Alert */}
         {selectedReport.severity.toLowerCase() === "critical" && (
           <div className="bg-red-50 border-l-4 border-red-600 p-1.5 mb-2 rounded">
             <div className="flex items-center gap-1.5">
@@ -78,7 +77,6 @@ export function MapPopup({
           </div>
         )}
 
-        {/* Report Selector */}
         {hasMultipleReports && (
           <div className="mb-2">
             <label className="text-[10px] font-semibold text-gray-700 mb-0.5 block">
@@ -101,7 +99,6 @@ export function MapPopup({
           </div>
         )}
 
-        {/* Header */}
         <div className="mb-2">
           <div className="flex justify-between items-center mb-1">
             <h3 className="text-sm font-semibold text-gray-900">
@@ -116,7 +113,6 @@ export function MapPopup({
           </p>
         </div>
 
-        {/* Image */}
         {selectedReport.imageUrl && selectedReport.imageUrl.length > 0 && (
           <img
             src={selectedReport.imageUrl[0]}
@@ -125,7 +121,6 @@ export function MapPopup({
           />
         )}
 
-        {/* Description */}
         {selectedReport.reporter_notes && (
           <div className="mb-2">
             <p className="text-xs leading-tight text-gray-700 line-clamp-2">
@@ -134,7 +129,6 @@ export function MapPopup({
           </div>
         )}
 
-        {/* Details */}
         <div className="bg-gray-50 p-1.5 rounded mb-2">
           <div className="mb-1">
             <div className="flex items-center gap-1 mb-0.5">
@@ -160,7 +154,6 @@ export function MapPopup({
           </div>
         </div>
 
-        {/* Show all reports summary if multiple */}
         {hasMultipleReports && (
           <div className="bg-blue-50 p-1.5 rounded mb-2">
             <div className="flex items-center gap-1 mb-1">
@@ -186,7 +179,6 @@ export function MapPopup({
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="space-y-1.5">
           <button
             onClick={() => handleGetDirectionsClick(selectedReport.latitude, selectedReport.longitude)}

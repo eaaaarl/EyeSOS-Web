@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -27,8 +28,16 @@ export function MapContainerComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-100">
-        <p className="text-lg text-zinc-600">Loading map...</p>
+      <div className="flex h-screen w-screen items-center justify-center bg-white">
+        <div className="relative h-full w-full">
+          <Image
+            src="/logo.png"
+            alt="EyeSOS logo"
+            fill
+            priority
+            className="object-contain"
+          />
+        </div>
       </div>
     );
   }
