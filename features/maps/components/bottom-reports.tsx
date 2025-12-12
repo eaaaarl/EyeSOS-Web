@@ -1,10 +1,11 @@
 "use client";
 import { useState } from 'react';
-import { FileText, MapPin, ChevronUp, ChevronDown, MessageCircleWarning } from 'lucide-react';
+import { MapPin, ChevronUp, ChevronDown, MessageCircleWarning } from 'lucide-react';
 import { Report } from '../interface/get-all-reports-bystander.interface';
 import { getSeverityColor } from '../utils/severityColor';
 import { DateTime } from 'luxon';
 import { AccidentReportDetailsDialog } from './accident-report-details-dialog';
+import { ResponderConfirmationDialog } from './responder-confirmation-dialog';
 
 interface BottomReportsProps {
   reports?: Report[];
@@ -15,6 +16,20 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  const handleGetDirectionsClick = (lat: number, lng: number) => {
+    setPendingCoordinates({ lat, lng });
+    setIsConfirmationOpen(true);
+  };
+
+  const handleConfirmResponse = () => {
+    if (pendingCoordinates) {
+      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+      setPendingCoordinates(null);
+    }
+  };
 
   if (!reports || reports.length === 0) {
     return null;
@@ -106,9 +121,14 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
           isOpen={isDetailsOpen}
           onOpenChange={setIsDetailsOpen}
           report={selectedReport}
-          onGetDirections={onGetDirections}
+          onGetDirections={handleGetDirectionsClick}
         />
       )}
+      <ResponderConfirmationDialog
+        isOpen={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
+        onConfirm={handleConfirmResponse}
+      />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { DateTime } from "luxon";
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +19,6 @@ import {
   Camera,
 } from "lucide-react";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
-import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
 
 interface AccidentReportDetailsDialogProps {
   isOpen: boolean;
@@ -52,20 +50,9 @@ export function AccidentReportDetailsDialog({
   report,
   onGetDirections,
 }: AccidentReportDetailsDialogProps) {
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-
-  const handleGetDirectionsClick = (lat: number, lng: number) => {
-    setPendingCoordinates({ lat, lng });
-    setIsConfirmationOpen(true);
-  };
-
-  const handleConfirmResponse = () => {
-    if (pendingCoordinates) {
-      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-      setPendingCoordinates(null);
-      onOpenChange(false);
-    }
+  const handleGetDirectionsClick = () => {
+    onGetDirections(report.latitude, report.longitude);
+    onOpenChange(false);
   };
 
   return (
@@ -233,7 +220,7 @@ export function AccidentReportDetailsDialog({
           {/* Action Button */}
           <div className="pt-2 border-t">
             <button
-              onClick={() => handleGetDirectionsClick(report.latitude, report.longitude)}
+              onClick={handleGetDirectionsClick}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
             >
               <Navigation className="w-3.5 h-3.5" />
@@ -243,11 +230,6 @@ export function AccidentReportDetailsDialog({
         </div>
       </DialogContent>
     </Dialog>
-    <ResponderConfirmationDialog
-      isOpen={isConfirmationOpen}
-      onOpenChange={setIsConfirmationOpen}
-      onConfirm={handleConfirmResponse}
-    />
     </>
   );
 }
