@@ -6,12 +6,12 @@ import { useState } from "react";
 import { ReportDetailsDialog } from "./report-details-dialog";
 import { useDirections } from "../hooks/use-directions";
 
-interface ReportSheetProps {
+interface ReportsListSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ReportSheet({ isOpen, onOpenChange }: ReportSheetProps) {
+export function ReportsListSheet({ isOpen, onOpenChange }: ReportsListSheetProps) {
   const { data: allReports, isLoading } = useGetAllReportsBystanderQuery();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,25 +44,6 @@ export function ReportSheet({ isOpen, onOpenChange }: ReportSheetProps) {
           </SheetHeader>
 
           <div className="space-y-4 overflow-y-auto flex-1 px-4">
-            {/* <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 bg-red-50 rounded-lg border border-red-200 text-center">
-                <p className="text-2xl font-bold text-red-700">{criticalCount}</p>
-                <p className="text-xs text-red-600 mt-1 font-medium">Critical</p>
-              </div>
-              <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 text-center">
-                <p className="text-2xl font-bold text-orange-700">{highCount}</p>
-                <p className="text-xs text-orange-600 mt-1 font-medium">High</p>
-              </div>
-              <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
-                <p className="text-2xl font-bold text-yellow-700">{moderateCount}</p>
-                <p className="text-xs text-yellow-600 mt-1 font-medium">Moderate</p>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg border border-green-200 text-center">
-                <p className="text-2xl font-bold text-green-700">{minorCount}</p>
-                <p className="text-xs text-green-600 mt-1 font-medium">Minor</p>
-              </div>
-            </div> */}
-
             <div className="space-y-2 mb-4">
               <h3 className="font-semibold text-gray-900 text-sm">
                 Total Reports: {reports.length}

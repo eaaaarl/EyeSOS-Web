@@ -2,21 +2,19 @@
 import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useMapIcons } from "../hooks/use-map-icons";
 import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
 import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
-import { ReportSheet } from "./report-sheet";
+import { ProfileSheet } from "./profile-sheet";
 
 export function MapContainerComponent() {
-  const icons = useMapIcons();
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
 
   // Query for to get all the reports send by the bystander
-  const { data: allReports } = useGetAllReportsBystanderQuery();
+  const { data: allReports, isLoading, isError } = useGetAllReportsBystanderQuery();
 
   // Group markers by location to handle overlapping
   const groupedMarkers = useMemo(() => {
@@ -26,10 +24,18 @@ export function MapContainerComponent() {
 
   const reports = allReports?.reports || []
 
-  if (icons.size === 0) {
+  if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-zinc-100">
         <p className="text-lg text-zinc-600">Loading map...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-zinc-100">
+        <p className="text-lg text-red-600">Error loading map data. Please try again.</p>
       </div>
     );
   }
@@ -84,7 +90,7 @@ export function MapContainerComponent() {
       </MapContainer>
 
       <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
-      <ReportSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+      <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
     </div>
   );
 }
