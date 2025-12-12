@@ -65,7 +65,7 @@ export function MapContainerComponent() {
 
       <MapContainer
         center={[8.6301417, 126.0932737]}
-        zoom={12}
+        zoom={11}
         className="h-full w-full z-0"
         zoomControl={false}
       >
