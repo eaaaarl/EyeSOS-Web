@@ -4,13 +4,6 @@ import { Report } from "../interface/get-all-reports-bystander.interface";
 import { useState } from "react";
 import { DateTime } from "luxon";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   AlertTriangle,
   AlertCircle,
   MapPin,
@@ -18,13 +11,8 @@ import {
   FileText,
   Navigation,
   Eye,
-  Calendar,
-  Phone,
-  MapPinned,
-  Landmark,
-  Clock,
-  Camera
 } from "lucide-react";
+import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
 
 interface MapPopupProps {
   accident: Report;
@@ -202,182 +190,12 @@ export function MapPopup({
         </div>
       </div>
 
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="flex items-center justify-between text-base">
-              <span>Accident Report Details</span>
-              <span className={`${getSeverityColor(selectedReport.severity)} text-white px-2 py-0.5 mr-5 rounded text-xs font-semibold`}>
-                {selectedReport.severity.toUpperCase()}
-              </span>
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Report #{selectedReport.report_number} • {DateTime.fromISO(selectedReport.created_at).toFormat("MMMM dd, yyyy 'at' h:mm a")}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 mt-2">
-            {selectedReport.severity.toLowerCase() === "critical" && (
-              <div className="bg-red-50 border-l-4 border-red-600 p-2 rounded">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-red-900">URGENT</p>
-                    <p className="text-[10px] text-red-700">Immediate attention needed</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedReport.imageUrl && selectedReport.imageUrl.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Camera className="w-3.5 h-3.5 text-gray-900" />
-                  <h3 className="text-xs font-semibold text-gray-900">Images</h3>
-                </div>
-                <div className="space-y-2">
-                  {selectedReport.imageUrl.map((url, index) => (
-                    <img
-                      key={index}
-                      src={url}
-                      alt={`Accident scene ${index + 1}`}
-                      className="w-full h-64 object-cover rounded-lg border border-gray-200"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Description */}
-            {selectedReport.reporter_notes && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <FileText className="w-3.5 h-3.5 text-gray-900" />
-                  <h3 className="text-xs font-semibold text-gray-900">Description</h3>
-                </div>
-                <p className="text-xs text-gray-700 bg-gray-50 p-2 rounded-lg">
-                  {selectedReport.reporter_notes}
-                </p>
-              </div>
-            )}
-
-            {/* Location Details */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <MapPinned className="w-3.5 h-3.5 text-gray-900" />
-                <h3 className="text-xs font-semibold text-gray-900">Location Details</h3>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-lg space-y-1.5">
-                <div>
-                  <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Address</p>
-                  <p className="text-xs text-gray-900">{selectedReport.location_address}</p>
-                </div>
-                {(selectedReport.barangay || selectedReport.municipality || selectedReport.province) && (
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {selectedReport.barangay && (
-                      <div>
-                        <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Barangay</p>
-                        <p className="text-xs text-gray-900">{selectedReport.barangay}</p>
-                      </div>
-                    )}
-                    {selectedReport.municipality && (
-                      <div>
-                        <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Municipality</p>
-                        <p className="text-xs text-gray-900">{selectedReport.municipality}</p>
-                      </div>
-                    )}
-                    {selectedReport.province && (
-                      <div>
-                        <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Province</p>
-                        <p className="text-xs text-gray-900">{selectedReport.province}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {selectedReport.landmark && (
-                  <div className="mt-2">
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <Landmark className="w-3 h-3 text-gray-600" />
-                      <p className="text-[10px] text-gray-600 font-semibold">Landmark</p>
-                    </div>
-                    <p className="text-xs text-gray-900">{selectedReport.landmark}</p>
-                  </div>
-                )}
-                <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Coordinates</p>
-                  <p className="text-xs text-gray-900 font-mono">
-                    {selectedReport.latitude.toFixed(6)}, {selectedReport.longitude.toFixed(6)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Reporter Information */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <User className="w-3.5 h-3.5 text-gray-900" />
-                <h3 className="text-xs font-semibold text-gray-900">Reporter Information</h3>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-lg space-y-1.5">
-                <div>
-                  <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Name</p>
-                  <p className="text-xs text-gray-900">{selectedReport.reporter_name}</p>
-                </div>
-                {selectedReport.reporter_contact && (
-                  <div>
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <Phone className="w-3 h-3 text-gray-600" />
-                      <p className="text-[10px] text-gray-600 font-semibold">Contact</p>
-                    </div>
-                    <p className="text-xs text-gray-900">{selectedReport.reporter_contact}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Timestamps */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Clock className="w-3.5 h-3.5 text-gray-900" />
-                <h3 className="text-xs font-semibold text-gray-900">Timestamps</h3>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-lg space-y-1.5">
-                <div>
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <Calendar className="w-3 h-3 text-gray-600" />
-                    <p className="text-[10px] text-gray-600 font-semibold">Reported At</p>
-                  </div>
-                  <p className="text-xs text-gray-900">
-                    {DateTime.fromISO(selectedReport.created_at).toFormat("MMMM dd, yyyy 'at' h:mm a")}
-                  </p>
-                </div>
-                {selectedReport.updated_at && selectedReport.updated_at !== selectedReport.created_at && (
-                  <div>
-                    <p className="text-[10px] text-gray-600 font-semibold mb-0.5">Last Updated</p>
-                    <p className="text-xs text-gray-900">
-                      {DateTime.fromISO(selectedReport.updated_at).toFormat("MMMM dd, yyyy 'at' h:mm a")}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <div className="pt-2 border-t">
-              <button
-                onClick={() => {
-                  onGetDirections(selectedReport.latitude, selectedReport.longitude);
-                  setIsDetailsOpen(false);
-                }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                Get Directions
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AccidentReportDetailsDialog
+        isOpen={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        report={selectedReport}
+        onGetDirections={onGetDirections}
+      />
     </Popup>
   );
 }

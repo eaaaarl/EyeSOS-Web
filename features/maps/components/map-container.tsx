@@ -92,7 +92,7 @@ export function MapContainerComponent() {
 
       <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
       <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
-      <BottomReports />
+      <BottomReports reports={reports} onGetDirections={openDirections} />
     </div>
   );
 }
