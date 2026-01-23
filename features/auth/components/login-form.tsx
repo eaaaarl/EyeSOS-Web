@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useSignInMutation } from "../api/authApi"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export const formSchema = z.object({
   email: z.string().min(2, {
@@ -108,9 +109,9 @@ export function LoginForm({
 
                 <p className="text-center text-sm text-muted-foreground">
                   Don&apos;t have an account?{" "}
-                  <a href="#" className="underline underline-offset-2 hover:text-primary">
+                  <Link href="/signup" className="underline underline-offset-2 hover:text-primary">
                     Sign up
-                  </a>
+                  </Link>
                 </p>
               </div>
             </form>
