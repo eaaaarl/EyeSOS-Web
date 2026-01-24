@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDirections } from "../hooks/use-directions";
@@ -16,7 +16,28 @@ export function MapContainerComponent() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Query for to get all the reports send by the bystander
-  const { data: allReports, isLoading, isError } = useGetAllReportsBystanderQuery();
+  const { data: allReports, isLoading, isError, /* refetch */ } = useGetAllReportsBystanderQuery();
+
+  // supabse realtime setup 
+  /*  useEffect(() => {
+     const channel = supabase
+       .channel('accidents-updates')
+       .on('postgres_changes',
+         { event: '*', schema: 'public', table: 'accidents' },
+         (payload) => {
+           console.log('🔴 New incident detected!', payload);
+           refetch()
+         }
+       )
+       .subscribe((status) => {
+         console.log('📡 Realtime subscription status:', status);
+       });
+ 
+     return () => {
+       console.log('🧹 Cleaning up realtime subscription');
+       supabase.removeChannel(channel);
+     };
+   }, [refetch]); */
 
   // Group markers by location to handle overlapping
   const groupedMarkers = useMemo(() => {
