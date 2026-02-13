@@ -11,6 +11,9 @@ import {
   FileText,
   Navigation,
   Eye,
+  Crosshair,
+  Signal,
+  Phone,
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
@@ -21,6 +24,38 @@ interface MapPopupProps {
   additionalReports?: Report[];
   totalCount?: number;
 }
+
+// Helper function to get location quality color and label
+const getLocationQualityInfo = (quality?: string) => {
+  if (!quality) return { color: "bg-gray-100 text-gray-700", label: "Unknown", icon: "text-gray-500" };
+
+  const q = quality.toLowerCase();
+  if (q === "high" || q === "excellent") {
+    return { color: "bg-green-100 text-green-800", label: quality, icon: "text-green-600" };
+  } else if (q === "medium" || q === "good") {
+    return { color: "bg-yellow-100 text-yellow-800", label: quality, icon: "text-yellow-600" };
+  } else if (q === "low" || q === "poor") {
+    return { color: "bg-red-100 text-red-800", label: quality, icon: "text-red-600" };
+  }
+  return { color: "bg-gray-100 text-gray-700", label: quality, icon: "text-gray-500" };
+};
+
+// Helper function to format accuracy
+const formatAccuracy = (accuracy?: string) => {
+  if (!accuracy) return "N/A";
+
+  // If it's a number, assume it's in meters
+  const numAccuracy = parseFloat(accuracy);
+  if (!isNaN(numAccuracy)) {
+    if (numAccuracy < 1000) {
+      return `±${numAccuracy.toFixed(0)}m`;
+    } else {
+      return `±${(numAccuracy / 1000).toFixed(1)}km`;
+    }
+  }
+
+  return accuracy;
+};
 
 export function MapPopup({
   accident,
@@ -33,6 +68,9 @@ export function MapPopup({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
+
+  const locationQualityInfo = getLocationQualityInfo(selectedReport.location_quality);
+  const formattedAccuracy = formatAccuracy(selectedReport.location_accuracy);
 
   const handleGetDirectionsClick = (lat: number, lng: number) => {
     setPendingCoordinates({ lat, lng });
@@ -129,8 +167,8 @@ export function MapPopup({
           </div>
         )}
 
-        <div className="bg-gray-50 p-1.5 rounded mb-2">
-          <div className="mb-1">
+        <div className="bg-gray-50 p-1.5 rounded mb-2 space-y-1.5">
+          <div>
             <div className="flex items-center gap-1 mb-0.5">
               <MapPin className="w-3 h-3 text-gray-600" />
               <p className="text-[10px] text-gray-600 font-semibold">
@@ -141,7 +179,36 @@ export function MapPopup({
               {selectedReport.location_address}
             </p>
           </div>
-          <div>
+
+          {/* Location Quality and Accuracy */}
+          <div className="flex gap-2 pt-1 border-t border-gray-200">
+            <div className="flex-1">
+              <div className="flex items-center gap-1 mb-0.5">
+                <Signal className={`w-3 h-3 ${locationQualityInfo.icon}`} />
+                <p className="text-[9px] text-gray-500 font-semibold">
+                  QUALITY
+                </p>
+              </div>
+              <span className={`${locationQualityInfo.color} px-1.5 py-0.5 rounded text-[9px] font-semibold inline-block`}>
+                {locationQualityInfo.label}
+              </span>
+            </div>
+
+            <div className="flex-1">
+              <div className="flex items-center gap-1 mb-0.5">
+                <Crosshair className="w-3 h-3 text-gray-600" />
+                <p className="text-[9px] text-gray-500 font-semibold">
+                  ACCURACY
+                </p>
+              </div>
+              <span className="text-[10px] text-gray-900 font-semibold">
+                {formattedAccuracy}
+              </span>
+            </div>
+          </div>
+
+          {/* Reporter Information */}
+          <div className="pt-1 border-t border-gray-200">
             <div className="flex items-center gap-1 mb-0.5">
               <User className="w-3 h-3 text-gray-600" />
               <p className="text-[10px] text-gray-600 font-semibold">
@@ -151,6 +218,14 @@ export function MapPopup({
             <p className="text-xs text-gray-900 mt-0.5">
               {selectedReport.reporter_name}
             </p>
+            {selectedReport.reporter_contact && (
+              <div className="flex items-center gap-1 mt-1">
+                <Phone className="w-3 h-3 text-gray-600" />
+                <p className="text-xs text-gray-900">
+                  {selectedReport.reporter_contact}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
