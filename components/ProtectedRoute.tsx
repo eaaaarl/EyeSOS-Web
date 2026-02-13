@@ -1,24 +1,25 @@
 'use client'
-
 import { useAppSelector } from '@/lib/redux/hooks'
 import { useRouter } from 'next/navigation'
 import React, { ReactNode, useEffect } from 'react'
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user } = useAppSelector((state) => state.auth)
-
+  const { user, isLoading } = useAppSelector((state) => state.auth)
   const router = useRouter()
+
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.replace('/')
     }
-  }, [router, user])
+  }, [router, user, isLoading])
 
-  if (!user) {
-    return null;
+  if (isLoading) {
+    return null
   }
 
-  return (
-    <>{children}</>
-  )
+  if (!user) {
+    return null
+  }
+
+  return <>{children}</>
 }
