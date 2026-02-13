@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
-import { useState, useMemo, useEffect } from "react";
+import { useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
-import { createDotMarkerIcon, groupMarkersByLocation } from "./marker";
+import { createDotMarkerIcon } from "./marker";
 import { ProfileSheet } from "./profile-sheet";
 import BottomReports from "./bottom-reports";
 
@@ -39,13 +39,7 @@ export function MapContainerComponent() {
      };
    }, [refetch]); */
 
-  // Group markers by location to handle overlapping
-  const groupedMarkers = useMemo(() => {
-    if (!allReports?.reports) return [];
-    return groupMarkersByLocation(allReports.reports);
-  }, [allReports]);
-
-  const reports = allReports?.reports || []
+  const reports = allReports?.reports || [];
 
   if (isLoading) {
     return (
@@ -104,17 +98,15 @@ export function MapContainerComponent() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {groupedMarkers.map((group, index) => (
+        {reports.map((report, index) => (
           <Marker
-            key={`marker-${index}-${group.lat}-${group.lng}`}
-            position={[group.lat, group.lng]}
-            icon={createDotMarkerIcon(group.severity, group.count)}
+            key={`marker-${index}-${report.id || index}`}
+            position={[report.latitude, report.longitude]}
+            icon={createDotMarkerIcon(report.severity, 1)}
           >
             <MapPopup
-              accident={group.primaryReport}
+              accident={report}
               onGetDirections={openDirections}
-              additionalReports={group.count > 1 ? group.reports : undefined}
-              totalCount={group.count}
             />
           </Marker>
         ))}

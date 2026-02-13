@@ -16,6 +16,8 @@ export interface Report {
   province: string | null;
   landmark: string | null;
   imageUrl: string[];
+  location_accuracy?: string;
+  location_quality?: string;
 }
 
 export interface ReportsResponse {
