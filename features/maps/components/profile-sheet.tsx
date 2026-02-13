@@ -6,7 +6,7 @@ import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Mail, Phone, Calendar, Shield, Edit, Settings, Activity, Clock } from "lucide-react";
+import { LogOut, User, Mail, Phone, Shield, Edit, Settings, Activity, Clock } from "lucide-react";
 import { useState } from "react";
 
 interface ProfileSheetProps {

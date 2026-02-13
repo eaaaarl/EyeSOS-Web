@@ -20,6 +20,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error checking initial session:', error)
+        dispatch(setClearUserSession())
       }
     }
 
