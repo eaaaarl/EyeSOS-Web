@@ -15,6 +15,33 @@ export const authApi = createApi({
           email,
           password,
         });
+
+        if (data.user) {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .single();
+
+          if (profileError) {
+            return {
+              error: {
+                message: profileError.message,
+              },
+            };
+          }
+
+          return {
+            data: {
+              user: data.user,
+              session: data.session,
+              profile: profileData,
+              success: true,
+              message: "Sign in successfully",
+            },
+          };
+        }
+
         if (error) {
           return {
             error: {

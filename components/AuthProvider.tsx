@@ -11,11 +11,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const checkInitialSession = async () => {
       try {
         const { data } = await supabase.auth.getSession()
-
-        console.log('data from the auth provider', data)
-
         if (data.session?.user) {
-          dispatch(setUserSession({ user: data.session?.user, session: data.session }))
+
+          const { data: profileData } = await supabase.from('profiles').select('*').eq('id', data.session?.user.id).single()
+          dispatch(setUserSession({ user: data.session?.user, session: data.session, profile: profileData }))
         } else {
           dispatch(setClearUserSession())
         }
@@ -27,13 +26,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     checkInitialSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-
-        console.log('EVENT', event)
-        console.log('SESSION', session)
-
+      async (event, session) => {
         if (session?.user) {
-          dispatch(setUserSession({ user: session?.user, session: session }))
+          const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session?.user.id).single()
+          dispatch(setUserSession({ user: session?.user, session: session, profile: profileData }))
         } else {
           dispatch(setClearUserSession())
         }

@@ -7,7 +7,6 @@ import React, { ReactNode, useEffect } from 'react'
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAppSelector((state) => state.auth)
 
-  console.log(user)
   const router = useRouter()
   useEffect(() => {
     if (!user) {
@@ -16,7 +15,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   }, [router, user])
 
   if (!user) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (
