@@ -40,10 +40,11 @@ export function LoginForm({
   const handleLogin = async (payload: z.infer<typeof formSchema>) => {
     try {
       const res = await signIn(payload)
-
-      console.log(JSON.stringify(res, null, 2))
-
-      router.replace('/map')
+      if (res?.data?.profile?.user_type === 'admin') {
+        router.replace('/admin')
+      } else {
+        router.replace('/map')
+      }
     } catch (error) {
       console.log(error)
     }
