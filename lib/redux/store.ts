@@ -10,6 +10,7 @@ import {
   REGISTER,
   REHYDRATE,
 } from "redux-persist";
+import { setupListeners } from "@reduxjs/toolkit/query";
 
 const createNoopStorage = () => {
   return {
@@ -35,7 +36,8 @@ const storage =
 const persistConfig = {
   key: "root",
   storage,
-  blacklist: apisReducerPath,
+  blacklist: [...apisReducerPath],
+  version: 1,
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -50,6 +52,8 @@ export const store = configureStore({
       },
     }).concat(apis.map((api) => api.middleware)),
 });
+
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

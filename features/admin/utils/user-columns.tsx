@@ -5,18 +5,10 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { IconDotsVertical } from "@tabler/icons-react"
+
 import { UserProfile } from "../api/interface"
 import { getUserTypeColor, getUserTypeIcon, getUserTypeLabel } from "../helpers/user-type-helpers"
-import { UserDetailsDialog } from "../components/user-details-dialog"
+import { UserActions } from "../components/user-actions"
 
 export const columns: ColumnDef<UserProfile>[] = [
     {
@@ -99,31 +91,6 @@ export const columns: ColumnDef<UserProfile>[] = [
     },
     {
         id: "actions",
-        cell: ({ row }) => (
-            <div className="flex items-center gap-1">
-                <UserDetailsDialog user={row.original} />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                            size="icon"
-                        >
-                            <IconDotsVertical />
-                            <span className="sr-only">Open menu</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem>Edit Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Send Message</DropdownMenuItem>
-                        <DropdownMenuItem>View Activity</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Change Role</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive">Deactivate</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        ),
+        cell: ({ row }) => <UserActions user={row.original} />,
     },
 ]

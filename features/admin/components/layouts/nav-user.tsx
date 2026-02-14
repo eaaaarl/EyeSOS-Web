@@ -53,7 +53,7 @@ export function NavUser() {
                         >
                             <Avatar className="h-8 w-8 rounded-lg grayscale">
                                 <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
-                                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                                <AvatarFallback className="rounded-lg">{profile?.name?.split(" ").map((name) => name[0]).join("").toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-medium">{profile?.name}</span>
