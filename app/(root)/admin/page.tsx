@@ -1,4 +1,4 @@
-
+'use client'
 import { SiteHeader } from "@/features/admin/components/layouts/site-header"
 import { AccidentStatsCards } from "@/features/admin/components/accident-stats-cards"
 import { AccidentTrendsChart } from "@/features/admin/components/accident-trends-chart"

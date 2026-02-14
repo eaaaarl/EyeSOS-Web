@@ -9,8 +9,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
+import { UserProfile } from "../api/interface";
 
-export function UserStatsCards() {
+export function UserStatsCards({ data }: { data: UserProfile[] }) {
+    const totalUsers = data.length;
+    const lguOfficials = data.filter(user => user.user_type === 'lgu').length;
+    const blguOfficials = data.filter(user => user.user_type === 'blgu').length;
+    const bystanders = data.filter(user => user.user_type === 'bystander').length;
     return (
         <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
             <Card className="@container/card border-l-4 border-l-blue-500">
@@ -20,7 +25,7 @@ export function UserStatsCards() {
                         Total Users
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        20
+                        {totalUsers}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950">
@@ -46,7 +51,7 @@ export function UserStatsCards() {
                         LGU Officials
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        7
+                        {lguOfficials}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-purple-50 dark:bg-purple-950">
@@ -71,7 +76,7 @@ export function UserStatsCards() {
                         BLGU Officials
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        7
+                        {blguOfficials}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-green-50 dark:bg-green-950">
@@ -96,7 +101,7 @@ export function UserStatsCards() {
                         Bystanders
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        5
+                        {bystanders}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-cyan-50 dark:bg-cyan-950">
