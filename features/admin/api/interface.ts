@@ -26,3 +26,31 @@ export interface Meta {
 }
 
 export type UserType = "bystander" | "lgu" | "admin" | "blgu";
+
+export interface AccidentReport {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  report_number: string;
+  severity: "minor" | "moderate" | "high" | "critical";
+  reported_by: string;
+  reporter_name: string;
+  reporter_contact: string;
+  reporter_notes: string;
+  latitude: number;
+  longitude: number;
+  location_address: string;
+  barangay: string | null;
+  municipality: string | null;
+  province: string | null;
+  landmark: string | null;
+  imageUrl: string[];
+  location_accuracy?: string;
+  location_quality?: string;
+  status: string; // Kept for compatibility with existing table logic
+}
+
+export interface AllAccidentsResponse {
+  accidents: AccidentReport[];
+  meta: Meta;
+}

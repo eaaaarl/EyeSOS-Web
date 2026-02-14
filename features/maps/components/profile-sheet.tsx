@@ -43,7 +43,7 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
   const userEmail = user?.email || profile?.email || "N/A";
   const userName = profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
   const userPhone = profile?.mobileNo || "N/A";
-  const userInitials = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const userInitials = userName.split(" ").map(n => n?.[0] || "").join("").toUpperCase().slice(0, 2);
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A";
 
   return (

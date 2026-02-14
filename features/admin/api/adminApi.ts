@@ -1,12 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { AllUsersResponse } from "./interface";
+import { AllAccidentsResponse, AllUsersResponse } from "./interface";
 import { UserFormValues } from "../components/edit-user-dialog";
 
 export const adminApi = createApi({
   reducerPath: "adminApi",
   baseQuery: fakeBaseQuery(),
-  tagTypes: ["getAllUsers"],
+  tagTypes: ["getAllUsers", "getAllAccidents"],
   endpoints: (builder) => ({
     //GET ALL USERS
     getAllUsers: builder.query<AllUsersResponse, void>({
@@ -67,7 +67,36 @@ export const adminApi = createApi({
       },
       invalidatesTags: ["getAllUsers"],
     }),
+
+    // GET ALL ACCIDENTS
+    getAllAccidents: builder.query<AllAccidentsResponse, void>({
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("accidents")
+          .select("*")
+          .order("updated_at", { ascending: false });
+
+        if (error) {
+          return { error: error.message };
+        }
+
+        return {
+          data: {
+            accidents: data,
+            meta: {
+              success: true,
+              message: "All accidents fetched.",
+            },
+          },
+        };
+      },
+      providesTags: ["getAllAccidents"],
+    }),
   }),
 });
 
-export const { useGetAllUsersQuery, useUpdateUserMutation } = adminApi;
+export const {
+  useGetAllUsersQuery,
+  useUpdateUserMutation,
+  useGetAllAccidentsQuery,
+} = adminApi;
