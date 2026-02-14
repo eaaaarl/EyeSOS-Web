@@ -33,17 +33,17 @@ const data = {
     navMain: [
         {
             title: "Dashboard",
-            url: "#",
+            url: "/admin",
             icon: IconDashboard,
         },
         {
             title: "Users",
-            url: "#",
+            url: "/admin/users",
             icon: IconUsers,
         },
         {
             title: "Accidents Report",
-            url: "#",
+            url: "/admin/accidents",
             icon: IconReport,
         },
     ],

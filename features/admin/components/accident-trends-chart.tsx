@@ -27,27 +27,31 @@ import {
 } from "@/components/ui/select"
 
 const chartData = [
-    { date: "2024-02-08", major: 2, moderate: 3, minor: 5 },
-    { date: "2024-02-09", major: 1, moderate: 4, minor: 6 },
-    { date: "2024-02-10", major: 3, moderate: 2, minor: 4 },
-    { date: "2024-02-11", major: 2, moderate: 5, minor: 7 },
-    { date: "2024-02-12", major: 4, moderate: 3, minor: 5 },
-    { date: "2024-02-13", major: 3, moderate: 4, minor: 6 },
-    { date: "2024-02-14", major: 2, moderate: 2, minor: 3 },
+    { date: "2024-02-08", critical: 1, high: 0, moderate: 1, minor: 0 },
+    { date: "2024-02-09", critical: 0, high: 1, moderate: 0, minor: 1 },
+    { date: "2024-02-10", critical: 1, high: 0, moderate: 1, minor: 0 },
+    { date: "2024-02-11", critical: 0, high: 1, moderate: 0, minor: 0 },
+    { date: "2024-02-12", critical: 1, high: 0, moderate: 1, minor: 0 },
+    { date: "2024-02-13", critical: 1, high: 1, moderate: 0, minor: 1 },
+    { date: "2024-02-14", critical: 0, high: 0, moderate: 0, minor: 0 },
 ]
 
 const chartConfig = {
-    major: {
-        label: "Major",
+    critical: {
+        label: "Critical",
         color: "hsl(0 84% 60%)",
+    },
+    high: {
+        label: "High",
+        color: "hsl(25 95% 53%)",
     },
     moderate: {
         label: "Moderate",
-        color: "hsl(25 95% 53%)",
+        color: "hsl(48 96% 53%)",
     },
     minor: {
         label: "Minor",
-        color: "hsl(48 96% 53%)",
+        color: "hsl(142 76% 36%)",
     },
 } satisfies ChartConfig
 
@@ -57,7 +61,7 @@ export function AccidentTrendsChart() {
     const filteredData = chartData
 
     return (
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 overflow-hidden min-w-0">
             <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
                 <div className="grid flex-1 gap-1 text-center sm:text-left">
                     <CardTitle>Accident Reports Trends</CardTitle>
@@ -92,15 +96,27 @@ export function AccidentTrendsChart() {
                 >
                     <AreaChart data={filteredData}>
                         <defs>
-                            <linearGradient id="fillMajor" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="fillCritical" x1="0" y1="0" x2="0" y2="1">
                                 <stop
                                     offset="5%"
-                                    stopColor="var(--color-major)"
+                                    stopColor="var(--color-critical)"
                                     stopOpacity={0.8}
                                 />
                                 <stop
                                     offset="95%"
-                                    stopColor="var(--color-major)"
+                                    stopColor="var(--color-critical)"
+                                    stopOpacity={0.1}
+                                />
+                            </linearGradient>
+                            <linearGradient id="fillHigh" x1="0" y1="0" x2="0" y2="1">
+                                <stop
+                                    offset="5%"
+                                    stopColor="var(--color-high)"
+                                    stopOpacity={0.8}
+                                />
+                                <stop
+                                    offset="95%"
+                                    stopColor="var(--color-high)"
                                     stopOpacity={0.1}
                                 />
                             </linearGradient>
@@ -182,10 +198,18 @@ export function AccidentTrendsChart() {
                             stackId="a"
                         />
                         <Area
-                            dataKey="major"
+                            dataKey="high"
                             type="monotone"
-                            fill="url(#fillMajor)"
-                            stroke="var(--color-major)"
+                            fill="url(#fillHigh)"
+                            stroke="var(--color-high)"
+                            strokeWidth={2}
+                            stackId="a"
+                        />
+                        <Area
+                            dataKey="critical"
+                            type="monotone"
+                            fill="url(#fillCritical)"
+                            stroke="var(--color-critical)"
                             strokeWidth={2}
                             stackId="a"
                         />
