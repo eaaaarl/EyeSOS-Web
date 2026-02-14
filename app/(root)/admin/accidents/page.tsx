@@ -1,3 +1,4 @@
+'use client'
 import { SiteHeader } from '@/features/admin/components/layouts/site-header'
 import { AccidentDataTable } from '@/features/admin/components/accident-data-table'
 import accidentData from '@/constant/accidents-data.json'
