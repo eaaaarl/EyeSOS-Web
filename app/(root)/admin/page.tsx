@@ -1,21 +1,25 @@
-'use client'
-import { useAppSelector } from '@/lib/redux/hooks'
-import React from 'react'
+
+import accidentData from "./accidents-data.json"
+import { SiteHeader } from "@/features/admin/components/layouts/site-header"
+import { AccidentStatsCards } from "@/features/admin/components/accident-stats-cards"
+import { AccidentTrendsChart } from "@/features/admin/components/accident-trends-chart"
+import { AccidentDataTable } from "@/features/admin/components/accident-data-table"
 
 export default function AdminPage() {
-    // Option 2: Get specific fields
-    const { profile, user } = useAppSelector((state) => state.auth)
-
-    console.log('profile', profile)
-    console.log('user', user)
-
     return (
-        <div className='p-4 bg-white'>
-            <h2 className='font-bold mb-4'>Profile:</h2>
-            <pre>{JSON.stringify(profile, null, 2)}</pre>
-
-            <h2 className='font-bold mb-4 mt-4'>User:</h2>
-            <pre>{JSON.stringify(user, null, 2)}</pre>
-        </div>
+        <>
+            <SiteHeader />
+            <div className="flex flex-1 flex-col">
+                <div className="@container/main flex flex-1 flex-col gap-2">
+                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                        <AccidentStatsCards />
+                        <div className="px-4 lg:px-6">
+                            <AccidentTrendsChart />
+                        </div>
+                        <AccidentDataTable data={accidentData} />
+                    </div>
+                </div>
+            </div>
+        </>
     )
 }
