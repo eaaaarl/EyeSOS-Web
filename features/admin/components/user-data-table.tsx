@@ -9,10 +9,14 @@ import {
     IconChevronsRight,
     IconDotsVertical,
     IconEye,
-    IconMapPin,
+    IconMail,
     IconPhone,
+    IconMapPin,
     IconUser,
-    IconDownload,
+    IconCalendar,
+    IconShieldCheck,
+    IconBuilding,
+    IconUsers,
 } from "@tabler/icons-react"
 import {
     flexRender,
@@ -29,7 +33,7 @@ import {
     type VisibilityState,
 } from "@tanstack/react-table"
 import { z } from "zod"
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -66,102 +70,73 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
 
-export const accidentSchema = z.object({
+export const userSchema = z.object({
     id: z.string(),
-    reportNumber: z.string(),
-    severity: z.string(),
-    reporterName: z.string(),
-    reporterContact: z.string(),
-    reporterNotes: z.string(),
-    locationAddress: z.string(),
-    barangay: z.string().nullable(),
-    municipality: z.string().nullable(),
-    status: z.string(),
-    responseTime: z.string(),
-    createdAt: z.string(),
+    name: z.string(),
+    email: z.string(),
+    mobileNo: z.string(),
+    avatarUrl: z.string(),
+    user_type: z.enum(["bystander", "blgu", "lgu", "admin"]),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+    organizations_id: z.string().optional().nullable(),
+    emergency_contact_name: z.string().optional(),
+    emergency_contact_number: z.string().optional(),
+    birthdate: z.string().optional(),
+    bio: z.string().optional(),
+    permanent_address: z.string(),
 })
 
-type AccidentReport = z.infer<typeof accidentSchema>
+type UserProfile = z.infer<typeof userSchema>
 
-function getSeverityColor(severity: string) {
-    switch (severity.toLowerCase()) {
-        case "critical":
+function getUserTypeColor(userType: string) {
+    switch (userType.toLowerCase()) {
+        case "admin":
             return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"
-        case "high":
-            return "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300 dark:border-orange-700"
-        case "moderate":
-            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700"
-        case "minor":
+        case "lgu":
+            return "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-700"
+        case "blgu":
             return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 border-green-300 dark:border-green-700"
+        case "bystander":
+            return "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700"
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
     }
 }
 
-function getStatusColor(status: string) {
-    switch (status.toLowerCase()) {
-        case "active":
-            return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"
-        case "in progress":
-            return "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700"
-        case "resolved":
-            return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 border-green-300 dark:border-green-700"
+function getUserTypeIcon(userType: string) {
+    switch (userType.toLowerCase()) {
+        case "admin":
+            return <IconShieldCheck className="size-3" />
+        case "lgu":
+            return <IconBuilding className="size-3" />
+        case "blgu":
+            return <IconUsers className="size-3" />
+        case "bystander":
+            return <IconEye className="size-3" />
         default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
+            return <IconUser className="size-3" />
     }
 }
 
-
-function exportToCSV(data: AccidentReport[]) {
-    const headers = [
-        "Report ID",
-        "Report Number",
-        "Severity",
-        "Reporter Name",
-        "Reporter Contact",
-        "Location",
-        "Barangay",
-        "Municipality",
-        "Status",
-        "Response Time",
-        "Date Reported",
-        "Notes",
-    ]
-
-    const csvRows = [headers.join(",")]
-
-    data.forEach((row) => {
-        const values = [
-            row.id,
-            row.reportNumber,
-            row.severity,
-            row.reporterName,
-            row.reporterContact,
-            `"${row.locationAddress}"`,
-            row.barangay || "",
-            row.municipality || "",
-            row.status,
-            row.responseTime,
-            new Date(row.createdAt).toLocaleString(),
-            `"${row.reporterNotes}"`,
-        ]
-        csvRows.push(values.join(","))
-    })
-
-    const csvContent = csvRows.join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `accident_reports_${new Date().toISOString().split("T")[0]}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+function getUserTypeLabel(userType: string) {
+    switch (userType.toLowerCase()) {
+        case "admin":
+            return "Admin"
+        case "lgu":
+            return "LGU"
+        case "blgu":
+            return "BLGU"
+        case "bystander":
+            return "Bystander"
+        default:
+            return userType
+    }
 }
 
-function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
+function UserDetailsDialog({ user }: { user: UserProfile }) {
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -172,73 +147,122 @@ function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <IconMapPin className="size-5 text-red-500" />
-                        Accident Report: {report.reportNumber}
+                    <DialogTitle className="flex items-center gap-3">
+                        <Avatar className="size-12">
+                            <AvatarImage src={user.avatarUrl} alt={user.name} />
+                            <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                {user.name}
+                                <Badge className={getUserTypeColor(user.user_type)}>
+                                    {getUserTypeIcon(user.user_type)}
+                                    {getUserTypeLabel(user.user_type)}
+                                </Badge>
+                            </div>
+                        </div>
                     </DialogTitle>
                     <DialogDescription>
-                        Detailed information about the reported accident
+                        Complete user profile and emergency contact information
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-muted-foreground text-xs">Severity</Label>
-                            <Badge className={getSeverityColor(report.severity)}>
-                                {report.severity.toUpperCase()}
-                            </Badge>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-muted-foreground text-xs">Status</Label>
-                            <Badge className={getStatusColor(report.status)}>
-                                {report.status}
-                            </Badge>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Location</Label>
-                        <div className="flex items-start gap-2">
-                            <IconMapPin className="size-4 mt-0.5 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">{report.locationAddress}</p>
-                                <p className="text-muted-foreground text-sm">
-                                    {report.barangay}, {report.municipality}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Reporter Information</Label>
-                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">Email Address</Label>
                             <div className="flex items-center gap-2">
-                                <IconUser className="size-4 text-muted-foreground" />
-                                <span className="font-medium">{report.reporterName}</span>
+                                <IconMail className="size-4 text-muted-foreground" />
+                                <span className="text-sm">{user.email}</span>
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">Mobile Number</Label>
                             <div className="flex items-center gap-2">
                                 <IconPhone className="size-4 text-muted-foreground" />
-                                <span className="text-sm">{report.reporterContact}</span>
+                                <span className="text-sm">{user.mobileNo}</span>
                             </div>
                         </div>
                     </div>
 
+                    {user.birthdate && (
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">Date of Birth</Label>
+                            <div className="flex items-center gap-2">
+                                <IconCalendar className="size-4 text-muted-foreground" />
+                                <span className="text-sm">
+                                    {new Date(user.birthdate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Notes</Label>
-                        <p className="text-sm bg-muted p-3 rounded-md">
-                            {report.reporterNotes}
-                        </p>
+                        <Label className="text-muted-foreground text-xs">Permanent Address</Label>
+                        <div className="flex items-start gap-2">
+                            <IconMapPin className="size-4 mt-0.5 text-muted-foreground" />
+                            <p className="text-sm">{user.permanent_address}</p>
+                        </div>
+                    </div>
+
+                    {user.bio && (
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">Bio / Role</Label>
+                            <p className="text-sm bg-muted p-3 rounded-md">
+                                {user.bio}
+                            </p>
+                        </div>
+                    )}
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                        <Label className="text-sm font-semibold">Emergency Contact</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground text-xs">Contact Name</Label>
+                                <div className="flex items-center gap-2">
+                                    <IconUser className="size-4 text-muted-foreground" />
+                                    <span className="text-sm">{user.emergency_contact_name || 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground text-xs">Contact Number</Label>
+                                <div className="flex items-center gap-2">
+                                    <IconPhone className="size-4 text-muted-foreground" />
+                                    <span className="text-sm">{user.emergency_contact_number || 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">Organization ID</Label>
+                            <p className="text-sm font-mono">{user.organizations_id || 'N/A'}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs">User ID</Label>
+                            <p className="text-sm font-mono">{user.id}</p>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-muted-foreground text-xs">Response Time</Label>
-                            <p className="font-medium">{report.responseTime}</p>
+                            <Label className="text-muted-foreground text-xs">Created At</Label>
+                            <p className="text-sm">
+                                {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                            </p>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-muted-foreground text-xs">Reported At</Label>
+                            <Label className="text-muted-foreground text-xs">Last Updated</Label>
                             <p className="text-sm">
-                                {new Date(report.createdAt).toLocaleString()}
+                                {user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A'}
                             </p>
                         </div>
                     </div>
@@ -248,7 +272,7 @@ function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
     )
 }
 
-const columns: ColumnDef<AccidentReport>[] = [
+const columns: ColumnDef<UserProfile>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -276,66 +300,59 @@ const columns: ColumnDef<AccidentReport>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: "reportNumber",
-        header: "Report #",
+        accessorKey: "name",
+        header: "User",
         cell: ({ row }) => (
-            <div className="font-mono text-xs font-medium">
-                {row.original.reportNumber}
-            </div>
-        ),
-    },
-    {
-        accessorKey: "severity",
-        header: "Severity",
-        cell: ({ row }) => (
-            <Badge className={getSeverityColor(row.original.severity)}>
-                {row.original.severity.toUpperCase()}
-            </Badge>
-        ),
-    },
-    {
-        accessorKey: "locationAddress",
-        header: "Location",
-        cell: ({ row }) => (
-            <div className="max-w-xs">
-                <div className="font-medium truncate">{row.original.locationAddress}</div>
-                <div className="text-muted-foreground text-xs truncate">
-                    {row.original.barangay}, {row.original.municipality}
+            <div className="flex items-center gap-3">
+                <Avatar className="size-10">
+                    <AvatarImage src={row.original.avatarUrl} alt={row.original.name} />
+                    <AvatarFallback>{row.original.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div>
+                    <div className="font-medium">{row.original.name}</div>
+                    <div className="text-muted-foreground text-xs">{row.original.email}</div>
                 </div>
             </div>
         ),
     },
     {
-        accessorKey: "reporterName",
-        header: "Reporter",
+        accessorKey: "user_type",
+        header: "Type",
         cell: ({ row }) => (
-            <div>
-                <div className="font-medium">{row.original.reporterName}</div>
-                <div className="text-muted-foreground text-xs">{row.original.reporterContact}</div>
-            </div>
-        ),
-    },
-    {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-            <Badge className={getStatusColor(row.original.status)}>
-                {row.original.status}
+            <Badge className={getUserTypeColor(row.original.user_type)}>
+                {getUserTypeIcon(row.original.user_type)}
+                {getUserTypeLabel(row.original.user_type)}
             </Badge>
         ),
     },
     {
-        accessorKey: "responseTime",
-        header: "Response",
+        accessorKey: "mobileNo",
+        header: "Contact",
         cell: ({ row }) => (
-            <div className="text-sm font-medium">{row.original.responseTime}</div>
+            <div className="text-sm">{row.original.mobileNo}</div>
+        ),
+    },
+    {
+        accessorKey: "permanent_address",
+        header: "Location",
+        cell: ({ row }) => (
+            <div className="max-w-xs">
+                <div className="text-sm truncate">{row.original.permanent_address}</div>
+            </div>
+        ),
+    },
+    {
+        accessorKey: "organizations_id",
+        header: "Organization",
+        cell: ({ row }) => (
+            <div className="text-xs font-mono">{row.original.organizations_id || 'N/A'}</div>
         ),
     },
     {
         id: "actions",
         cell: ({ row }) => (
             <div className="flex items-center gap-1">
-                <AccidentDetailsDialog report={row.original} />
+                <UserDetailsDialog user={row.original} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -348,11 +365,13 @@ const columns: ColumnDef<AccidentReport>[] = [
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem>View on Map</DropdownMenuItem>
-                        <DropdownMenuItem>Contact Reporter</DropdownMenuItem>
-                        <DropdownMenuItem>Update Status</DropdownMenuItem>
+                        <DropdownMenuItem>Edit Profile</DropdownMenuItem>
+                        <DropdownMenuItem>Send Message</DropdownMenuItem>
+                        <DropdownMenuItem>View Activity</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Export Report</DropdownMenuItem>
+                        <DropdownMenuItem>Change Role</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive">Deactivate</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -360,10 +379,10 @@ const columns: ColumnDef<AccidentReport>[] = [
     },
 ]
 
-export function AccidentDataTable({
+export function UserDataTable({
     data: initialData,
 }: {
-    data: AccidentReport[]
+    data: UserProfile[]
 }) {
     const [rowSelection, setRowSelection] = React.useState({})
     const [columnVisibility, setColumnVisibility] =
@@ -406,61 +425,32 @@ export function AccidentDataTable({
             <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-1 items-center gap-2">
                     <Input
-                        placeholder="Search reports..."
-                        value={(table.getColumn("reportNumber")?.getFilterValue() as string) ?? ""}
+                        placeholder="Search users..."
+                        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("reportNumber")?.setFilterValue(event.target.value)
+                            table.getColumn("name")?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm"
                     />
                     <Select
-                        value={(table.getColumn("severity")?.getFilterValue() as string) ?? "all"}
+                        value={(table.getColumn("user_type")?.getFilterValue() as string) ?? "all"}
                         onValueChange={(value) =>
-                            table.getColumn("severity")?.setFilterValue(value === "all" ? "" : value)
+                            table.getColumn("user_type")?.setFilterValue(value === "all" ? "" : value)
                         }
                     >
                         <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Severity" />
+                            <SelectValue placeholder="User Type" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Severity</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="moderate">Moderate</SelectItem>
-                            <SelectItem value="minor">Minor</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select
-                        value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                        onValueChange={(value) =>
-                            table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)
-                        }
-                    >
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="In Progress">In Progress</SelectItem>
-                            <SelectItem value="Resolved">Resolved</SelectItem>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="lgu">LGU</SelectItem>
+                            <SelectItem value="blgu">BLGU</SelectItem>
+                            <SelectItem value="bystander">Bystander</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={() =>
-                            exportToCSV(
-                                table.getFilteredRowModel().rows.map((row) => row.original)
-                            )
-                        }
-                    >
-                        <IconDownload className="size-4" />
-                        Export
-                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
@@ -492,6 +482,10 @@ export function AccidentDataTable({
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button variant="default" size="sm">
+                        <IconUser className="size-4" />
+                        Add User
+                    </Button>
                 </div>
             </div>
 
@@ -535,7 +529,7 @@ export function AccidentDataTable({
                                     colSpan={columns.length}
                                     className="h-24 text-center"
                                 >
-                                    No accident reports found.
+                                    No users found.
                                 </TableCell>
                             </TableRow>
                         )}

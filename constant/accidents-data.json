@@ -2,7 +2,7 @@
   {
     "id": "ACC-2024-001",
     "reportNumber": "RPT-20240214-001",
-    "severity": "major",
+    "severity": "critical",
     "reportedBy": "user_001",
     "reporterName": "Maria Santos",
     "reporterContact": "+63 917 123 4567",
@@ -62,7 +62,7 @@
   {
     "id": "ACC-2024-004",
     "reportNumber": "RPT-20240213-015",
-    "severity": "major",
+    "severity": "critical",
     "reportedBy": "user_004",
     "reporterName": "Roberto Garcia",
     "reporterContact": "+63 920 456 7890",
@@ -142,7 +142,7 @@
   {
     "id": "ACC-2024-008",
     "reportNumber": "RPT-20240213-011",
-    "severity": "major",
+    "severity": "critical",
     "reportedBy": "user_008",
     "reporterName": "Miguel Torres",
     "reporterContact": "+63 924 890 1234",
@@ -222,7 +222,7 @@
   {
     "id": "ACC-2024-012",
     "reportNumber": "RPT-20240212-024",
-    "severity": "major",
+    "severity": "critical",
     "reportedBy": "user_012",
     "reporterName": "Ramon Villar",
     "reporterContact": "+63 928 234 5678",
