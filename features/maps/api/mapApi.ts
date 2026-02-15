@@ -40,43 +40,31 @@ export const mapApi = createApi({
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
       ) {
         try {
-          // Wait for initial data load
           await cacheDataLoaded;
 
-          console.log("✅ Setting up realtime in RTK Query...");
-
-          // Subscribe to changes
           const channel = supabase
-            .channel("accidents-rtk")
+            .channel("lgu-blgu-accidents-realtime")
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: "accidents" },
               (payload) => {
                 console.log("Payload", JSON.stringify(payload));
 
-                // Update cache directly (no refetch needed!)
                 updateCachedData((draft) => {
                   if (payload.eventType === "INSERT") {
-                    // Add new incident to cache
                     draft.reports.unshift(payload.new as Report);
-                    console.log("✅ Added to cache without refetch!");
                   } else if (payload.eventType === "UPDATE") {
-                    // Update existing incident
                     const index = draft.reports.findIndex(
                       (r) => r.id === (payload.new as Report).id,
                     );
 
                     if (index !== -1) {
                       draft.reports[index] = payload.new as Report;
-                      console.log("🔄 Updated in cache!");
                     }
                   } else if (payload.eventType === "DELETE") {
-                    // Remove incident
                     draft.reports = draft.reports.filter(
                       (r) => r.id !== (payload.old as Report).id,
                     );
-
-                    console.log("🗑️ Removed from cache!");
                   }
                 });
               },
@@ -87,10 +75,8 @@ export const mapApi = createApi({
               }
             });
 
-          // Wait for cleanup
           await cacheEntryRemoved;
 
-          // Unsubscribe
           console.log("🔌 Cleaning up RTK Query realtime");
           supabase.removeChannel(channel);
         } catch (error) {

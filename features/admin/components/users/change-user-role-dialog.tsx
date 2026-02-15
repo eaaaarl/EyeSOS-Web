@@ -28,8 +28,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { UserProfile, UserType } from "../api/interface"
-import { useUpdateUserMutation } from "../api/adminApi"
+import { UserProfile, UserType } from "../../api/interface"
+import { useUpdateUserMutation } from "../../api/adminApi"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { UserFormValues } from "./edit-user-dialog"

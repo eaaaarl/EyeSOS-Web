@@ -1,7 +1,7 @@
 'use client'
 import { SiteHeader } from '@/features/admin/components/layouts/site-header'
-import { UserStatsCards } from '@/features/admin/components/user-stats-cards'
-import { UserDataTable } from '@/features/admin/components/user-data-table'
+import { UserStatsCards } from '@/features/admin/components/users/user-stats-cards'
+import { UserDataTable } from '@/features/admin/components/users/user-data-table'
 import { useGetAllUsersQuery } from '@/features/admin/api/adminApi'
 
 export default function UsersPage() {

@@ -39,8 +39,8 @@ import {
 } from '@/components/ui/table'
 import { IconLoader2 } from "@tabler/icons-react"
 
-import { UserProfile } from "../api/interface"
-import { useUserTable } from "../hooks/use-user-table"
+import { UserProfile } from "../../api/interface"
+import { useUserTable } from "../../hooks/use-user-table"
 
 export function UserDataTable({
     data: initialData,

@@ -54,16 +54,62 @@ export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
                         </div> */}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Location</Label>
-                        <div className="flex items-start gap-2">
-                            <IconMapPin className="size-4 mt-0.5 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">{report.location_address}</p>
-                                <p className="text-muted-foreground text-sm">
-                                    {report.barangay}, {report.municipality}
-                                </p>
+                    <div className="space-y-3">
+                        <Label className="text-muted-foreground text-xs">Location Details</Label>
+
+                        <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border">
+                            <IconMapPin className="size-5 mt-0.5 text-red-500 shrink-0" />
+                            <div className="space-y-1 w-full">
+                                <p className="font-medium text-sm">{report.location_address}</p>
+                                <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
+                                    <span className="col-span-2">
+                                        {[report.barangay, report.municipality, report.province]
+                                            .filter(Boolean)
+                                            .join(", ")}
+                                    </span>
+                                    {report.landmark && (
+                                        <span className="col-span-2 flex items-center gap-1">
+                                            <span className="font-medium">Landmark:</span> {report.landmark}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3 bg-muted/40 rounded-lg border space-y-1">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                    <IconMapPin className="size-3.5" />
+                                    <span>Coordinates</span>
+                                </div>
+                                <div className="font-mono text-xs font-medium">
+                                    <div>Lat: {report.latitude?.toFixed(6) ?? "N/A"}</div>
+                                    <div>Long: {report.longitude?.toFixed(6) ?? "N/A"}</div>
+                                </div>
+                            </div>
+
+                            {(report.location_quality || report.location_accuracy) && (
+                                <div className="p-3 bg-muted/40 rounded-lg border space-y-1">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                        <IconMapPin className="size-3.5" />
+                                        <span>Precision</span>
+                                    </div>
+                                    <div className="text-xs space-y-0.5">
+                                        {report.location_quality && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Quality:</span>
+                                                <span className="font-medium">{report.location_quality}</span>
+                                            </div>
+                                        )}
+                                        {report.location_accuracy && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Accuracy:</span>
+                                                <span className="font-medium">{report.location_accuracy}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

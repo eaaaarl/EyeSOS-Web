@@ -20,8 +20,8 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { UserProfile } from "../api/interface"
-import { getUserTypeColor, getUserTypeIcon, getUserTypeLabel } from "../helpers/user-type-helpers"
+import { UserProfile } from "../../api/interface"
+import { getUserTypeColor, getUserTypeIcon, getUserTypeLabel } from "../../helpers/user-type-helpers"
 
 export function UserDetailsDialog({ user }: { user: UserProfile }) {
     return (

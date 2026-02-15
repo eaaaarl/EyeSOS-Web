@@ -9,7 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { UserProfile } from "../api/interface";
+import { UserProfile } from "../../api/interface";
 
 export function UserStatsCards({ data }: { data: UserProfile[] }) {
     const totalUsers = data.length;

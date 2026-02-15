@@ -11,11 +11,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { IconActivity, IconDotsVertical, IconEdit, IconMessage, IconTrash, IconUser } from "@tabler/icons-react"
-import { UserProfile } from "../api/interface"
-import { UserDetailsDialog } from "../components/user-details-dialog"
-import { EditUserDialog } from "../components/edit-user-dialog"
-import { ChangeUserRoleDialog } from "../components/change-user-role-dialog"
+import { UserProfile } from "../../api/interface"
+import { EditUserDialog } from "./edit-user-dialog"
+import { ChangeUserRoleDialog } from "./change-user-role-dialog"
 import { UserActivityDialog } from "./user-activity-dialog"
+import { UserDetailsDialog } from "./user-details-dialog"
 
 interface UserActionsProps {
     user: UserProfile

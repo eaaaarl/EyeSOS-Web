@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { IconActivity, IconAlertTriangle, IconLogin, IconMessage, IconUserCheck } from "@tabler/icons-react"
-import { UserProfile } from "../api/interface"
+import { UserProfile } from "../../api/interface"
 
 interface UserActivityDialogProps {
     user: UserProfile
