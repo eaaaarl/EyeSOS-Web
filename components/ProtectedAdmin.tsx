@@ -2,6 +2,7 @@
 
 import { useGetUserProfileQuery } from '@/features/auth/api/authApi'
 import { useAppSelector } from '@/lib/redux/hooks'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { ReactNode, useEffect } from 'react'
 
@@ -19,15 +20,31 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
         }
 
         if (!isLoading && profile) {
-            if (profile.profile.user_type !== 'admin') {
+            if (profile.profile.user_type === 'lgu' || profile.profile.user_type === 'blgu') {
                 router.replace('/map');
             }
         }
+
     }, [user, profile, isLoading, router]);
 
 
     if (!user || isLoading || !profile) {
-        return <div>Loading...</div>
+        return (
+            <div className="flex items-center justify-center h-screen w-screen">
+                <div className="flex flex-col items-center gap-4 ">
+                    <div className="relative">
+                        <Image
+                            src="/logo.png"
+                            alt="Splash Screen Logo"
+                            width={500}
+                            height={500}
+                            className="animate-pulse"
+                            priority
+                        />
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return <>{children}</>

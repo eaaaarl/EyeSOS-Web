@@ -1,8 +1,9 @@
 'use client'
 import { useGetUserProfileQuery } from '@/features/auth/api/authApi'
 import { useAppSelector } from '@/lib/redux/hooks'
-import { useRouter } from 'next/navigation'
-import React, { ReactNode, useEffect } from 'react'
+import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
+import React, { ReactNode, useEffect, useRef } from 'react'
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAppSelector((state) => state.auth)
@@ -10,19 +11,43 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     skip: !user?.id
   });
   const router = useRouter()
+  const pathname = usePathname()
+  const hasRedirected = useRef(false)
+
+  const isAdmin = profile?.profile.user_type === 'admin'
+  const isOnAdminPage = pathname?.startsWith('/admin')
 
   useEffect(() => {
     if (!user) {
       router.replace('/')
+      return
     }
-  }, [router, user])
 
+    if (!isLoading && isAdmin && !isOnAdminPage && !hasRedirected.current) {
+      hasRedirected.current = true
+      router.replace('/admin');
+    }
 
-  if (!user || isLoading || !profile) {
-    return <div>Loading...</div>
+  }, [router, user, isAdmin, isLoading, isOnAdminPage])
+
+  if (!user || isLoading || !profile || (isAdmin && !isOnAdminPage)) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen">
+        <div className="flex flex-col items-center gap-4 ">
+          <div className="relative">
+            <Image
+              src="/logo.png"
+              alt="Splash Screen Logo"
+              width={500}
+              height={500}
+              className="animate-pulse"
+              priority
+            />
+          </div>
+        </div>
+      </div>
+    )
   }
-
-
 
   return <>{children}</>
 }

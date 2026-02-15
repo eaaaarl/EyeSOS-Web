@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useSignInMutation } from "../api/authApi"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 export const formSchema = z.object({
   email: z.string().min(2, {
@@ -37,7 +38,11 @@ export function LoginForm({
 
   const handleLogin = async (payload: z.infer<typeof formSchema>) => {
     try {
-      await signIn(payload)
+      const res = await signIn(payload)
+
+      if (res.error) {
+        toast.error((res.error as { message: string }).message)
+      }
     } catch (error) {
       console.log(error)
     }

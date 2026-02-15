@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -10,38 +9,15 @@ import { useGetAllReportsBystanderQuery } from "../api/mapApi";
 import { createDotMarkerIcon } from "./marker";
 import { ProfileSheet } from "./profile-sheet";
 import BottomReports from "./bottom-reports";
+import { Loader } from "lucide-react";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data: allReports, isLoading, isError } = useGetAllReportsBystanderQuery();
+  const { data: allReports, isLoading, isError, refetch } = useGetAllReportsBystanderQuery();
 
   const reports = allReports?.reports || [];
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <div className="relative h-full w-full">
-          <Image
-            src="/logo.png"
-            alt="EyeSOS logo"
-            fill
-            priority
-            className="object-contain"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-100">
-        <p className="text-lg text-red-600">Error loading map data. Please try again.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-screen relative">
@@ -89,6 +65,31 @@ export function MapContainerComponent() {
           </Marker>
         ))}
       </MapContainer>
+
+
+      {isLoading && (
+        <div className="absolute top-17 left-4 z-[1000] bg-white rounded-xl shadow-lg p-4 max-w-sm animate-in fade-in slide-in-from-left duration-300">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Loader className="w-4 h-4 animate-spin" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">Loading emergencies...</h3>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isError && (
+        <div className="absolute top-17 left-4 z-[1000] bg-red-50 rounded-xl shadow-lg p-4 max-w-sm animate-in fade-in slide-in-from-left duration-300">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-sm font-semibold text-zinc-900">Failed to load emergencies</h3>
+            <button onClick={() => refetch()} className="text-sm font-semibold text-red-600 hover:text-red-700 transition-colors px-3 py-1 rounded-lg hover:bg-red-100">
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
       <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
