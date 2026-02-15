@@ -25,8 +25,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 import { Textarea } from "@/components/ui/textarea"
-import { UserProfile } from "../api/interface"
-import { useUpdateUserMutation } from "../api/adminApi"
+import { UserProfile } from "../../api/interface"
+import { useUpdateUserMutation } from "../../api/adminApi"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 

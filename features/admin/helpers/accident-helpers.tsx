@@ -1,4 +1,5 @@
 export function getSeverityColor(severity: string) {
+    if (!severity) return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
     switch (severity.toLowerCase()) {
         case "critical":
             return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"
@@ -14,6 +15,7 @@ export function getSeverityColor(severity: string) {
 }
 
 export function getStatusColor(status: string) {
+    if (!status) return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
     switch (status.toLowerCase()) {
         case "active":
             return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"

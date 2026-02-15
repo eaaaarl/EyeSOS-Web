@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 
 import { UserProfile } from "../api/interface"
 import { getUserTypeColor, getUserTypeIcon, getUserTypeLabel } from "../helpers/user-type-helpers"
-import { UserActions } from "../components/user-actions"
+import { UserActions } from "../components/users/user-actions"
 
 export const columns: ColumnDef<UserProfile>[] = [
     {

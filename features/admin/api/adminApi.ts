@@ -1,7 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { AllAccidentsResponse, AllUsersResponse } from "./interface";
-import { UserFormValues } from "../components/edit-user-dialog";
+import {
+  AccidentReport,
+  AllAccidentsResponse,
+  AllUsersResponse,
+} from "./interface";
+import { UserFormValues } from "../components/users/edit-user-dialog";
 
 export const adminApi = createApi({
   reducerPath: "adminApi",
@@ -91,6 +95,52 @@ export const adminApi = createApi({
         };
       },
       providesTags: ["getAllAccidents"],
+      async onCacheEntryAdded(
+        arg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
+      ) {
+        try {
+          await cacheDataLoaded;
+          const channel = supabase
+            .channel("admin-accidents-realtime")
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "accidents" },
+              (payload) => {
+                console.log("Payload", JSON.stringify(payload));
+
+                updateCachedData((draft) => {
+                  if (payload.eventType === "INSERT") {
+                    draft.accidents.unshift(payload.new as AccidentReport);
+                  } else if (payload.eventType === "UPDATE") {
+                    const index = draft.accidents.findIndex(
+                      (r) => r.id === (payload.new as AccidentReport).id,
+                    );
+
+                    if (index !== -1) {
+                      draft.accidents[index] = payload.new as AccidentReport;
+                    }
+                  } else if (payload.eventType === "DELETE") {
+                    draft.accidents = draft.accidents.filter(
+                      (r) => r.id !== (payload.old as AccidentReport).id,
+                    );
+                  }
+                });
+              },
+            )
+            .subscribe((status) => {
+              if (status === "SUBSCRIBED") {
+                console.log("✅ RTK Query realtime active!");
+              }
+            });
+
+          await cacheEntryRemoved;
+
+          supabase.removeChannel(channel);
+        } catch (error) {
+          console.error("❌ RTK Query realtime error:", error);
+        }
+      },
     }),
   }),
 });

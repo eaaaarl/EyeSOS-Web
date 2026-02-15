@@ -14,36 +14,7 @@ import { IconDotsVertical } from "@tabler/icons-react"
 import { ColumnDef } from "@tanstack/react-table"
 import { AccidentReport } from "../api/interface"
 import { AccidentDetailsDialog } from "../components/accidents/accident-details-dialog"
-
-function getSeverityColor(severity: string) {
-    if (!severity) return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
-    switch (severity.toLowerCase()) {
-        case "critical":
-            return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"
-        case "high":
-            return "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300 dark:border-orange-700"
-        case "moderate":
-            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700"
-        case "minor":
-            return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 border-green-300 dark:border-green-700"
-        default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
-    }
-}
-
-function getStatusColor(status: string) {
-    if (!status) return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
-    switch (status.toLowerCase()) {
-        case "active":
-            return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300 dark:border-red-700"
-        case "in progress":
-            return "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700"
-        case "resolved":
-            return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 border-green-300 dark:border-green-700"
-        default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300"
-    }
-}
+import { getSeverityColor, getStatusColor } from "../helpers/accident-helpers"
 
 export const accidentColumns: ColumnDef<AccidentReport>[] = [
     {
@@ -107,6 +78,26 @@ export const accidentColumns: ColumnDef<AccidentReport>[] = [
                     {[row.original.barangay, row.original.municipality, row.original.province]
                         .filter(Boolean)
                         .join(", ")}
+                </div>
+                <div className="pt-1 text-[10px] text-muted-foreground grid gap-0.5">
+                    <div className="flex items-center gap-1">
+                        <span className="font-medium">Coords:</span>
+                        {row.original.latitude?.toFixed(5)}, {row.original.longitude?.toFixed(5)}
+                    </div>
+                    {(row.original.location_quality || row.original.location_accuracy) && (
+                        <div className="flex items-center gap-2">
+                            {row.original.location_quality && (
+                                <div className="flex items-center gap-1">
+                                    <span className="font-medium">Qual:</span> {row.original.location_quality}
+                                </div>
+                            )}
+                            {row.original.location_accuracy && (
+                                <div className="flex items-center gap-1">
+                                    <span className="font-medium">Acc:</span> {row.original.location_accuracy}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         ),

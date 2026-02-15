@@ -7,6 +7,7 @@ import {
     IconChevronsLeft,
     IconChevronsRight,
     IconDownload,
+    IconLoader2,
 } from "@tabler/icons-react"
 import { flexRender } from "@tanstack/react-table"
 
@@ -166,7 +167,27 @@ export function AccidentDataTable({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={table.getAllColumns().length}
+                                    className="h-24 text-center"
+                                >
+                                    <div className="flex justify-center items-center h-full">
+                                        <IconLoader2 className="animate-spin text-muted-foreground" />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : error ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={accidentColumns.length}
+                                    className="h-24 text-center text-red-500"
+                                >
+                                    Error loading accident reports.
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
