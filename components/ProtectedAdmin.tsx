@@ -9,7 +9,10 @@ import { ReactNode, useEffect } from 'react'
 export default function ProtectedAdmin({ children }: { children: ReactNode }) {
     const router = useRouter()
     const { user } = useAppSelector((state) => state.auth);
-    const { data: profile, isLoading } = useGetUserProfileQuery({ user_id: user?.id as string }, {
+    const {
+        data: profile,
+        isLoading,
+    } = useGetUserProfileQuery({ user_id: user?.id as string }, {
         skip: !user?.id
     });
 
