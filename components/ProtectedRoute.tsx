@@ -1,25 +1,28 @@
 'use client'
+import { useGetUserProfileQuery } from '@/features/auth/api/authApi'
 import { useAppSelector } from '@/lib/redux/hooks'
 import { useRouter } from 'next/navigation'
 import React, { ReactNode, useEffect } from 'react'
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAppSelector((state) => state.auth)
+  const { user } = useAppSelector((state) => state.auth)
+  const { data: profile, isLoading } = useGetUserProfileQuery({ user_id: user?.id as string }, {
+    skip: !user?.id
+  });
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!user) {
       router.replace('/')
     }
-  }, [router, user, isLoading])
+  }, [router, user])
 
-  if (isLoading) {
-    return null
+
+  if (!user || isLoading || !profile) {
+    return <div>Loading...</div>
   }
 
-  if (!user) {
-    return null
-  }
+
 
   return <>{children}</>
 }

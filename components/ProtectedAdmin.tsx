@@ -1,27 +1,33 @@
 'use client'
+
+import { useGetUserProfileQuery } from '@/features/auth/api/authApi'
 import { useAppSelector } from '@/lib/redux/hooks'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 
 export default function ProtectedAdmin({ children }: { children: ReactNode }) {
     const router = useRouter()
-    const { profile, isLoading } = useAppSelector(state => state.auth)
+    const { user } = useAppSelector((state) => state.auth);
+    const { data: profile, isLoading } = useGetUserProfileQuery({ user_id: user?.id as string }, {
+        skip: !user?.id
+    });
 
     useEffect(() => {
-        if (!isLoading) {
-            if (!profile || profile.user_type !== 'admin') {
-                router.replace('/map')
+        if (!user) {
+            router.replace('/');
+            return;
+        }
+
+        if (!isLoading && profile) {
+            if (profile.profile.user_type !== 'admin') {
+                router.replace('/map');
             }
         }
-    }, [profile, router, isLoading])
+    }, [user, profile, isLoading, router]);
 
-    if (isLoading) {
-        return null // Or loading spinner
-    }
 
-    if (!profile || profile.user_type !== 'admin') {
-        return null
+    if (!user || isLoading || !profile) {
+        return <div>Loading...</div>
     }
 
     return <>{children}</>
