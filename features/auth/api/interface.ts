@@ -22,4 +22,5 @@ export interface Profile {
   mobileNo: string;
   avatarUrl?: string;
   created_at: string;
+  user_type: "blgu" | "lgu" | "admin";
 }
