@@ -6,19 +6,20 @@ import { useDirections } from "../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
-import { createDotMarkerIcon } from "./marker";
 import { ProfileSheet } from "./profile-sheet";
 import BottomReports from "./bottom-reports";
-import { Loader, MapIcon, Building2, Home } from "lucide-react";
+import { Loader, Building2, Home, EyeOff, Eye, X } from "lucide-react";
 import { AccidentZones } from "./accident-zones-lianga";
 import { MunicipalityAccidentZones } from "./surigao-zones";
-import { mockAccidentData } from "@/constant/mockData";
+import { Button } from "@/components/ui/button";
+import { createPinMarkerIcon } from "./marker";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
   const [showZones, setShowZones] = useState(true);
   const [zoneLevel, setZoneLevel] = useState<'municipality' | 'barangay'>('barangay');
+  const [showLegendSeverity, setShowLegendSeverity] = useState(true);
   const { data: allReports, isLoading, isError, refetch } = useGetAllReportsBystanderQuery();
   const reports = allReports?.reports || [];
 
@@ -74,10 +75,10 @@ export function MapContainerComponent() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {showZones && reports.length > 0 && (
+        {showZones && /* reports.length > 0 && */ (
           <>
             {zoneLevel === 'municipality' && <MunicipalityAccidentZones reports={reports} />}
-            {zoneLevel === 'barangay' && <AccidentZones reports={mockAccidentData} />}
+            {zoneLevel === 'barangay' && <AccidentZones reports={reports} />}
           </>
         )}
 
@@ -85,7 +86,7 @@ export function MapContainerComponent() {
           <Marker
             key={`marker-${index}-${report.id || index}`}
             position={[report.latitude, report.longitude]}
-            icon={createDotMarkerIcon(report.severity, 1)}
+            icon={createPinMarkerIcon(report.severity, 1)}
           >
             <MapPopup
               accident={report}
@@ -95,68 +96,101 @@ export function MapContainerComponent() {
         ))}
       </MapContainer>
 
-      <div className="absolute top-24 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={() => setShowZones(!showZones)}
-          className="bg-white rounded-lg shadow-lg px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors flex items-center gap-2"
-        >
-          <MapIcon className="w-4 h-4" />
-          {showZones ? "Hide" : "Show"} Zones
-        </button>
+      {!isOpen && (
+        <div className="absolute top-18 right-4 z-[1000] flex flex-col gap-2">
+          <Button
+            onClick={() => setShowZones(!showZones)}
+            className="bg-white rounded-lg shadow-lg bg-green-600 hover:bg-green-700 transition-colors  text-xs font-semibold text-white hover:text-white transition-colors flex items-center gap-1.5"
+          >
+            {showZones ? (
+              <EyeOff className="w-3.5 h-3.5 text-white" />
+            ) : (
+              <Eye className="w-3.5 h-3.5 text-white" />
+            )}
+            <span className="text-white">{showZones ? "Hide" : "Show"} Zones</span>
+          </Button>
 
-        {showZones && (
-          <div className="bg-white rounded-lg shadow-lg p-2 flex gap-1">
-            <button
-              onClick={() => setZoneLevel('municipality')}
-              className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors flex items-center gap-2 ${zoneLevel === 'municipality'
-                ? 'bg-blue-600 text-white'
-                : 'text-zinc-700 hover:bg-zinc-100'
-                }`}
-            >
-              <Building2 className="w-3 h-3" />
-              Municipality
-            </button>
-            <button
-              onClick={() => setZoneLevel('barangay')}
-              className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors flex items-center gap-2 ${zoneLevel === 'barangay'
-                ? 'bg-blue-600 text-white'
-                : 'text-zinc-700 hover:bg-zinc-100'
-                }`}
-            >
-              <Home className="w-3 h-3" />
-              Barangay
-            </button>
-          </div>
-        )}
-      </div>
-
-      {showZones && (
-        <div className="absolute bottom-24 right-4 z-[1000] bg-white rounded-lg shadow-lg p-4 text-sm max-w-[200px]">
-          <div className="font-semibold mb-2 text-zinc-900">
-            Severity Level
-            <div className="text-xs font-normal text-zinc-500 mt-1">
-              ({zoneLevel === 'municipality' ? 'Municipality' : 'Barangay'} Level)
+          {showZones && (
+            <div className="bg-white rounded-lg shadow-lg p-1 flex flex-col gap-1">
+              <button
+                onClick={() => setZoneLevel('municipality')}
+                className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${zoneLevel === 'municipality'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-zinc-700 hover:bg-zinc-100'
+                  }`}
+              >
+                <Building2 className="w-3 h-3" />
+                Municipality
+              </button>
+              <button
+                onClick={() => setZoneLevel('barangay')}
+                className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${zoneLevel === 'barangay'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-zinc-700 hover:bg-zinc-100'
+                  }`}
+              >
+                <Home className="w-3 h-3" />
+                Barangay
+              </button>
             </div>
+          )}
+        </div>
+      )}
+
+
+      {!isOpen && (
+        <Button
+          onClick={() => setShowLegendSeverity(!showLegendSeverity)}
+          className="absolute top-48 right-4 z-[1000] rounded-lg shadow-lg bg-red-600 hover:bg-red-700 transition-colors px-3 py-1.5 flex items-center gap-1.5"
+          title={showLegendSeverity ? "Hide legend" : "Show legend"}
+        >
+          {showLegendSeverity ? (
+            <EyeOff className="w-4 h-4 text-white" />
+          ) : (
+            <Eye className="w-4 h-4 text-white" />
+          )}
+          <span className="text-white text-xs font-semibold">Severity Level</span>
+        </Button>
+      )}
+
+
+      {!isOpen && (showZones && showLegendSeverity) && (
+        <div className="absolute bottom-24 left-4 z-[1000] bg-white rounded-lg shadow-lg p-3 text-xs max-w-[180px]">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="font-semibold text-zinc-900">
+                Severity Level
+              </div>
+              <div className="text-[10px] font-normal text-zinc-500 mt-0.5">
+                ({zoneLevel === 'municipality' ? 'Municipality' : 'Barangay'})
+              </div>
+            </div>
+            <button
+              onClick={() => setShowLegendSeverity(false)}
+              className="absolute text-zinc-400 hover:text-zinc-600 text-lg leading-none p-1 top-2 right-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-red-600 opacity-50 border border-red-800"></div>
-              <span className="text-zinc-700 text-xs">Critical</span>
+              <div className="w-3.5 h-3.5 rounded bg-red-600 opacity-50 border border-red-800"></div>
+              <span className="text-zinc-700">Critical</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-orange-600 opacity-40 border border-orange-800"></div>
-              <span className="text-zinc-700 text-xs">High</span>
+              <div className="w-3.5 h-3.5 rounded bg-orange-600 opacity-40 border border-orange-800"></div>
+              <span className="text-zinc-700">High</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-500 opacity-35 border border-yellow-700"></div>
-              <span className="text-zinc-700 text-xs">Moderate</span>
+              <div className="w-3.5 h-3.5 rounded bg-yellow-500 opacity-35 border border-yellow-700"></div>
+              <span className="text-zinc-700">Moderate</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-green-500 opacity-25 border border-green-700"></div>
-              <span className="text-zinc-700 text-xs">Minor</span>
+              <div className="w-3.5 h-3.5 rounded bg-green-500 opacity-25 border border-green-700"></div>
+              <span className="text-zinc-700">Minor</span>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-zinc-200 text-xs text-zinc-500">
+          <div className="mt-2.5 pt-2 border-t border-zinc-200 text-[10px] text-zinc-500">
             Most accidents area
           </div>
         </div>

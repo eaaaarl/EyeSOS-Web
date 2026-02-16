@@ -1,5 +1,4 @@
 import L from "leaflet";
-import { Report } from "../interface/get-all-reports-bystander.interface";
 
 export const createCircleMarkerIcon = (severity: string) => {
   const normalizedSeverity = severity?.toLowerCase() || 'minor';
@@ -115,7 +114,7 @@ export const createCircleMarkerIcon = (severity: string) => {
   });
 };
 
-export const createDotMarkerIcon = (severity: string, count: number = 1) => {
+export const createPinMarkerIcon = (severity: string, count: number = 1) => {
   const normalizedSeverity = severity?.toLowerCase() || 'minor';
   const severityColors = {
     'critical': '#DC2626',
@@ -123,106 +122,75 @@ export const createDotMarkerIcon = (severity: string, count: number = 1) => {
     'moderate': '#F59E0B',
     'minor': '#10B981'
   };
-
   const color = severityColors[normalizedSeverity as keyof typeof severityColors] || '#6B7280';
   const isCritical = normalizedSeverity === 'critical';
   const hasMultiple = count > 1;
-  const baseSize = 20; // Medium size for better balance
-  const borderWidth = 3; // Adjusted border for medium size
+  const pinWidth = 32;
+  const pinHeight = 40;
 
   return L.divIcon({
-    className: 'custom-dot-marker',
+    className: 'custom-pin-marker',
     html: `
       <div style="position: relative;">
         ${isCritical ? `
           <div style="
             position: absolute;
-            top: -8px;
-            left: -8px;
-            width: ${baseSize + 16}px;
-            height: ${baseSize + 16}px;
+            top: -4px;
+            left: -4px;
+            width: ${pinWidth + 8}px;
+            height: ${pinHeight + 8}px;
             background: ${color}30;
-            border-radius: 50%;
-            animation: pulse-dot 2s ease-out infinite;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            animation: pulse-pin 2s ease-out infinite;
+            z-index: 0;
           "></div>
           <style>
-            @keyframes pulse-dot {
-              0% { transform: scale(1); opacity: 0.8; }
-              100% { transform: scale(2); opacity: 0; }
+            @keyframes pulse-pin {
+              0% { transform: rotate(-45deg) scale(1); opacity: 0.8; }
+              100% { transform: rotate(-45deg) scale(1.5); opacity: 0; }
             }
           </style>
         ` : ''}
         
-        <div style="
-          width: ${baseSize}px;
-          height: ${baseSize}px;
-          background: ${color};
-          border: ${borderWidth}px solid white;
-          border-radius: 50%;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-          cursor: pointer;
-        "></div>
+        <!-- Pin Shape -->
+        <svg width="${pinWidth}" height="${pinHeight}" viewBox="0 0 32 40" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); position: relative; z-index: 1;">
+          <!-- Pin body -->
+          <path d="M16 0 C7.2 0 0 7.2 0 16 C0 24 16 40 16 40 S32 24 32 16 C32 7.2 24.8 0 16 0 Z" 
+                fill="${color}" 
+                stroke="white" 
+                stroke-width="2"/>
+          <!-- Inner circle -->
+          <circle cx="16" cy="16" r="8" fill="white" opacity="0.9"/>
+          <circle cx="16" cy="16" r="5" fill="${color}"/>
+        </svg>
         
         ${hasMultiple ? `
           <div style="
             position: absolute;
-            top: -12px;
-            right: -12px;
-            min-width: 24px;
-            height: 24px;
+            top: -8px;
+            right: -8px;
+            min-width: 22px;
+            height: 22px;
             background: #DC2626;
             color: white;
-            border: 3px solid white;
-            border-radius: 12px;
+            border: 2.5px solid white;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            padding: 0 6px;
+            padding: 0 5px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            z-index: 2;
           ">${count}</div>
         ` : ''}
       </div>
     `,
-    iconSize: [baseSize + (hasMultiple ? 24 : 0), baseSize + (hasMultiple ? 24 : 0)],
-    iconAnchor: [(baseSize + (hasMultiple ? 24 : 0)) / 2, (baseSize + (hasMultiple ? 24 : 0)) / 2],
-    popupAnchor: [0, -(baseSize + (hasMultiple ? 24 : 0)) / 2],
-  });
-};
-
-export const groupMarkersByLocation = (reports: Array<Report>) => {
-  const grouped = new Map<string, Array<Report>>();
-
-  reports.forEach(report => {
-    // Group by location with 6 decimal precision (~0.1m accuracy)
-    const key = `${report.latitude.toFixed(6)},${report.longitude.toFixed(6)}`;
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
-    }
-    grouped.get(key)!.push(report);
-  });
-
-  return Array.from(grouped.entries()).map(([location, items]) => {
-    const [lat, lng] = location.split(',').map(Number);
-
-    // Determine highest severity from all reports at this location
-    const highestSeverity = items.reduce((highest, item) => {
-      const severityOrder = ['critical', 'high', 'moderate', 'minor'];
-      const itemSeverity = item.severity?.toLowerCase() || 'minor';
-      const currentIndex = severityOrder.indexOf(itemSeverity);
-      const highestIndex = severityOrder.indexOf(highest);
-      return currentIndex !== -1 && currentIndex < highestIndex ? itemSeverity : highest;
-    }, 'minor');
-
-    return {
-      lat,
-      lng,
-      severity: highestSeverity,
-      count: items.length,
-      reports: items, // All reports at this location
-      primaryReport: items[0] // Use first report as primary for popup
-    };
+    iconSize: [pinWidth, pinHeight],
+    iconAnchor: [pinWidth / 2, pinHeight],
+    popupAnchor: [0, -pinHeight],
   });
 };
