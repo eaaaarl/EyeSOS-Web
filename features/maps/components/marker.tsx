@@ -125,8 +125,10 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
   const color = severityColors[normalizedSeverity as keyof typeof severityColors] || '#6B7280';
   const isCritical = normalizedSeverity === 'critical';
   const hasMultiple = count > 1;
-  const pinWidth = 32;
-  const pinHeight = 40;
+
+  // smaller pin size
+  const pinWidth = 24;
+  const pinHeight = 32;
 
   return L.divIcon({
     className: 'custom-pin-marker',
@@ -135,10 +137,10 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
         ${isCritical ? `
           <div style="
             position: absolute;
-            top: -4px;
-            left: -4px;
-            width: ${pinWidth + 8}px;
-            height: ${pinHeight + 8}px;
+            top: -3px;
+            left: -3px;
+            width: ${pinWidth + 6}px;
+            height: ${pinHeight + 6}px;
             background: ${color}30;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
@@ -152,37 +154,34 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
             }
           </style>
         ` : ''}
-        
+
         <!-- Pin Shape -->
-        <svg width="${pinWidth}" height="${pinHeight}" viewBox="0 0 32 40" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); position: relative; z-index: 1;">
-          <!-- Pin body -->
+        <svg width="${pinWidth}" height="${pinHeight}" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); position: relative; z-index: 1;">
+          <!-- Pin body without border -->
           <path d="M16 0 C7.2 0 0 7.2 0 16 C0 24 16 40 16 40 S32 24 32 16 C32 7.2 24.8 0 16 0 Z" 
-                fill="${color}" 
-                stroke="white" 
-                stroke-width="2"/>
-          <!-- Inner circle -->
-          <circle cx="16" cy="16" r="8" fill="white" opacity="0.9"/>
-          <circle cx="16" cy="16" r="5" fill="${color}"/>
+                fill="${color}" />
+          <!-- Inner circles -->
+          <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
+          <circle cx="16" cy="16" r="4" fill="${color}"/>
         </svg>
-        
+
         ${hasMultiple ? `
           <div style="
             position: absolute;
-            top: -8px;
-            right: -8px;
-            min-width: 22px;
-            height: 22px;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
             background: #DC2626;
             color: white;
-            border: 2.5px solid white;
-            border-radius: 11px;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
-            padding: 0 5px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            padding: 0 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             z-index: 2;
           ">${count}</div>
@@ -194,3 +193,4 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
     popupAnchor: [0, -pinHeight],
   });
 };
+

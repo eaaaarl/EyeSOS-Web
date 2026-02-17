@@ -116,8 +116,8 @@ export const accidentColumns: ColumnDef<AccidentReport>[] = [
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
-            <Badge className={getStatusColor(row.original.status)}>
-                {row.original.status || "Unknown"}
+            <Badge className={getStatusColor(row.original.accident_status)}>
+                {row.original.accident_status || "Unknown"}
             </Badge>
         ),
     },

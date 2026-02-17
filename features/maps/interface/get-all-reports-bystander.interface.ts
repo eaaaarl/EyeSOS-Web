@@ -3,7 +3,7 @@ export interface Report {
   created_at: string;
   updated_at: string;
   report_number: string;
-  severity: "minor" | "moderate" | "major" | string; // adjust if you have fixed values
+  severity: "minor" | "moderate" | "high" | "critical"; // adjust if you have fixed values
   reported_by: string;
   reporter_name: string;
   reporter_contact: string;
@@ -15,9 +15,13 @@ export interface Report {
   municipality: string | null;
   province: string | null;
   landmark: string | null;
-  imageUrl: string[];
   location_accuracy?: string;
   location_quality?: string;
+  accident_images: {
+    id: string;
+    url: string;
+    created_at: string;
+  }[];
 }
 
 export interface ReportsResponse {

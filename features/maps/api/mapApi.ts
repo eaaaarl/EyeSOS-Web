@@ -12,7 +12,9 @@ export const mapApi = createApi({
   endpoints: (builder) => ({
     getAllReportsBystander: builder.query<ReportsResponse, void>({
       queryFn: async () => {
-        const { data, error } = await supabase.from("accidents").select("*");
+        const { data, error } = await supabase
+          .from("accidents")
+          .select("*, accident_images(*)");
 
         console.log("data: ", JSON.stringify(data));
 

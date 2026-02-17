@@ -77,12 +77,14 @@ export const adminApi = createApi({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("accidents")
-          .select("*")
+          .select("*, accident_images(*)")
           .order("updated_at", { ascending: false });
 
         if (error) {
           return { error: error.message };
         }
+
+        console.log("accidents response:", data);
 
         return {
           data: {
