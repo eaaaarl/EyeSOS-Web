@@ -14,12 +14,18 @@ import {
     IconMapPin,
     IconPhone,
     IconUser,
+    IconPhoto,
 } from "@tabler/icons-react"
 import { getSeverityColor } from '../../helpers/accident-helpers'
 import { AccidentReport } from '../../api/interface'
+import { useState } from 'react'
+import Image from 'next/image'
 
 
 export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
+    const [imgError, setImgError] = useState(false)
+    const [imgLoading, setImgLoading] = useState(true)
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -53,6 +59,38 @@ export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
                             </Badge>
                         </div> */}
                     </div>
+
+                    {report.accident_images.length > 0 && (
+                        <div className="space-y-2">
+                            <Label className="text-muted-foreground text-xs flex items-center gap-1">
+                                <IconPhoto className="size-3.5" />
+                                Report Image
+                            </Label>
+                            {!imgError ? (
+                                <div className="relative rounded-lg overflow-hidden border bg-muted/40 aspect-video">
+                                    {imgLoading && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted/40 animate-pulse">
+                                            <IconPhoto className="size-8 text-muted-foreground/40" />
+                                            <span className="text-xs text-muted-foreground">Loading image...</span>
+                                        </div>
+                                    )}
+                                    <Image
+                                        src={report.accident_images[0].url}
+                                        alt={`Accident report ${report.report_number}`}
+                                        fill
+                                        className={`object-contain transition-opacity duration-300 ${imgLoading ? 'opacity-0' : 'opacity-100'}`}
+                                        onLoad={() => setImgLoading(false)}
+                                        onError={() => { setImgLoading(false); setImgError(true) }}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="rounded-lg border bg-muted/40 aspect-video flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                                    <IconPhoto className="size-8 opacity-40" />
+                                    <p className="text-xs">Image could not be loaded</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="space-y-3">
                         <Label className="text-muted-foreground text-xs">Location Details</Label>

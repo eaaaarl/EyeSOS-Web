@@ -44,10 +44,15 @@ export interface AccidentReport {
   municipality: string | null;
   province: string | null;
   landmark: string | null;
-  imageUrl: string[];
   location_accuracy?: string;
   location_quality?: string;
-  status: string; // Kept for compatibility with existing table logic
+  status: string;
+  accident_images: AccidentImage[];
+}
+
+export interface AccidentImage {
+  id: string;
+  url: string;
 }
 
 export interface AllAccidentsResponse {
