@@ -46,7 +46,7 @@ export interface AccidentReport {
   landmark: string | null;
   location_accuracy?: string;
   location_quality?: string;
-  status: string;
+  accident_status: string;
   accident_images: AccidentImage[];
 }
 
