@@ -15,9 +15,13 @@ export interface Report {
   municipality: string | null;
   province: string | null;
   landmark: string | null;
-  imageUrl: string[];
   location_accuracy?: string;
   location_quality?: string;
+  accident_images: {
+    id: string;
+    url: string;
+    created_at: string;
+  }[];
 }
 
 export interface ReportsResponse {

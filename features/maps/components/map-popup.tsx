@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
+import Image from "next/image";
 
 interface MapPopupProps {
   accident: Report;
@@ -151,12 +152,15 @@ export function MapPopup({
           </p>
         </div>
 
-        {selectedReport.imageUrl && selectedReport.imageUrl.length > 0 && (
-          <img
-            src={selectedReport.imageUrl[0]}
-            alt="Accident scene"
-            className="w-full h-24 object-cover rounded mb-2"
-          />
+        {selectedReport.accident_images && selectedReport.accident_images.length > 0 && (
+          <div className="relative w-full h-32">
+            <Image
+              src={selectedReport.accident_images[0].url}
+              alt="Accident scene"
+              className="w-full h-full object-contain rounded mb-2"
+              fill
+            />
+          </div>
         )}
 
         {selectedReport.reporter_notes && (
