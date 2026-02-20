@@ -7,17 +7,11 @@ import {
   AlertTriangle,
   AlertCircle,
   MapPin,
-  User,
-  FileText,
   Navigation,
   Eye,
-  Crosshair,
-  Signal,
-  Phone,
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
-import Image from "next/image";
 
 interface MapPopupProps {
   accident: Report;
@@ -26,52 +20,17 @@ interface MapPopupProps {
   totalCount?: number;
 }
 
-// Helper function to get location quality color and label
-const getLocationQualityInfo = (quality?: string) => {
-  if (!quality) return { color: "bg-gray-100 text-gray-700", label: "Unknown", icon: "text-gray-500" };
-
-  const q = quality.toLowerCase();
-  if (q === "high" || q === "excellent") {
-    return { color: "bg-green-100 text-green-800", label: quality, icon: "text-green-600" };
-  } else if (q === "medium" || q === "good") {
-    return { color: "bg-yellow-100 text-yellow-800", label: quality, icon: "text-yellow-600" };
-  } else if (q === "low" || q === "poor") {
-    return { color: "bg-red-100 text-red-800", label: quality, icon: "text-red-600" };
-  }
-  return { color: "bg-gray-100 text-gray-700", label: quality, icon: "text-gray-500" };
-};
-
-// Helper function to format accuracy
-const formatAccuracy = (accuracy?: string) => {
-  if (!accuracy) return "N/A";
-
-  // If it's a number, assume it's in meters
-  const numAccuracy = parseFloat(accuracy);
-  if (!isNaN(numAccuracy)) {
-    if (numAccuracy < 1000) {
-      return `±${numAccuracy.toFixed(0)}m`;
-    } else {
-      return `±${(numAccuracy / 1000).toFixed(1)}km`;
-    }
-  }
-
-  return accuracy;
-};
-
 export function MapPopup({
   accident,
   onGetDirections,
   additionalReports,
   totalCount = 1
 }: MapPopupProps) {
-  const [selectedReport, setSelectedReport] = useState<Report>(accident);
+  const selectedReport = accident;
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
-
-  const locationQualityInfo = getLocationQualityInfo(selectedReport.location_quality);
-  const formattedAccuracy = formatAccuracy(selectedReport.location_accuracy);
 
   const handleGetDirectionsClick = (lat: number, lng: number) => {
     setPendingCoordinates({ lat, lng });
@@ -87,191 +46,74 @@ export function MapPopup({
 
   return (
     <Popup maxWidth={280} className="custom-popup">
-      <div className="w-[240px] font-sans">
+      <div className="w-[210px] font-sans">
         {hasMultipleReports && (
-          <div className="bg-orange-50 border-l-4 border-orange-600 p-1.5 mb-2 rounded">
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-orange-600 shrink-0" />
+          <div className="bg-orange-50 border-l-2 border-orange-600 p-1 mb-1.5 rounded">
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-orange-600 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-orange-900">
+                <p className="text-[10px] font-bold text-orange-900 leading-none">
                   {totalCount} REPORTS
                 </p>
-                <p className="text-[10px] text-orange-700">
-                  Multiple reports at this location
+                <p className="text-[9px] text-orange-700 leading-tight">
+                  Multiple reports here
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {selectedReport.severity.toLowerCase() === "critical" && (
-          <div className="bg-red-50 border-l-4 border-red-600 p-1.5 mb-2 rounded">
-            <div className="flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+        {(selectedReport.severity.toLowerCase() === "critical" || selectedReport.severity.toLowerCase() === "high") && (
+          <div className={`${selectedReport.severity.toLowerCase() === "critical" ? "bg-red-50 border-red-600" : "bg-orange-50 border-orange-600"} border-l-2 p-1 mb-1.5 rounded`}>
+            <div className="flex items-center gap-1">
+              <AlertCircle className={`w-3.5 h-3.5 ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-600" : "text-orange-600"} shrink-0`} />
               <div>
-                <p className="text-xs font-bold text-red-900">URGENT</p>
-                <p className="text-[10px] text-red-700">Immediate attention needed</p>
+                <p className={`text-[10px] font-bold ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-900" : "text-orange-900"} uppercase leading-none`}>
+                  {selectedReport.severity.toLowerCase() === "critical" ? "Urgent" : "High Risk"}
+                </p>
+                <p className={`text-[9px] ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-700" : "text-orange-700"} leading-tight`}>
+                  {selectedReport.severity.toLowerCase() === "critical" ? "Immediate attention" : "Dangerous road condition"}
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {hasMultipleReports && (
-          <div className="mb-2">
-            <label className="text-[10px] font-semibold text-gray-700 mb-0.5 block">
-              SELECT REPORT:
-            </label>
-            <select
-              value={selectedReport.id}
-              onChange={(e) => {
-                const report = additionalReports.find(r => r.id === e.target.value);
-                if (report) setSelectedReport(report);
-              }}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {additionalReports.map((report, idx) => (
-                <option key={report.id} value={report.id}>
-                  #{idx + 1} - {report.severity} - {new Date(report.created_at).toLocaleTimeString()}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="mb-2">
-          <div className="flex justify-between items-center mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Accident Report
+        <div className="mb-1.5">
+          <div className="flex justify-between items-center mb-0.5">
+            <h3 className="text-[10px] font-bold text-gray-900">
+              #{selectedReport.report_number}
             </h3>
-            <span className={`${getSeverityColor(selectedReport.severity)} text-white px-1.5 py-0.5 rounded text-[10px] font-semibold`}>
-              {selectedReport.severity.toUpperCase()}
+            <span className={`${getSeverityColor(selectedReport.severity)} text-white px-1 py-0.5 rounded text-[8px] font-bold uppercase`}>
+              {selectedReport.severity}
             </span>
           </div>
-          <p className="text-[10px] text-gray-600">
-            #{selectedReport.report_number} • {DateTime.fromISO(selectedReport.created_at).toFormat("MMM dd, h:mm a")}
+          <p className="text-[9px] text-gray-500 font-medium">
+            {DateTime.fromISO(selectedReport.created_at).toFormat("MMM dd, h:mm a")}
           </p>
         </div>
 
-        {selectedReport.accident_images && selectedReport.accident_images.length > 0 && (
-          <div className="relative w-full h-32">
-            <Image
-              src={selectedReport.accident_images[0].url}
-              alt="Accident scene"
-              className="w-full h-full object-contain rounded mb-2"
-              fill
-            />
-          </div>
-        )}
-
-        {selectedReport.reporter_notes && (
-          <div className="mb-2">
-            <p className="text-xs leading-tight text-gray-700 line-clamp-2">
-              {selectedReport.reporter_notes}
-            </p>
-          </div>
-        )}
-
-        <div className="bg-gray-50 p-1.5 rounded mb-2 space-y-1.5">
-          <div>
-            <div className="flex items-center gap-1 mb-0.5">
-              <MapPin className="w-3 h-3 text-gray-600" />
-              <p className="text-[10px] text-gray-600 font-semibold">
-                LOCATION
-              </p>
-            </div>
-            <p className="text-xs text-gray-900 mt-0.5 line-clamp-2">
-              {selectedReport.location_address}
-            </p>
-          </div>
-
-          {/* Location Quality and Accuracy */}
-          <div className="flex gap-2 pt-1 border-t border-gray-200">
-            <div className="flex-1">
-              <div className="flex items-center gap-1 mb-0.5">
-                <Signal className={`w-3 h-3 ${locationQualityInfo.icon}`} />
-                <p className="text-[9px] text-gray-500 font-semibold">
-                  QUALITY
-                </p>
-              </div>
-              <span className={`${locationQualityInfo.color} px-1.5 py-0.5 rounded text-[9px] font-semibold inline-block`}>
-                {locationQualityInfo.label}
-              </span>
-            </div>
-
-            <div className="flex-1">
-              <div className="flex items-center gap-1 mb-0.5">
-                <Crosshair className="w-3 h-3 text-gray-600" />
-                <p className="text-[9px] text-gray-500 font-semibold">
-                  ACCURACY
-                </p>
-              </div>
-              <span className="text-[10px] text-gray-900 font-semibold">
-                {formattedAccuracy}
-              </span>
-            </div>
-          </div>
-
-          {/* Reporter Information */}
-          <div className="pt-1 border-t border-gray-200">
-            <div className="flex items-center gap-1 mb-0.5">
-              <User className="w-3 h-3 text-gray-600" />
-              <p className="text-[10px] text-gray-600 font-semibold">
-                REPORTER
-              </p>
-            </div>
-            <p className="text-xs text-gray-900 mt-0.5">
-              {selectedReport.reporter_name}
-            </p>
-            {selectedReport.reporter_contact && (
-              <div className="flex items-center gap-1 mt-1">
-                <Phone className="w-3 h-3 text-gray-600" />
-                <p className="text-xs text-gray-900">
-                  {selectedReport.reporter_contact}
-                </p>
-              </div>
-            )}
-          </div>
+        <div className="flex items-start gap-1 mb-2">
+          <MapPin className="w-3 h-3 text-gray-500 shrink-0 mt-[1px]" />
+          <span className="text-[10px] text-gray-600 leading-tight line-clamp-2">
+            {selectedReport.location_address}
+          </span>
         </div>
 
-        {hasMultipleReports && (
-          <div className="bg-blue-50 p-1.5 rounded mb-2">
-            <div className="flex items-center gap-1 mb-1">
-              <FileText className="w-3 h-3 text-blue-900" />
-              <p className="text-[10px] font-semibold text-blue-900">
-                ALL REPORTS:
-              </p>
-            </div>
-            <div className="space-y-0.5 max-h-20 overflow-y-auto">
-              {additionalReports.map((report, idx) => (
-                <div
-                  key={report.id}
-                  className={`text-[10px] p-1 rounded cursor-pointer transition-colors ${selectedReport.id === report.id
-                    ? 'bg-blue-200 border border-blue-400'
-                    : 'bg-white border border-blue-200 hover:bg-blue-100'
-                    }`}
-                  onClick={() => setSelectedReport(report)}
-                >
-                  <span className="font-semibold">#{idx + 1}</span> - {report.severity} - {report.reporter_name}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-1.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => handleGetDirectionsClick(selectedReport.latitude, selectedReport.longitude)}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
           >
-            <Navigation className="w-3.5 h-3.5" />
-            Get Directions
+            <Navigation className="w-3 h-3" />
+            Navigate
           </button>
           <button
             onClick={() => setIsDetailsOpen(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
           >
-            <Eye className="w-3.5 h-3.5" />
-            View Full Details
+            <Eye className="w-3 h-3" />
+            Full Details
           </button>
         </div>
       </div>
