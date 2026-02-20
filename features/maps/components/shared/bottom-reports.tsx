@@ -1,11 +1,11 @@
 "use client";
 import { useState } from 'react';
 import { MapPin, ChevronUp, ChevronDown, MessageCircleWarning } from 'lucide-react';
-import { Report } from '../interface/get-all-reports-bystander.interface';
-import { getSeverityColor } from '../utils/severityColor';
+import { Report } from "../../interfaces/get-all-reports-bystander.interface";
+import { getSeverityColor } from "../../utils/severityColor";
 import { DateTime } from 'luxon';
-import { AccidentReportDetailsDialog } from './accident-report-details-dialog';
-import { ResponderConfirmationDialog } from './responder-confirmation-dialog';
+import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
+import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
 
 interface BottomReportsProps {
   reports?: Report[];
