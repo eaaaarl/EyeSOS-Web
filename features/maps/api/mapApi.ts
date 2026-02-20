@@ -3,7 +3,7 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import {
   ReportsResponse,
   Report,
-} from "../interface/get-all-reports-bystander.interface";
+} from "../interfaces/get-all-reports-bystander.interface";
 
 export const mapApi = createApi({
   reducerPath: "mapApi",

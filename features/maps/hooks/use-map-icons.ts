@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import { useGetAllReportsBystanderQuery } from "../api/mapApi";
-import { createCircleMarkerIcon } from "../components/marker";
+import { createCircleMarkerIcon } from "../components/map/marker";
 
 export function useMapIcons() {
   const [icons, setIcons] = useState<Map<number, L.DivIcon>>(new Map());
@@ -14,7 +14,7 @@ export function useMapIcons() {
     allReports?.reports.forEach((accident) => {
       iconMap.set(
         Number(accident.id),
-        createCircleMarkerIcon(accident.severity)
+        createCircleMarkerIcon(accident.severity),
       );
     });
     setTimeout(() => {

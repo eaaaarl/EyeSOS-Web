@@ -23,7 +23,7 @@ import {
   ImageOff,
 } from "lucide-react";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
-import { Report } from "@/features/maps/interface/get-all-reports-bystander.interface";
+import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import Image from "next/image";
 
 interface AccidentReportDetailsDialogProps {

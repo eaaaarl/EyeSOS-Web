@@ -1,4 +1,4 @@
-import { Report } from "../interface/get-all-reports-bystander.interface";
+import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 
 interface MapNavigationProps {
   onMenuClick: () => void;

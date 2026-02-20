@@ -1,2 +1,1 @@
-export { MapContainerComponent as default } from "./components/map-container";
-
+export { MapContainerComponent as default } from "./components/map/map-container";

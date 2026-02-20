@@ -1,6 +1,6 @@
 import { Popup } from "react-leaflet";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
-import { Report } from "../interface/get-all-reports-bystander.interface";
+import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { useState } from "react";
 import { DateTime } from "luxon";
 import {
@@ -10,8 +10,8 @@ import {
   Navigation,
   Eye,
 } from "lucide-react";
-import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
-import { ResponderConfirmationDialog } from "./responder-confirmation-dialog";
+import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
+import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
 
 interface MapPopupProps {
   accident: Report;

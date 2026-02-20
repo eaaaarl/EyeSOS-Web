@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useDirections } from "../hooks/use-directions";
+import { useDirections } from "../../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
-import { useGetAllReportsBystanderQuery } from "../api/mapApi";
-import { ProfileSheet } from "./profile-sheet";
-import BottomReports from "./bottom-reports";
+import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
+import { ProfileSheet } from "../dialogs/profile-sheet";
+import BottomReports from "../shared/bottom-reports";
 import { Loader, EyeOff, Eye, X, AlertCircle } from "lucide-react";
 import { createPinMarkerIcon } from "./marker";
-import { AccidentRiskRoads } from "./accident-risk-roads";
+import { AccidentRiskRoads } from "../layers/accident-risk-roads";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
