@@ -11,6 +11,9 @@ import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
 import { AccidentRiskRoads } from "../layers/accident-risk-roads";
 import { ProfileSheet } from "../dialogs/profile-sheet";
 import BottomReports from "../shared/bottom-reports";
+import L from "leaflet";
+
+
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
@@ -25,7 +28,10 @@ export function MapContainerComponent() {
   const reports = allReports?.reports || [];
 
   const mlPredictions = undefined;
-
+  const philippinesBounds = L.latLngBounds(
+    [4.5, 116.0],
+    [21.5, 127.0]
+  );
   return (
     <div className="h-screen w-screen relative">
       <style>{`
@@ -61,6 +67,9 @@ export function MapContainerComponent() {
         zoom={12.5}
         className="h-full w-full z-0"
         zoomControl={false}
+        maxBounds={philippinesBounds}
+        maxBoundsViscosity={1.0}
+        minZoom={6}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
