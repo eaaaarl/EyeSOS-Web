@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useDirections } from "../../hooks/use-directions";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
-import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
-import { ProfileSheet } from "../dialogs/profile-sheet";
-import BottomReports from "../shared/bottom-reports";
 import { Loader, EyeOff, Eye, X, AlertCircle } from "lucide-react";
 import { createPinMarkerIcon } from "./marker";
+import { useDirections } from "../../hooks/use-directions";
+import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
 import { AccidentRiskRoads } from "../layers/accident-risk-roads";
+import { ProfileSheet } from "../dialogs/profile-sheet";
+import BottomReports from "../shared/bottom-reports";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
@@ -89,58 +89,60 @@ export function MapContainerComponent() {
         ))}
       </MapContainer>
 
-      {/* ── Road risk loading indicator ── */}
-      {showRiskRoads && roadsLoading && (
-        <div className="absolute top-16 left-4 z-[1000] bg-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-left duration-300">
-          <Loader className="w-4 h-4 animate-spin text-blue-600" />
-          <span className="text-sm font-semibold text-zinc-900">Loading road risk data…</span>
-        </div>
-      )}
+      {/* ── Unified status indicators ── */}
+      {((showRiskRoads && (roadsLoading || roadsError)) || isLoading || isError) && (
+        <div className="absolute top-16 left-4 z-[1000] flex flex-col gap-1.5 animate-in fade-in slide-in-from-left duration-300">
 
-      {/* ── Road risk error banner ── */}
-      {showRiskRoads && roadsError && (
-        <div className="absolute top-16 left-4 z-[1000] bg-red-50 border border-red-200 rounded-xl shadow-lg px-4 py-3 max-w-xs animate-in fade-in slide-in-from-left duration-300">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-red-800">Road data unavailable</p>
-              <p className="text-xs text-red-600 mt-0.5">{roadsError}</p>
+          {showRiskRoads && roadsLoading && (
+            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm border border-zinc-200 rounded-lg shadow-md px-3 py-2">
+              <Loader className="w-3.5 h-3.5 animate-spin text-blue-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-zinc-700 whitespace-nowrap">Loading road risks…</span>
+            </div>
+          )}
+
+          {showRiskRoads && roadsError && (
+            <div className="flex items-center gap-2 bg-red-50/95 backdrop-blur-sm border border-red-200 rounded-lg shadow-md px-3 py-2">
+              <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-red-700 whitespace-nowrap">Road data unavailable</span>
               <button
                 onClick={() => {
                   setRoadsError(null);
                   (window as unknown as { __retryRoadFetch?: () => void }).__retryRoadFetch?.();
                 }}
-                className="mt-1.5 text-xs font-bold text-red-700 underline hover:text-red-900"
+                className="ml-1 text-[10px] font-bold text-red-600 underline hover:text-red-800 whitespace-nowrap"
               >
                 Retry
               </button>
             </div>
-          </div>
+          )}
+
+          {isLoading && (
+            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm border border-zinc-200 rounded-lg shadow-md px-3 py-2">
+              <Loader className="w-3.5 h-3.5 animate-spin text-red-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-zinc-700 whitespace-nowrap">Loading emergencies…</span>
+            </div>
+          )}
+
+          {isError && (
+            <div className="flex items-center gap-2 bg-red-50/95 backdrop-blur-sm border border-red-200 rounded-lg shadow-md px-3 py-2">
+              <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-red-700 whitespace-nowrap">Failed to load reports</span>
+              <button
+                onClick={() => refetch()}
+                className="ml-1 text-[10px] font-bold text-red-600 underline hover:text-red-800 whitespace-nowrap"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
         </div>
       )}
 
-      {isLoading && (
-        <div className="absolute top-36 left-4 z-[1000] bg-white rounded-xl shadow-lg p-4 max-w-sm animate-in fade-in slide-in-from-left duration-300">
-          <div className="flex items-center gap-4">
-            <Loader className="w-4 h-4 animate-spin text-red-600" />
-            <h3 className="text-sm font-semibold text-zinc-900">Loading emergencies…</h3>
-          </div>
-        </div>
-      )}
-
-      {isError && (
-        <div className="absolute top-36 left-4 z-[1000] bg-red-50 rounded-xl shadow-lg p-4 max-w-sm animate-in fade-in slide-in-from-left duration-300">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="text-sm font-semibold text-zinc-900">Failed to load emergencies</h3>
-            <button onClick={() => refetch()} className="text-sm font-semibold text-red-600 hover:text-red-700 px-3 py-1 rounded-lg hover:bg-red-100">
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* ── Compact grouped toggle buttons (top-right) ── */}
       {!isOpen && (
         <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-1">
+          {/* Risk Roads toggle */}
           <button
             onClick={() => setShowRiskRoads(!showRiskRoads)}
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-md transition-all whitespace-nowrap"
@@ -151,6 +153,7 @@ export function MapContainerComponent() {
             {showRiskRoads ? "Hide" : "Show"} Risk Roads
           </button>
 
+          {/* Severity legend toggle */}
           <button
             onClick={() => setShowLegend(!showLegend)}
             className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-md transition-all whitespace-nowrap"
@@ -163,6 +166,7 @@ export function MapContainerComponent() {
         </div>
       )}
 
+      {/* ── Legend ── */}
       {!isOpen && showRiskRoads && showLegend && (
         <div className="absolute bottom-24 left-4 z-[1000] bg-white rounded-lg shadow-lg p-3 text-xs max-w-[190px]">
           <div className="relative flex items-start justify-between mb-2">
