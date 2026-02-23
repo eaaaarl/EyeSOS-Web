@@ -64,17 +64,18 @@ export function MapPopup({
         )}
 
         {(selectedReport.severity.toLowerCase() === "critical" || selectedReport.severity.toLowerCase() === "high") && (
-          <div className={`${selectedReport.severity.toLowerCase() === "critical" ? "bg-red-50 border-red-600" : "bg-orange-50 border-orange-600"} border-l-2 p-1 mb-1.5 rounded`}>
-            <div className="flex items-center gap-1">
-              <AlertCircle className={`w-3.5 h-3.5 ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-600" : "text-orange-600"} shrink-0`} />
-              <div>
-                <p className={`text-[10px] font-bold ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-900" : "text-orange-900"} uppercase leading-none`}>
-                  {selectedReport.severity.toLowerCase() === "critical" ? "Urgent" : "High Risk"}
-                </p>
-                <p className={`text-[9px] ${selectedReport.severity.toLowerCase() === "critical" ? "text-red-700" : "text-orange-700"} leading-tight`}>
-                  {selectedReport.severity.toLowerCase() === "critical" ? "Immediate attention" : "Dangerous road condition"}
-                </p>
-              </div>
+          <div className={`flex items-center gap-2 px-2 py-1.5 mb-1.5 rounded-md ${selectedReport.severity.toLowerCase() === "critical"
+            ? "bg-red-100 text-red-700"
+            : "bg-orange-100 text-orange-700"
+            }`}>
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase leading-tight tracking-wide">
+                {selectedReport.severity.toLowerCase() === "critical" ? "Urgent Response Needed" : "High Risk Incident"}
+              </span>
+              <span className="text-[9px] leading-tight opacity-80">
+                {selectedReport.severity.toLowerCase() === "critical" ? "Immediate attention required" : "Dangerous road condition"}
+              </span>
             </div>
           </div>
         )}

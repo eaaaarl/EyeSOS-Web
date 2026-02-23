@@ -18,8 +18,8 @@ import L from "leaflet";
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
-  const [showRiskRoads, setShowRiskRoads] = useState(true);
-  const [showLegend, setShowLegend] = useState(true);
+  const [showRiskRoads, setShowRiskRoads] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const [roadsLoading, setRoadsLoading] = useState(true);
   const [roadsError, setRoadsError] = useState<string | null>(null);
@@ -163,15 +163,17 @@ export function MapContainerComponent() {
           </button>
 
           {/* Severity legend toggle */}
-          <button
-            onClick={() => setShowLegend(!showLegend)}
-            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-md transition-all whitespace-nowrap"
-          >
-            {showLegend
-              ? <EyeOff className="w-3 h-3 shrink-0" />
-              : <Eye className="w-3 h-3 shrink-0" />}
-            Severity Level
-          </button>
+          {showRiskRoads && (
+            <button
+              onClick={() => setShowLegend(!showLegend)}
+              className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-md transition-all whitespace-nowrap"
+            >
+              {showLegend
+                ? <EyeOff className="w-3 h-3 shrink-0" />
+                : <Eye className="w-3 h-3 shrink-0" />}
+              Severity Level
+            </button>
+          )}
         </div>
       )}
 
