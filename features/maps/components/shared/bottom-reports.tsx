@@ -24,10 +24,14 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
     setIsConfirmationOpen(true);
   };
 
-  const handleConfirmResponse = () => {
-    if (pendingCoordinates) {
-      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-      setPendingCoordinates(null);
+  const handleConfirmResponse = async () => {
+    if (pendingCoordinates && selectedReport) {
+      try {
+        onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+        setPendingCoordinates(null);
+      } catch (error) {
+        console.error("Failed to update status:", error);
+      }
     }
   };
 

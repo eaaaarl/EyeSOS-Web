@@ -4,6 +4,7 @@ import {
   ReportsResponse,
   Report,
 } from "../interfaces/get-all-reports-bystander.interface";
+import { sendAccidentResponse } from "./interface";
 
 export const mapApi = createApi({
   reducerPath: "mapApi",
@@ -15,8 +16,6 @@ export const mapApi = createApi({
         const { data, error } = await supabase
           .from("accidents")
           .select("*, accident_images(*)");
-
-        console.log("data: ", JSON.stringify(data));
 
         if (error) {
           return {
@@ -50,8 +49,6 @@ export const mapApi = createApi({
               "postgres_changes",
               { event: "*", schema: "public", table: "accidents" },
               (payload) => {
-                console.log("Payload", JSON.stringify(payload));
-
                 updateCachedData((draft) => {
                   if (payload.eventType === "INSERT") {
                     draft.reports.unshift(payload.new as Report);
@@ -71,22 +68,55 @@ export const mapApi = createApi({
                 });
               },
             )
-            .subscribe((status) => {
-              if (status === "SUBSCRIBED") {
-                console.log("✅ RTK Query realtime active!");
-              }
-            });
+            .subscribe();
 
           await cacheEntryRemoved;
-
-          console.log("🔌 Cleaning up RTK Query realtime");
           supabase.removeChannel(channel);
         } catch (error) {
           console.error("❌ RTK Query realtime error:", error);
         }
       },
     }),
+
+    sendAccidentResponse: builder.mutation<
+      { status: boolean; message: string },
+      sendAccidentResponse
+    >({
+      queryFn: async ({
+        accidentId,
+        actionTaken,
+        responderId,
+        responseType,
+      }) => {
+        const { error } = await supabase.from("accident_responses").insert({
+          accident_id: accidentId,
+          responder_id: responderId,
+          action_taken: actionTaken,
+          response_type: responseType,
+          response_notes: null,
+          responded_at: new Date().toISOString(),
+        });
+
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+        return {
+          data: {
+            status: true,
+            message: "Accident response added.",
+          },
+        };
+      },
+      invalidatesTags: ["getAccidents"],
+    }),
   }),
 });
 
-export const { useGetAllReportsBystanderQuery } = mapApi;
+export const {
+  useGetAllReportsBystanderQuery,
+  useSendAccidentResponseMutation,
+} = mapApi;
