@@ -1,4 +1,4 @@
-import { Popup } from "react-leaflet";
+import { Popup, useMap } from "react-leaflet";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { useState } from "react";
@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
+import { useSendAccidentResponseMutation } from "../../api/mapApi";
+import { toast } from "sonner";
 
 interface MapPopupProps {
   accident: Report;
@@ -32,20 +34,36 @@ export function MapPopup({
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
 
+  const [sendAccidentResponse, { isLoading }] = useSendAccidentResponseMutation();
+
   const handleGetDirectionsClick = (lat: number, lng: number) => {
     setPendingCoordinates({ lat, lng });
     setIsConfirmationOpen(true);
   };
 
-  const handleConfirmResponse = () => {
+  const map = useMap();
+
+  const handleConfirmResponse = async () => {
     if (pendingCoordinates) {
-      onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-      setPendingCoordinates(null);
+      try {
+        /*  await sendAccidentResponse({
+           accidentId: selectedReport.id,
+           actionTaken: "responding",
+           responderId: "",
+           responseType: "",
+         }).unwrap(); */
+        onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+        setPendingCoordinates(null);
+        map.closePopup();
+      } catch (error) {
+        console.error("Failed to update status:", error);
+        toast.error("Failed to send response.");
+      }
     }
   };
 
   return (
-    <Popup maxWidth={280} className="custom-popup">
+    <Popup maxWidth={280} className="custom-popup"  >
       <div className="w-[210px] font-sans">
         {hasMultipleReports && (
           <div className="bg-orange-50 border-l-2 border-orange-600 p-1 mb-1.5 rounded">
@@ -125,11 +143,13 @@ export function MapPopup({
         report={selectedReport}
         onGetDirections={handleGetDirectionsClick}
       />
+
       <ResponderConfirmationDialog
         isOpen={isConfirmationOpen}
         onOpenChange={setIsConfirmationOpen}
         onConfirm={handleConfirmResponse}
       />
+
     </Popup>
   );
 }

@@ -13,8 +13,6 @@ import { ProfileSheet } from "../dialogs/profile-sheet";
 import BottomReports from "../shared/bottom-reports";
 import L from "leaflet";
 
-
-
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
@@ -150,7 +148,7 @@ export function MapContainerComponent() {
 
       {/* ── Compact grouped toggle buttons (top-right) ── */}
       {!isOpen && (
-        <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-1">
+        <div className="absolute top-16 right-4 flex flex-col gap-1">
           {/* Risk Roads toggle */}
           <button
             onClick={() => setShowRiskRoads(!showRiskRoads)}
@@ -179,7 +177,7 @@ export function MapContainerComponent() {
 
       {/* ── Legend ── */}
       {!isOpen && showRiskRoads && showLegend && (
-        <div className="absolute bottom-24 left-4 z-[1000] bg-white rounded-lg shadow-lg p-3 text-xs max-w-[190px]">
+        <div className="absolute bottom-24 left-4 bg-white rounded-lg shadow-lg p-3 text-xs max-w-[190px]">
           <div className="relative flex items-start justify-between mb-2">
             <div>
               <div className="font-semibold text-zinc-900">Road Risk Level</div>
