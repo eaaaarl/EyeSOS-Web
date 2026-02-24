@@ -46,19 +46,19 @@ export function MapPopup({
   const handleConfirmResponse = async () => {
     if (pendingCoordinates) {
       try {
-        /*  await sendAccidentResponse({
-           accidentId: selectedReport.id,
-           actionTaken: "responding",
-           responderId: "",
-           responseType: "",
-         }).unwrap(); */
         onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-        setPendingCoordinates(null);
         map.closePopup();
       } catch (error) {
         console.error("Failed to update status:", error);
         toast.error("Failed to send response.");
       }
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsConfirmationOpen(open);
+    if (!open) {
+      setPendingCoordinates(null);
     }
   };
 
@@ -146,8 +146,13 @@ export function MapPopup({
 
       <ResponderConfirmationDialog
         isOpen={isConfirmationOpen}
-        onOpenChange={setIsConfirmationOpen}
+        onOpenChange={handleOpenChange}
         onConfirm={handleConfirmResponse}
+        onReopenDirections={() => {
+          if (pendingCoordinates) {
+            onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+          }
+        }}
       />
 
     </Popup>
