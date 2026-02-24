@@ -44,10 +44,16 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
     if (pendingCoordinates && selectedReport) {
       try {
         onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-        setPendingCoordinates(null);
       } catch (error) {
         console.error("Failed to update status:", error);
       }
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsConfirmationOpen(open);
+    if (!open) {
+      setPendingCoordinates(null);
     }
   };
 
@@ -63,32 +69,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  const headerContent = (
-    <div className="bg-linear-to-r from-blue-600 via-blue-500 to-indigo-600 px-4 py-3 flex items-center justify-between cursor-pointer">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-          <MessageCircleWarning className='text-white w-4.5 h-4.5' />
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-white leading-tight">
-            Incident Reports
-          </h3>
-          <p className="text-[10px] text-blue-100 font-medium">
-            {reports.length} report{reports.length !== 1 ? 's' : ''} active
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="bg-white/10 hover:bg-white/20 transition-colors p-1 rounded-full">
-          {isMobile ? (
-            <ChevronUp className="w-4 h-4 text-white" />
-          ) : (
-            isExpanded ? <ChevronDown className="w-4 h-4 text-white" /> : <ChevronUp className="w-4 h-4 text-white" />
-          )}
-        </div>
-      </div>
-    </div>
-  );
+
 
   const reportsListContent = (
     <div className={`${isMobile ? "max-h-[60vh]" : "max-h-[400px]"} overflow-y-auto no-scrollbar`}>
@@ -189,8 +170,13 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
         )}
         <ResponderConfirmationDialog
           isOpen={isConfirmationOpen}
-          onOpenChange={setIsConfirmationOpen}
+          onOpenChange={handleOpenChange}
           onConfirm={handleConfirmResponse}
+          onReopenDirections={() => {
+            if (pendingCoordinates) {
+              onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+            }
+          }}
         />
       </>
     );
@@ -241,8 +227,13 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
       )}
       <ResponderConfirmationDialog
         isOpen={isConfirmationOpen}
-        onOpenChange={setIsConfirmationOpen}
+        onOpenChange={handleOpenChange}
         onConfirm={handleConfirmResponse}
+        onReopenDirections={() => {
+          if (pendingCoordinates) {
+            onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
+          }
+        }}
       />
     </div>
   );

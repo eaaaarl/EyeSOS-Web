@@ -15,6 +15,7 @@ interface ResponderConfirmationDialogProps {
   onConfirm: () => Promise<void>;
   onCancelResponse?: () => Promise<void>;
   onMarkDone?: () => Promise<void>;
+  onReopenDirections?: () => void;
 }
 
 type DialogState = "confirm" | "loading" | "responding";
@@ -25,6 +26,7 @@ export function ResponderConfirmationDialog({
   onConfirm,
   onCancelResponse,
   onMarkDone,
+  onReopenDirections,
 }: ResponderConfirmationDialogProps) {
   const [state, setState] = useState<DialogState>("confirm");
 
@@ -55,6 +57,10 @@ export function ResponderConfirmationDialog({
       setState("confirm");
       onOpenChange(false);
     }
+  };
+
+  const handleReopen = () => {
+    onReopenDirections?.();
   };
 
   return (
@@ -113,13 +119,20 @@ export function ResponderConfirmationDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
-              <p className="text-sm font-semibold text-green-800">En Route to Accident Scene</p>
-              <p className="text-xs text-green-600">Navigation is active — stay safe!</p>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 text-green-600 animate-spin" />
+                <p className="text-sm font-bold text-green-800">En Route to Accident Scene</p>
+              </div>
+              <button
+                onClick={handleReopen}
+                className="flex items-center gap-2 bg-white border border-green-200 px-4 py-2 rounded-lg text-xs font-bold text-green-700 hover:bg-green-100/50 transition-colors shadow-sm active:scale-95"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                RE-OPEN NAVIGATION
+              </button>
             </div>
 
-            {/* Stack responding actions on mobile, grid on larger screens */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               <button
                 onClick={handleCancelResponse}
