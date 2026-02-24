@@ -234,7 +234,6 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
         <DrawerContent className="h-[85vh] rounded-t-xl bg-white border-none border-t-0 flex flex-col p-0 overflow-hidden outline-none [&>div:first-child]:hidden">
           <div className="mx-auto mt-3 h-1.5 w-24 shrink-0 rounded-full bg-gray-300 mb-2" />
           <ProfileInfo />
-
         </DrawerContent>
       </Drawer>
     );
