@@ -78,8 +78,8 @@ export function ResponderConfirmationDialog({
               </DialogDescription>
             </DialogHeader>
 
-            {/* Replace DialogFooter with a full-width grid */}
-            <div className="grid grid-cols-2 gap-3 mt-2">
+            {/* Stack buttons on mobile, grid on larger screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               <button
                 onClick={() => onOpenChange(false)}
                 disabled={state === "loading"}
@@ -119,8 +119,8 @@ export function ResponderConfirmationDialog({
               <p className="text-xs text-green-600">Navigation is active — stay safe!</p>
             </div>
 
-            {/* Full-width grid for responding actions */}
-            <div className="grid grid-cols-2 gap-3 mt-2">
+            {/* Stack responding actions on mobile, grid on larger screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               <button
                 onClick={handleCancelResponse}
                 className="w-full px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
