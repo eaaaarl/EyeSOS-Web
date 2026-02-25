@@ -1,6 +1,6 @@
-import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { SignInResponse, UserGetProfileQueryResponse } from "./interface";
+import { supabase } from "@/lib/supabase";
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -90,7 +90,49 @@ export const authApi = createApi({
         };
       },
     }),
+
+    sendPasswordResetEmail: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+      },
+      { email: string }
+    >({
+      queryFn: async ({ email }) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) return { error: { message: error.message } };
+        return {
+          data: {
+            success: true,
+            message: "Password reset email sent successfully",
+          },
+        };
+      },
+    }),
+
+    updatePassword: builder.mutation<
+      { success: boolean; message?: string },
+      { password: string }
+    >({
+      queryFn: async ({ password }) => {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) return { error: { message: error.message } };
+        return {
+          data: {
+            success: true,
+            message: "Password updated successfully",
+          },
+        };
+      },
+    }),
   }),
 });
 
-export const { useSignInMutation, useGetUserProfileQuery } = authApi;
+export const {
+  useSignInMutation,
+  useGetUserProfileQuery,
+  useSendPasswordResetEmailMutation,
+  useUpdatePasswordMutation,
+} = authApi;

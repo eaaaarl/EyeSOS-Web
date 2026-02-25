@@ -3,9 +3,11 @@ import { combineReducers } from "@reduxjs/toolkit";
 import { authReducer } from "./state/authSlice";
 import { mapApi } from "@/features/maps/api/mapApi";
 import { adminApi } from "@/features/admin/api/adminApi";
+import { notificationReducer } from "./state/notificationSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  notification: notificationReducer,
 
   [authApi.reducerPath]: authApi.reducer,
   [mapApi.reducerPath]: mapApi.reducer,

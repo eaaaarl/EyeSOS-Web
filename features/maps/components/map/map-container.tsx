@@ -99,7 +99,6 @@ export function MapContainerComponent() {
         ))}
       </MapContainer>
 
-      {/* ── Unified status indicators ── */}
       {((showRiskRoads && (roadsLoading || roadsError)) || isLoading || isError) && (
         <div className="absolute top-16 left-4 z-[1000] flex flex-col gap-1.5 animate-in fade-in slide-in-from-left duration-300">
 
