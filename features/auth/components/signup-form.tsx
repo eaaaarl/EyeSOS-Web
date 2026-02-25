@@ -33,51 +33,55 @@ export default function SignupForm({
     <form className={cn("flex flex-col gap-6", className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Register Organization</h1>
+          <h1 className="text-2xl font-bold">MDRRMC Registration</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Create an EyeSOS account for your LGU/BLGU
+            Create an EyeSOS account for your agency or response unit
           </p>
         </div>
 
         <FieldSeparator>Organization Information</FieldSeparator>
 
         <Field>
-          <FieldLabel htmlFor="organizationType">Organization Type</FieldLabel>
+          <FieldLabel htmlFor="organizationType">Agency / Department</FieldLabel>
           <Select
             value={organizationType}
             onValueChange={setOrganizationType}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder="Select agency" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="LGU">LGU (Local Government Unit)</SelectItem>
-              <SelectItem value="BLGU">BLGU (Barangay Local Government Unit)</SelectItem>
+              <SelectItem value="MDRRMO">MDRRMO</SelectItem>
+              <SelectItem value="BFP">BFP (Bureau of Fire Protection)</SelectItem>
+              <SelectItem value="PNP">PNP (Philippine National Police)</SelectItem>
+              <SelectItem value="MHO">MHO (Municipal Health Office / EMS)</SelectItem>
+              <SelectItem value="MSWDO">MSWDO (Social Welfare & Relief)</SelectItem>
+              <SelectItem value="ENGINEERING">Engineering Office</SelectItem>
+              <SelectItem value="GSO">GSO (General Services Office)</SelectItem>
+              <SelectItem value="LGU_ADMIN">LGU Administrator</SelectItem>
+              <SelectItem value="NGO_VOLUNTEER">NGO / Volunteer Group</SelectItem>
             </SelectContent>
           </Select>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="organizationName">Organization Name</FieldLabel>
+          <FieldLabel htmlFor="organizationName">Office / Unit Name</FieldLabel>
           <Input
             id="organizationName"
             type="text"
-            placeholder="City/Municipality Name"
+            placeholder="e.g. MDRRMO Lianga / BFP Station"
             required
           />
         </Field>
 
-        {organizationType === "BLGU" && (
-          <Field>
-            <FieldLabel htmlFor="barangayName">Barangay Name</FieldLabel>
-            <Input
-              id="barangayName"
-              type="text"
-              placeholder="Enter barangay name"
-              required
-            />
-          </Field>
-        )}
+        <Field>
+          <FieldLabel htmlFor="unitTeam">Unit / Team Name (Optional)</FieldLabel>
+          <Input
+            id="unitTeam"
+            type="text"
+            placeholder="e.g. Search and Rescue Unit / Alpha Team"
+          />
+        </Field>
 
         <Field>
           <FieldLabel htmlFor="email">Organization Email</FieldLabel>
@@ -109,7 +113,7 @@ export default function SignupForm({
           />
         </Field>
 
-        <FieldSeparator>Administrator Information</FieldSeparator>
+        <FieldSeparator>Representative Information</FieldSeparator>
 
         <Field>
           <FieldLabel htmlFor="adminName">Full Name</FieldLabel>
@@ -142,6 +146,16 @@ export default function SignupForm({
         </Field>
 
         <Field>
+          <FieldLabel htmlFor="designation">Designation / Position</FieldLabel>
+          <Input
+            id="designation"
+            type="text"
+            placeholder="e.g. Operations Officer / Fire Marshal"
+            required
+          />
+        </Field>
+
+        <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input id="password" type="password" required />
           <FieldDescription>
@@ -160,7 +174,7 @@ export default function SignupForm({
 
         <FieldDescription className="px-6 text-center">
           Already have an account?{" "}
-          <Link href="#" className="underline underline-offset-4 hover:text-primary">
+          <Link href="/" className="underline underline-offset-4 hover:text-primary">
             Sign in
           </Link>
         </FieldDescription>
