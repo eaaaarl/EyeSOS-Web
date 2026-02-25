@@ -115,7 +115,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
       <>
         <Drawer>
           <DrawerTrigger asChild>
-            <div className="fixed bottom-4 left-4 right-4 z-40 bg-white/95 backdrop-blur-sm shadow-lg rounded-full border border-blue-100 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700">
+            <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-full border border-red-400 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700">
               <div className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <MessageCircleWarning className="w-4 h-4 text-blue-600" />
@@ -192,7 +192,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
 
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-[420px] px-4 py-2.5 bg-white/95 backdrop-blur-sm shadow-lg rounded-xl border border-blue-100 cursor-pointer hover:bg-white transition-colors"
+        className="flex items-center justify-between w-[420px] px-4 py-2.5 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-xl border border-red-400 cursor-pointer hover:bg-slate-200 transition-colors"
       >
         <div className="flex items-center gap-2">
           <MessageCircleWarning className="w-4 h-4 text-blue-600" />
