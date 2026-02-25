@@ -33,10 +33,11 @@ import { useRouter } from "next/navigation";
 
 export function NavUser() {
     const { isMobile } = useSidebar()
-    const { profile } = useAppSelector((state) => state.auth);
+    const { user } = useAppSelector((state) => state.auth);
     const dispatch = useAppDispatch();
     const router = useRouter();
 
+    console.log('profile', user)
     const handleSignOut = async () => {
         await supabase.auth.signOut();
         dispatch(setClearUserSession());
@@ -52,13 +53,13 @@ export function NavUser() {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg grayscale">
-                                <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
-                                <AvatarFallback className="rounded-lg">{profile?.name?.split(" ").map((name) => name[0]).join("").toUpperCase()}</AvatarFallback>
+                                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
+                                <AvatarFallback className="rounded-lg">{user?.user_metadata?.name?.split(" ").map((name) => name[0]).join("").toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{profile?.name}</span>
+                                <span className="truncate font-medium">{user?.user_metadata?.name}</span>
                                 <span className="text-muted-foreground truncate text-xs">
-                                    {profile?.email}
+                                    {user?.email}
                                 </span>
                             </div>
                             <IconDotsVertical className="ml-auto size-4" />
@@ -73,13 +74,13 @@ export function NavUser() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
+                                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
                                     <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">{profile?.name}</span>
+                                    <span className="truncate font-medium">{user?.user_metadata?.name}</span>
                                     <span className="text-muted-foreground truncate text-xs">
-                                        {profile?.email}
+                                        {user?.email}
                                     </span>
                                 </div>
                             </div>

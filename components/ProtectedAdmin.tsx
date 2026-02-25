@@ -23,7 +23,7 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
         }
 
         if (!isLoading && profile) {
-            if (profile.profile.user_type === 'lgu' || profile.profile.user_type === 'blgu') {
+            if (profile.profile.user_type === 'lgu' || profile.profile.user_type === 'blgu' || profile.profile.user_type === 'responder') {
                 router.replace('/map');
             }
         }

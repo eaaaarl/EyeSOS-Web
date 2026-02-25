@@ -4,29 +4,36 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
-import { Loader, EyeOff, Eye, X, AlertCircle } from "lucide-react";
 import { createPinMarkerIcon } from "./marker";
 import { useDirections } from "../../hooks/use-directions";
 import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
-import { AccidentRiskRoads } from "../layers/accident-risk-roads";
 import { ProfileSheet } from "../dialogs/profile-sheet";
 import BottomReports from "../shared/bottom-reports";
 import { MapAutoZoom } from "./map-auto-zoom";
 import L from "leaflet";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
+import { ResponderDispatchAlert } from "./responder-dispatch-alert";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
   const [isOpen, setIsOpen] = useState(false);
-  const [showRiskRoads, setShowRiskRoads] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
+  // const [showRiskRoads, setShowRiskRoads] = useState(false);
+  // const [showLegend, setShowLegend] = useState(false);
 
-  const [roadsLoading, setRoadsLoading] = useState(true);
-  const [roadsError, setRoadsError] = useState<string | null>(null);
+  // const [roadsLoading, setRoadsLoading] = useState(true);
+  // const [roadsError, setRoadsError] = useState<string | null>(null);
 
-  const { data: allReports, isLoading, isError, refetch } = useGetAllReportsBystanderQuery();
-  const reports = allReports?.reports || [];
+  const { data: allReports } = useGetAllReportsBystanderQuery();
+  const { user } = useAppSelector((state) => state.auth);
+  const { data: profileData } = useGetUserProfileQuery(
+    { user_id: user?.id || "" },
+    { skip: !user?.id }
+  );
+  const isResponder = profileData?.profile.user_type === "responder";
+  const reports = !isResponder ? (allReports?.reports || []) : [];
 
-  const mlPredictions = undefined;
+  // const mlPredictions = undefined;
   const philippinesBounds = L.latLngBounds(
     [4.5, 116.0],
     [21.5, 127.0]
@@ -77,7 +84,7 @@ export function MapContainerComponent() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {showRiskRoads && (
+        {/*  {showRiskRoads && (
           <AccidentRiskRoads
             mlPredictions={mlPredictions}
             onLoadingChange={(loading) => {
@@ -86,7 +93,7 @@ export function MapContainerComponent() {
             }}
             onError={(msg) => setRoadsError(msg)}
           />
-        )}
+        )} */}
 
         {reports.map((report, index) => (
           <Marker
@@ -99,7 +106,7 @@ export function MapContainerComponent() {
         ))}
       </MapContainer>
 
-      {((showRiskRoads && (roadsLoading || roadsError)) || isLoading || isError) && (
+      {/* {((showRiskRoads && (roadsLoading || roadsError)) || isLoading || isError) && (
         <div className="absolute top-16 left-4 z-[1000] flex flex-col gap-1.5 animate-in fade-in slide-in-from-left duration-300">
 
           {showRiskRoads && roadsLoading && (
@@ -146,12 +153,10 @@ export function MapContainerComponent() {
           )}
 
         </div>
-      )}
+      )} */}
 
-      {/* ── Compact grouped toggle buttons (top-right) ── */}
-      {!isOpen && (
+      {/*   {!isOpen && (
         <div className="absolute top-16 right-4 flex flex-col gap-1">
-          {/* Risk Roads toggle */}
           <button
             onClick={() => setShowRiskRoads(!showRiskRoads)}
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-md transition-all whitespace-nowrap"
@@ -161,8 +166,6 @@ export function MapContainerComponent() {
               : <Eye className="w-3 h-3 shrink-0" />}
             {showRiskRoads ? "Hide" : "Show"} Risk Roads
           </button>
-
-          {/* Severity legend toggle */}
           {showRiskRoads && (
             <button
               onClick={() => setShowLegend(!showLegend)}
@@ -175,10 +178,9 @@ export function MapContainerComponent() {
             </button>
           )}
         </div>
-      )}
+      )} */}
 
-      {/* ── Legend ── */}
-      {!isOpen && showRiskRoads && showLegend && (
+      {/*  {!isOpen && showRiskRoads && showLegend && (
         <div className="absolute bottom-24 left-4 bg-white rounded-lg shadow-lg p-3 text-xs max-w-[190px]">
           <div className="relative flex items-start justify-between mb-2">
             <div>
@@ -211,11 +213,12 @@ export function MapContainerComponent() {
             Hover a road to see details
           </div>
         </div>
-      )}
+      )} */}
 
-      <MapNavigation reports={reports} onMenuClick={() => setIsOpen(true)} />
+      <MapNavigation isResponder={isResponder} reports={reports} onMenuClick={() => setIsOpen(true)} />
       <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
-      <BottomReports reports={reports} onGetDirections={openDirections} />
+      {isResponder ? null : <BottomReports reports={reports} onGetDirections={openDirections} />}
+      {isResponder && <ResponderDispatchAlert />}
     </div>
   );
 }

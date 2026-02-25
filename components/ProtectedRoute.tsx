@@ -17,8 +17,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   const isAdmin = profile?.profile.user_type === 'admin'
   const isOnAdminPage = pathname?.startsWith('/admin')
-  console.log('user', user)
-  console.log('profile', profile)
+
   useEffect(() => {
     if (!user) {
       router.replace('/')

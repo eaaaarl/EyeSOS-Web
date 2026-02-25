@@ -1,4 +1,5 @@
 "use client";
+
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Drawer,
@@ -56,15 +57,16 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
   const userInitials = userName.split(" ").map((n: unknown[]) => n?.[0] || "").join("").toUpperCase().slice(0, 2);
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A";
 
+  const admin = profileData?.profile?.user_type === "lgu" || profileData?.profile?.user_type === "blgu";
   const ProfileInfo = () => (
     <>
       <div className="relative shrink-0">
-        <div className="h-16 bg-linear-to-br from-red-600 via-red-500 to-orange-600 relative overflow-hidden">
+        <div className={`h-16 bg-linear-to-br ${admin ? 'from-blue-600 via-blue-500 to-indigo-600' : 'from-red-600 via-red-500 to-orange-600'} relative overflow-hidden`}>
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div className="absolute top-3 left-3">
-            <Activity className="w-5 h-5 text-white/80" />
+            {admin ? <Shield className="w-5 h-5 text-white/80" /> : <Activity className="w-5 h-5 text-white/80" />}
           </div>
         </div>
 
@@ -80,12 +82,12 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-linear-to-br from-red-500 to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
+                <div className={`w-full h-full rounded-full bg-linear-to-br ${admin ? 'from-blue-500 to-indigo-600' : 'from-red-500 to-orange-600'} flex items-center justify-center text-white text-2xl font-bold`}>
                   {userInitials}
                 </div>
               )}
             </div>
-            <button className="absolute bottom-1 right-1 w-7 h-7 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
+            <button className={`absolute bottom-1 right-1 w-7 h-7 ${admin ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'} rounded-full flex items-center justify-center shadow-lg transition-colors`}>
               <Edit className="w-3.5 h-3.5 text-white" />
             </button>
           </div>
@@ -97,14 +99,14 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
           <DrawerHeader className="text-center space-y-1 mb-4">
             <DrawerTitle className="text-xl font-bold text-gray-900">{userName}</DrawerTitle>
             <DrawerDescription className="text-xs text-gray-500">
-              Responder since {memberSince}
+              {admin ? 'Official' : 'Responder'} since {memberSince}
             </DrawerDescription>
           </DrawerHeader>
         ) : (
           <SheetHeader className="text-center space-y-1 mb-4">
             <SheetTitle className="text-xl font-bold text-gray-900">{userName}</SheetTitle>
             <SheetDescription className="text-xs text-gray-500">
-              Responder since {memberSince}
+              {admin ? 'Official' : 'Responder'} since {memberSince}
             </SheetDescription>
           </SheetHeader>
         )}
@@ -117,47 +119,45 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-3 border border-red-100">
+              <div className={`bg-gradient-to-br ${admin ? 'from-blue-50 to-indigo-50 border-blue-100' : 'from-red-50 to-orange-50 border-red-100'} rounded-lg p-3 border`}>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Shield className="w-3.5 h-3.5 text-red-600" />
-                  <span className="text-[10px] font-semibold text-red-600 uppercase">Status</span>
+                  <Shield className={`w-3.5 h-3.5 ${admin ? 'text-blue-600' : 'text-red-600'}`} />
+                  <span className={`text-[10px] font-semibold uppercase ${admin ? 'text-blue-600' : 'text-red-600'}`}>Status</span>
                 </div>
-                <p className="text-sm sm:text-base font-bold text-gray-900">Active</p>
+                <p className="text-sm sm:text-base font-bold text-gray-900">{admin ? 'Authorized' : 'Active'}</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
+              <div className={`bg-gradient-to-br ${admin ? 'from-slate-50 to-zinc-50 border-slate-100' : 'from-green-50 to-emerald-50 border-green-100'} rounded-lg p-3 border`}>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Activity className="w-3.5 h-3.5 text-green-600" />
-                  <span className="text-[10px] font-semibold text-green-600 uppercase">Ready</span>
+                  <Activity className={`w-3.5 h-3.5 ${admin ? 'text-slate-600' : 'text-green-600'}`} />
+                  <span className={`text-[10px] font-semibold uppercase ${admin ? 'text-slate-600' : 'text-green-600'}`}>{admin ? 'Monitoring' : 'Ready'}</span>
                 </div>
-                <p className="text-sm sm:text-base font-bold text-gray-900">On Duty</p>
+                <p className="text-sm sm:text-base font-bold text-gray-900">{admin ? 'Online' : 'On Duty'}</p>
               </div>
             </div>
 
-            {/* Response Stats */}
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-3 border border-amber-200">
+            <div className={`bg-gradient-to-br ${admin ? 'from-blue-50 to-cyan-50 border-blue-200' : 'from-amber-50 to-yellow-50 border-amber-200'} rounded-lg p-3 border`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-semibold text-gray-700">Response Activity</span>
+                  <Clock className={`w-4 h-4 ${admin ? 'text-blue-600' : 'text-amber-600'}`} />
+                  <span className="text-xs font-semibold text-gray-700">{admin ? 'Dispatch Overview' : 'Response Activity'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
                 <div className="min-w-0">
                   <p className="text-lg sm:text-xl font-bold text-gray-900">0</p>
-                  <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">Total</p>
+                  <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">{admin ? 'Managed' : 'Total'}</p>
                 </div>
-                <div className="min-w-0 border-x border-amber-200 px-1">
+                <div className={`min-w-0 border-x px-1 ${admin ? 'border-blue-200' : 'border-amber-200'}`}>
                   <p className="text-lg sm:text-xl font-bold text-gray-900">0</p>
                   <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">This Month</p>
                 </div>
                 <div className="min-w-0">
                   <p className="text-lg sm:text-xl font-bold text-gray-900">-</p>
-                  <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">Avg. Time</p>
+                  <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">{admin ? 'Efficiency' : 'Avg. Time'}</p>
                 </div>
               </div>
             </div>
 
-            {/* Contact Information */}
             <div className="space-y-2.5">
               <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" />
@@ -195,34 +195,6 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
               </div>
             </div>
 
-            {/* <div className="space-y-2.5">
-              <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5" />
-                App Preferences
-              </h3>
-
-              <div className="space-y-2">
-                <button
-                  onClick={toggleNotifications}
-                  className="w-full group bg-white hover:bg-gray-50 rounded-lg p-3 border border-gray-200 transition-all flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <Bell className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-gray-900">Notifications</p>
-                      <p className="text-[10px] text-gray-500">Alerts for nearby incidents</p>
-                    </div>
-                  </div>
-                  <div className={`w-8 h-4 rounded-full relative cursor-pointer shadow-inner transition-colors ${notification ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${notification ? 'right-0.5' : 'left-0.5'}`} />
-                  </div>
-                </button>
-              </div>
-            </div> */}
-
-            {/* Actions */}
             <div className="space-y-2 pt-3 border-t border-gray-200">
               <Button
                 variant="outline"
