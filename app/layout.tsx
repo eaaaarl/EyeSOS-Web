@@ -44,7 +44,12 @@ export default function RootLayout({
       >
         <Providers>
           <TooltipProvider>
-            <Toaster />
+            <Toaster
+              position="top-center"
+              expand={false}
+              gap={8}
+              toastOptions={{ unstyled: true }}
+            />
             {children}
           </TooltipProvider>
         </Providers>
