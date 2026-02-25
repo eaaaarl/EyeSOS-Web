@@ -11,6 +11,7 @@ import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
 import { AccidentRiskRoads } from "../layers/accident-risk-roads";
 import { ProfileSheet } from "../dialogs/profile-sheet";
 import BottomReports from "../shared/bottom-reports";
+import { MapAutoZoom } from "./map-auto-zoom";
 import L from "leaflet";
 
 export function MapContainerComponent() {
@@ -69,6 +70,8 @@ export function MapContainerComponent() {
         maxBoundsViscosity={1.0}
         minZoom={6}
       >
+        <MapAutoZoom reports={reports} />
+
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

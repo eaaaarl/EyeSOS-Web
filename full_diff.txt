@@ -1,0 +1,43 @@
+diff --git a/features/maps/components/map/map-container.tsx b/features/maps/components/map/map-container.tsx
+index 309876d..1f302cc 100644
+--- a/features/maps/components/map/map-container.tsx
++++ b/features/maps/components/map/map-container.tsx
+@@ -11,6 +11,7 @@ import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
+ import { AccidentRiskRoads } from "../layers/accident-risk-roads";
+ import { ProfileSheet } from "../dialogs/profile-sheet";
+ import BottomReports from "../shared/bottom-reports";
++import { MapAutoZoom } from "./map-auto-zoom";
+ import L from "leaflet";
+ 
+ export function MapContainerComponent() {
+@@ -69,6 +70,8 @@ export function MapContainerComponent() {
+         maxBoundsViscosity={1.0}
+         minZoom={6}
+       >
++        <MapAutoZoom reports={reports} />
++
+         <TileLayer
+           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+diff --git a/features/maps/components/shared/bottom-reports.tsx b/features/maps/components/shared/bottom-reports.tsx
+index 8e3ca63..9a9809c 100644
+--- a/features/maps/components/shared/bottom-reports.tsx
++++ b/features/maps/components/shared/bottom-reports.tsx
+@@ -115,7 +115,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
+       <>
+         <Drawer>
+           <DrawerTrigger asChild>
+-            <div className="fixed bottom-4 left-4 right-4 z-40 bg-white/95 backdrop-blur-sm shadow-lg rounded-full border border-blue-100 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700">
++            <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-full border border-red-400 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700">
+               <div className="flex items-center justify-between px-4 py-2.5">
+                 <div className="flex items-center gap-2">
+                   <MessageCircleWarning className="w-4 h-4 text-blue-600" />
+@@ -192,7 +192,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
+ 
+       <div
+         onClick={() => setIsExpanded(!isExpanded)}
+-        className="flex items-center justify-between w-[420px] px-4 py-2.5 bg-white/95 backdrop-blur-sm shadow-lg rounded-xl border border-blue-100 cursor-pointer hover:bg-white transition-colors"
++        className="flex items-center justify-between w-[420px] px-4 py-2.5 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-xl border border-red-400 cursor-pointer hover:bg-slate-200 transition-colors"
+       >
+         <div className="flex items-center gap-2">
+           <MessageCircleWarning className="w-4 h-4 text-blue-600" />
