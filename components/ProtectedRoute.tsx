@@ -10,13 +10,15 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { data: profile, isLoading } = useGetUserProfileQuery({ user_id: user?.id as string }, {
     skip: !user?.id
   });
+
   const router = useRouter()
   const pathname = usePathname()
   const hasRedirected = useRef(false)
 
   const isAdmin = profile?.profile.user_type === 'admin'
   const isOnAdminPage = pathname?.startsWith('/admin')
-
+  console.log('user', user)
+  console.log('profile', profile)
   useEffect(() => {
     if (!user) {
       router.replace('/')
@@ -28,7 +30,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
       router.replace('/admin');
     }
 
-  }, [router, user, isAdmin, isLoading, isOnAdminPage])
+  }, [router, user, isAdmin, isLoading, isOnAdminPage, profile])
 
   if (!user || isLoading || !profile || (isAdmin && !isOnAdminPage)) {
     return (
