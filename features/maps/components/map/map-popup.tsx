@@ -3,16 +3,19 @@ import { getSeverityColor } from "@/features/maps/utils/severityColor";
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { useState } from "react";
 import { DateTime } from "luxon";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 import {
   AlertTriangle,
   AlertCircle,
   MapPin,
   Navigation,
   Eye,
+  Shield,
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
-import { useSendAccidentResponseMutation } from "../../api/mapApi";
+import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
 import { toast } from "sonner";
 
 interface MapPopupProps {
@@ -28,13 +31,20 @@ export function MapPopup({
   additionalReports,
   totalCount = 1
 }: MapPopupProps) {
+  const { user } = useAppSelector((state) => state.auth);
+  const { data: profileData } = useGetUserProfileQuery(
+    { user_id: user?.id || "" },
+    { skip: !user?.id }
+  );
+
+  const isAdmin = profileData?.profile?.user_type === "lgu" || profileData?.profile?.user_type === "blgu";
+
   const selectedReport = accident;
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
-
-  const [sendAccidentResponse, { isLoading }] = useSendAccidentResponseMutation();
 
   const handleGetDirectionsClick = (lat: number, lng: number) => {
     setPendingCoordinates({ lat, lng });
@@ -119,21 +129,42 @@ export function MapPopup({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => handleGetDirectionsClick(selectedReport.latitude, selectedReport.longitude)}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
-          >
-            <Navigation className="w-3 h-3" />
-            Navigate
-          </button>
-          <button
-            onClick={() => setIsDetailsOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
-          >
-            <Eye className="w-3 h-3" />
-            Full Details
-          </button>
+        <div className="flex flex-col gap-2">
+          {isAdmin ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setIsDispatchOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm shadow-blue-100"
+              >
+                <Shield className="w-3 h-3" />
+                Dispatch
+              </button>
+              <button
+                onClick={() => setIsDetailsOpen(true)}
+                className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm"
+              >
+                <Eye className="w-3 h-3" />
+                Details
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => handleGetDirectionsClick(selectedReport.latitude, selectedReport.longitude)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
+              >
+                <Navigation className="w-3 h-3" />
+                Navigate
+              </button>
+              <button
+                onClick={() => setIsDetailsOpen(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1"
+              >
+                <Eye className="w-3 h-3" />
+                Full Details
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -142,6 +173,12 @@ export function MapPopup({
         onOpenChange={setIsDetailsOpen}
         report={selectedReport}
         onGetDirections={handleGetDirectionsClick}
+      />
+
+      <ResponderDispatchDialog
+        isOpen={isDispatchOpen}
+        onOpenChange={setIsDispatchOpen}
+        report={selectedReport}
       />
 
       <ResponderConfirmationDialog
@@ -154,7 +191,6 @@ export function MapPopup({
           }
         }}
       />
-
     </Popup>
   );
 }

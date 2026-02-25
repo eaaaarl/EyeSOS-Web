@@ -11,7 +11,6 @@ import {
   AlertCircle,
   User,
   FileText,
-  Navigation,
   Calendar,
   Phone,
   MapPinned,
@@ -94,10 +93,9 @@ function AccidentImage({ url, reportNumber }: { url: string; reportNumber: strin
 
 interface ReportContentProps {
   report: Report;
-  onGetDirections: () => void;
 }
 
-const ReportContent = ({ report, onGetDirections }: ReportContentProps) => {
+const ReportContent = ({ report }: ReportContentProps) => {
   const locationQualityInfo = getLocationQualityInfo(report.location_quality);
   const formattedAccuracy = formatAccuracy(report.location_accuracy);
 
@@ -243,16 +241,6 @@ const ReportContent = ({ report, onGetDirections }: ReportContentProps) => {
           </div>
         </div>
       </div>
-
-      <div className="pt-2">
-        <button
-          onClick={onGetDirections}
-          className="w-full bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3.5 sm:py-2.5 px-4 rounded-xl sm:rounded-lg text-sm transition-all flex items-center justify-center gap-2.5 sm:gap-2 shadow-lg shadow-green-100 active:scale-[0.98]"
-        >
-          <Navigation className="w-5 h-5 sm:w-4 sm:h-4" />
-          DISPATCH DIRECTIONS
-        </button>
-      </div>
     </div>
   );
 };
@@ -294,7 +282,6 @@ export function AccidentReportDetailsDialog({
           <div className="px-6 py-4 overflow-y-auto max-h-[calc(92vh-100px)]">
             <ReportContent
               report={report}
-              onGetDirections={handleGetDirectionsClick}
             />
           </div>
         </DrawerContent>
@@ -323,7 +310,6 @@ export function AccidentReportDetailsDialog({
         <div className="px-4 py-6 overflow-y-auto">
           <ReportContent
             report={report}
-            onGetDirections={handleGetDirectionsClick}
           />
         </div>
       </DialogContent>

@@ -6,13 +6,16 @@ import {
   ChevronDown,
   MessageCircleWarning,
   ChevronRight,
-  Info
+  Info,
+  Shield,
+  Eye,
 } from 'lucide-react';
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { getSeverityColor } from "../../utils/severityColor";
 import { DateTime } from 'luxon';
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
+import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
 import {
   Drawer,
   DrawerContent,
@@ -21,17 +24,62 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 
 interface BottomReportsProps {
   reports?: Report[];
   onGetDirections: (lat: number, lng: number) => void;
 }
 
+interface BottomTriggerProps {
+  reports: Report[];
+  isMobile: boolean;
+  isExpanded: boolean;
+  hasCritical: boolean;
+}
+
+const BottomTrigger = ({ reports, isMobile, isExpanded, hasCritical }: BottomTriggerProps) => (
+  <div className="flex items-center justify-between px-4 py-2.5">
+    <div className="flex items-center gap-2">
+      <MessageCircleWarning className="w-4 h-4 text-blue-600" />
+      <span className="text-sm font-bold text-gray-900">
+        Incident Reports
+      </span>
+      <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+        {reports.length}
+      </span>
+    </div>
+    <div className="flex items-center gap-1.5">
+      {hasCritical && (
+        <span className="flex items-center gap-1 bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
+          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+          Critical
+        </span>
+      )}
+      {isMobile ? (
+        <ChevronUp className="w-4 h-4 text-gray-400" />
+      ) : (
+        isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />
+      )}
+    </div>
+  </div>
+);
+
 export default function BottomReports({ reports = [], onGetDirections }: BottomReportsProps) {
   const isMobile = useIsMobile();
+  const { user } = useAppSelector((state) => state.auth);
+  const { data: profileData } = useGetUserProfileQuery(
+    { user_id: user?.id || "" },
+    { skip: !user?.id }
+  );
+
+  const isAdmin = profileData?.profile?.user_type === "lgu" || profileData?.profile?.user_type === "blgu";
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -61,6 +109,8 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
     return null;
   }
 
+  const hasCritical = reports.some(r => r.severity.toLowerCase() === "critical");
+
   const sortedReports = [...reports].sort((a, b) => {
     const severityOrder = { critical: 0, high: 1, moderate: 2, minor: 3 };
     const aOrder = severityOrder[a.severity.toLowerCase() as keyof typeof severityOrder] ?? 4;
@@ -69,40 +119,60 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-
-
   const reportsListContent = (
     <div className={`${isMobile ? "max-h-[60vh]" : "max-h-[400px]"} overflow-y-auto no-scrollbar`}>
       <div className="divide-y divide-gray-100 pb-8">
         {sortedReports.map((report) => (
           <div
             key={report.id}
-            onClick={() => {
-              setSelectedReport(report);
-              setIsDetailsOpen(true);
-            }}
-            className="group px-4 py-3.5 hover:bg-blue-50/30 cursor-pointer transition-all active:bg-blue-50"
+            className="group px-4 py-3.5 hover:bg-slate-50 cursor-pointer transition-all active:bg-slate-100"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <span className={`${getSeverityColor(report.severity)} text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight`}>
                     {report.severity}
                   </span>
                   <span className="text-[9px] font-poppins text-gray-400">#{report.report_number.slice(-4)}</span>
-                  <span className="text-[9px] text-gray-400 ml-auto">
-                    {DateTime.fromISO(report.created_at).toRelative()}
-                  </span>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3 h-3 text-red-500 shrink-0" />
-                  <p className="text-xs font-semibold text-gray-800 line-clamp-1 flex-1">
-                    {report.location_address}
-                  </p>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
-                </div>
+                <span className="text-[9px] text-gray-400">
+                  {DateTime.fromISO(report.created_at).toRelative()}
+                </span>
               </div>
+
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                <p className="text-[13px] font-bold text-gray-800 line-clamp-2 leading-snug flex-1">
+                  {report.location_address}
+                </p>
+                {!isAdmin && <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />}
+              </div>
+
+              {isAdmin && (
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedReport(report);
+                      setIsDispatchOpen(true);
+                    }}
+                    className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-tighter rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm shadow-blue-100 active:scale-95"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    Dispatch
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedReport(report);
+                      setIsDetailsOpen(true);
+                    }}
+                    className="flex-1 h-9 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[11px] font-bold uppercase tracking-tighter rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Details
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -116,26 +186,7 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
         <Drawer>
           <DrawerTrigger asChild>
             <div className="fixed bottom-4 left-4 right-4 z-40 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-full border border-red-400 overflow-hidden animate-in fade-in slide-in-from-bottom duration-700">
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <MessageCircleWarning className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-bold text-gray-900">
-                    Incident Reports
-                  </span>
-                  <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {reports.length}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {sortedReports.some(r => r.severity.toLowerCase() === "critical") && (
-                    <span className="flex items-center gap-1 bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                      Critical
-                    </span>
-                  )}
-                  <ChevronUp className="w-4 h-4 text-gray-400" />
-                </div>
-              </div>
+              <BottomTrigger reports={reports} isMobile={isMobile} isExpanded={isExpanded} hasCritical={hasCritical} />
             </div>
           </DrawerTrigger>
           <DrawerContent className="max-h-[85vh] rounded-t-[2.5rem] bg-white border-none outline-none shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden [&>div:first-child]:hidden">
@@ -161,12 +212,19 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
         </Drawer>
 
         {selectedReport && (
-          <AccidentReportDetailsDialog
-            isOpen={isDetailsOpen}
-            onOpenChange={setIsDetailsOpen}
-            report={selectedReport}
-            onGetDirections={handleGetDirectionsClick}
-          />
+          <>
+            <AccidentReportDetailsDialog
+              isOpen={isDetailsOpen}
+              onOpenChange={setIsDetailsOpen}
+              report={selectedReport}
+              onGetDirections={handleGetDirectionsClick}
+            />
+            <ResponderDispatchDialog
+              isOpen={isDispatchOpen}
+              onOpenChange={setIsDispatchOpen}
+              report={selectedReport}
+            />
+          </>
         )}
         <ResponderConfirmationDialog
           isOpen={isConfirmationOpen}
@@ -185,45 +243,38 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[50]">
       {isExpanded && (
-        <div className="mb-2 w-[420px] bg-white shadow-2xl rounded-xl border border-gray-200 overflow-hidden">
+        <div className="mb-2 w-[420px] bg-white shadow-2xl rounded-xl border border-gray-200 overflow-hidden animate-in zoom-in-95 fade-in duration-200 origin-bottom">
+          <div className="px-4 py-3 border-b border-gray-50 bg-slate-50/50 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-tighter">Emergency Feed</h3>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-widest">{reports.length} Reports</span>
+          </div>
           {reportsListContent}
         </div>
       )}
 
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-[420px] px-4 py-2.5 bg-slate-100/95 backdrop-blur-sm shadow-lg rounded-xl border border-red-400 cursor-pointer hover:bg-slate-200 transition-colors"
+        className="flex items-center w-[420px] bg-slate-100/95 backdrop-blur-sm shadow-xl rounded-xl border border-red-400 cursor-pointer hover:bg-slate-200 transition-all active:scale-[0.99] group overflow-hidden"
       >
-        <div className="flex items-center gap-2">
-          <MessageCircleWarning className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-bold text-gray-900">Incident Reports</span>
-          <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            {reports.length}
-          </span>
-          {sortedReports.some(r => r.severity.toLowerCase() === "critical") && (
-            <span className="flex items-center gap-1 bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
-              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-              Critical
-            </span>
-          )}
-        </div>
-
-        <div>
-          {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          ) : (
-            <ChevronUp className="w-4 h-4 text-gray-400" />
-          )}
+        <div className="flex-1">
+          <BottomTrigger reports={reports} isMobile={isMobile} isExpanded={isExpanded} hasCritical={hasCritical} />
         </div>
       </div>
 
       {selectedReport && (
-        <AccidentReportDetailsDialog
-          isOpen={isDetailsOpen}
-          onOpenChange={setIsDetailsOpen}
-          report={selectedReport}
-          onGetDirections={handleGetDirectionsClick}
-        />
+        <>
+          <AccidentReportDetailsDialog
+            isOpen={isDetailsOpen}
+            onOpenChange={setIsDetailsOpen}
+            report={selectedReport}
+            onGetDirections={handleGetDirectionsClick}
+          />
+          <ResponderDispatchDialog
+            isOpen={isDispatchOpen}
+            onOpenChange={setIsDispatchOpen}
+            report={selectedReport}
+          />
+        </>
       )}
       <ResponderConfirmationDialog
         isOpen={isConfirmationOpen}
