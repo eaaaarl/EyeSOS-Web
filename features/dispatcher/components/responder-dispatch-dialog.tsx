@@ -17,9 +17,9 @@ import { Shield, Truck, MapPin, Ambulance, Loader2, Clock, CheckCircle, Navigati
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { toast } from "sonner";
-import { AvailableResponders } from "../../api/interface";
-import { formatDistance, getDistanceKm } from "../../utils/haversine";
-import { useDispatchResponderMutation, useGetAccidentStatusQuery } from "../../api/mapApi";
+import { formatDistance, getDistanceKm } from "../../maps/utils/haversine";
+import { useDispatchResponderMutation, useGetAccidentStatusQuery } from "../../maps/api/mapApi";
+import { AvailableResponders } from "../api/inteface";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;

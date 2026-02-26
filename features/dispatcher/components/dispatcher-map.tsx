@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { Marker } from "react-leaflet";
-import { BaseMap } from "./base-map";
+import { BaseMap } from "../../maps/components/map/base-map";
 import { MapPopup } from "./map-popup";
-import { MapNavigation } from "./map-navigation";
-import { createPinMarkerIcon } from "./marker";
-import { useDirections } from "../../hooks/use-directions";
-import { useGetAllReportsBystanderQuery, useGetAvailableRespondersQuery } from "../../api/mapApi";
-import { AdminProfileSheet } from "../dialogs/admin-profile-sheet";
-import BottomReports from "../shared/bottom-reports";
+import { MapNavigation } from "../../maps/components/map/map-navigation";
+import { createPinMarkerIcon } from "../../maps/components/map/marker";
+import { useDirections } from "../../maps/hooks/use-directions";
+import BottomReports from "../../maps/components/shared/bottom-reports";
+import { DispatcherProfileSheet } from "./dispatcher-profile-sheet";
+import { useGetAllReportsBystanderQuery, useGetAvailableRespondersQuery } from "../api/dispatcherApi";
 
-export function AdminMap() {
+export function DispatcherMap() {
     const { openDirections } = useDirections();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -42,7 +42,7 @@ export function AdminMap() {
                 reports={reports}
                 onMenuClick={() => setIsOpen(true)}
             />
-            <AdminProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+            <DispatcherProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
             <BottomReports reports={reports} />
         </>
     );

@@ -25,7 +25,6 @@ interface IncidentPopupContentProps {
 export function IncidentPopupContent({ dispatch, onResolve, isResolving }: IncidentPopupContentProps) {
     const { getCurrentLocation, isLoading: isFetchingLocation } = useCurrentLocation();
     const [isNavigating, setIsNavigating] = useState(false);
-
     const handleNavigate = async () => {
         if (!dispatch?.latitude || !dispatch?.longitude) return;
         setIsNavigating(true);

@@ -1,6 +1,6 @@
 import { Popup, useMap } from "react-leaflet";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
-import { Report } from "../../interfaces/get-all-reports-bystander.interface";
+import { Report } from "../../maps/interfaces/get-all-reports-bystander.interface";
 import { useState } from "react";
 import { DateTime } from "luxon";
 import { useAppSelector } from "@/lib/redux/hooks";
@@ -14,11 +14,11 @@ import {
   Shield,
   CheckCircle2
 } from "lucide-react";
-import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
-import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
-import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
+import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
+import { ResponderConfirmationDialog } from "../../maps/components/dialogs/responder-confirmation-dialog";
+import { ResponderDispatchDialog } from "./responder-dispatch-dialog";
 import { toast } from "sonner";
-import { AvailableResponders } from "../../api/interface";
+import { AvailableResponders } from "../api/inteface";
 
 interface MapPopupProps {
   accident: Report;

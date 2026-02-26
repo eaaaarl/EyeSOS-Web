@@ -1,6 +1,6 @@
 "use client";
 
-import { BaseProfileSheet, ProfileSheetConfig } from "./base-profile-sheet";
+import { BaseProfileSheet, ProfileSheetConfig } from "../../maps/components/dialogs/base-profile-sheet";
 import { Shield, Activity } from "lucide-react";
 
 const adminConfig: ProfileSheetConfig = {
@@ -19,12 +19,12 @@ const adminConfig: ProfileSheetConfig = {
     activityIcon: Activity,
 };
 
-interface AdminProfileSheetProps {
+interface DispatcherProfileSheetProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export function AdminProfileSheet({ isOpen, onOpenChange }: AdminProfileSheetProps) {
+export function DispatcherProfileSheet({ isOpen, onOpenChange }: DispatcherProfileSheetProps) {
     return (
         <BaseProfileSheet
             isOpen={isOpen}
