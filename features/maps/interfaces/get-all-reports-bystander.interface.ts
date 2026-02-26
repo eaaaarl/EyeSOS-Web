@@ -4,7 +4,15 @@ export interface Report {
   updated_at: string;
   report_number: string;
   severity: "minor" | "moderate" | "high" | "critical";
-  status?: "pending" | "responding" | "resolved";
+  accident_status?:
+    | "NEW"
+    | "VERIFIED"
+    | "DELETED"
+    | "RESOLVED"
+    | "IN_PROGRESS"
+    | "CLOSED"
+    | "PENDING"
+    | "IDLE";
   responder_id?: string;
   responded_at?: string;
   reported_by: string;

@@ -41,6 +41,11 @@ const data = {
             url: "/admin/accidents",
             icon: IconReport,
         },
+        {
+            title: "Live Map",
+            url: "/dashboard/map",
+            icon: IconInnerShadowTop, // Or use IconMap if available
+        },
     ],
     navSecondary: [
         {

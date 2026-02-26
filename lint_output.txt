@@ -1,0 +1,125 @@
+
+> eyesos-web@0.1.0 lint
+> eslint
+
+
+C:\eyesosWeb\app\(auth)\forgot-password\page.tsx
+  13:10  warning  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\eyesosWeb\components\ui\sidebar.tsx
+  611:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\eyesosWeb\components\ui\sidebar.tsx:611:26
+  609 |   // Random width between 50 to 90%.
+  610 |   const width = React.useMemo(() => {
+> 611 |     return `${Math.floor(Math.random() * 40) + 50}%`
+      |                          ^^^^^^^^^^^^^ Cannot call impure function
+  612 |   }, [])
+  613 |
+  614 |   return (  react-hooks/purity
+
+C:\eyesosWeb\features\admin\components\accidents\accident-stats-cards.tsx
+  27:5  warning  'countActiveReport' is defined but never used     @typescript-eslint/no-unused-vars
+  28:5  warning  'countResolvedReport' is defined but never used   @typescript-eslint/no-unused-vars
+  29:5  warning  'countIncidents' is defined but never used        @typescript-eslint/no-unused-vars
+  30:5  warning  'countResolvedToday' is defined but never used    @typescript-eslint/no-unused-vars
+  31:5  warning  'countAvgResponseTime' is defined but never used  @typescript-eslint/no-unused-vars
+  32:5  warning  'isError' is defined but never used               @typescript-eslint/no-unused-vars
+  33:5  warning  'isLoading' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\eyesosWeb\features\admin\components\layouts\data-table.tsx
+  368:19  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\eyesosWeb\features\admin\components\layouts\data-table.tsx:368:19
+  366 |     )
+  367 |
+> 368 |     const table = useReactTable({
+      |                   ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  369 |         data,
+  370 |         columns,
+  371 |         state: {  react-hooks/incompatible-library
+
+C:\eyesosWeb\features\admin\components\layouts\nav-documents.tsx
+  368:19  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\eyesosWeb\features\admin\components\layouts\nav-documents.tsx:368:19
+  366 |     )
+  367 |
+> 368 |     const table = useReactTable({
+      |                   ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  369 |         data,
+  370 |         columns,
+  371 |         state: {  react-hooks/incompatible-library
+
+C:\eyesosWeb\features\maps\components\layers\accident-zones-lianga.tsx
+   32:14  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   37:50  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   55:6   warning  React Hook useEffect has a missing dependency: 'calculateStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   57:36  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   63:40  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   76:18  warning  'e' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+  183:30  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  224:35  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  224:47  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  402:22  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  410:21  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+C:\eyesosWeb\features\maps\components\layers\heatmap-layer.tsx
+  20:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:8   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\eyesosWeb\features\maps\components\layers\surigao-zones.tsx
+   15:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+   16:76  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+   26:17  error    Error: Cannot access variable before it is declared
+
+`calculateStats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\eyesosWeb\features\maps\components\layers\surigao-zones.tsx:26:17
+  24 |             .then(data => {
+  25 |                 setGeoJsonData(data);
+> 26 |                 calculateStats(data);
+     |                 ^^^^^^^^^^^^^^ `calculateStats` accessed before it is declared
+  27 |                 setLoading(false);
+  28 |             })
+  29 |             .catch(error => {
+
+C:\eyesosWeb\features\maps\components\layers\surigao-zones.tsx:35:5
+  33 |     }, []);
+  34 |
+> 35 |     const calculateStats = (geoData: any) => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         if (!geoData || !geoData.features) return;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 92 |         setMunicipalityStats(stats);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 93 |     };
+     | ^^^^^^^ `calculateStats` is declared here
+  94 |
+  95 |     useEffect(() => {
+  96 |         if (geoJsonData) {  react-hooks/immutability
+   33:8   warning  React Hook useEffect has a missing dependency: 'calculateStats'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+   35:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+   40:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+   52:26  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   99:8   warning  React Hook useEffect has missing dependencies: 'calculateStats' and 'geoJsonData'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+  101:32  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  142:37  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  142:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  230:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  238:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+
+C:\eyesosWeb\lib\database.types.ts
+  1:0  error  Parsing error: Unexpected keyword or identifier
+
+✖ 38 problems (23 errors, 15 warnings)
+

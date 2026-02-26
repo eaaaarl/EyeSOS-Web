@@ -11,7 +11,6 @@ import {
   AlertCircle,
   User,
   FileText,
-  Navigation,
   Calendar,
   Phone,
   MapPinned,
@@ -21,6 +20,7 @@ import {
   Crosshair,
   Signal,
   ImageOff,
+  CheckCircle2,
 } from "lucide-react";
 import { getSeverityColor } from "@/features/maps/utils/severityColor";
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
@@ -38,7 +38,6 @@ interface AccidentReportDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   report: Report;
-  onGetDirections: (lat: number, lng: number) => void;
 }
 
 const getLocationQualityInfo = (quality?: string) => {
@@ -94,10 +93,9 @@ function AccidentImage({ url, reportNumber }: { url: string; reportNumber: strin
 
 interface ReportContentProps {
   report: Report;
-  onGetDirections: () => void;
 }
 
-const ReportContent = ({ report, onGetDirections }: ReportContentProps) => {
+const ReportContent = ({ report }: ReportContentProps) => {
   const locationQualityInfo = getLocationQualityInfo(report.location_quality);
   const formattedAccuracy = formatAccuracy(report.location_accuracy);
 
@@ -112,6 +110,20 @@ const ReportContent = ({ report, onGetDirections }: ReportContentProps) => {
             <div>
               <p className="text-xs sm:text-sm font-bold text-red-900 tracking-tight">LIFE-THREATENING INCIDENT</p>
               <p className="text-[10px] sm:text-[12px] font-semibold text-red-700">Immediate first response and medical dispatch required</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {report.accident_status === "RESOLVED" && (
+        <div className="bg-green-50/80 border-l-4 border-green-600 p-3 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
+              <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-green-900 tracking-tight">INCIDENT RESOLVED</p>
+              <p className="text-[10px] sm:text-[12px] font-semibold text-green-700">This situation has been safely cleared by responders.</p>
             </div>
           </div>
         </div>
@@ -243,16 +255,6 @@ const ReportContent = ({ report, onGetDirections }: ReportContentProps) => {
           </div>
         </div>
       </div>
-
-      <div className="pt-2">
-        <button
-          onClick={onGetDirections}
-          className="w-full bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3.5 sm:py-2.5 px-4 rounded-xl sm:rounded-lg text-sm transition-all flex items-center justify-center gap-2.5 sm:gap-2 shadow-lg shadow-green-100 active:scale-[0.98]"
-        >
-          <Navigation className="w-5 h-5 sm:w-4 sm:h-4" />
-          DISPATCH DIRECTIONS
-        </button>
-      </div>
     </div>
   );
 };
@@ -261,15 +263,8 @@ export function AccidentReportDetailsDialog({
   isOpen,
   onOpenChange,
   report,
-  onGetDirections,
 }: AccidentReportDetailsDialogProps) {
   const isMobile = useIsMobile();
-
-  const handleGetDirectionsClick = () => {
-    onGetDirections(report.latitude, report.longitude);
-    onOpenChange(false);
-  };
-
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onOpenChange}>
@@ -294,7 +289,6 @@ export function AccidentReportDetailsDialog({
           <div className="px-6 py-4 overflow-y-auto max-h-[calc(92vh-100px)]">
             <ReportContent
               report={report}
-              onGetDirections={handleGetDirectionsClick}
             />
           </div>
         </DrawerContent>
@@ -323,7 +317,6 @@ export function AccidentReportDetailsDialog({
         <div className="px-4 py-6 overflow-y-auto">
           <ReportContent
             report={report}
-            onGetDirections={handleGetDirectionsClick}
           />
         </div>
       </DialogContent>

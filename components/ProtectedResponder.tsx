@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { ReactNode, useEffect } from 'react'
 
-export default function ProtectedAdmin({ children }: { children: ReactNode }) {
+export default function ProtectedResponder({ children }: { children: ReactNode }) {
     const router = useRouter()
     const { user } = useAppSelector((state) => state.auth);
     const {
@@ -23,22 +23,18 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
         }
 
         if (!isLoading && profile) {
-            if (profile.profile.user_type === 'lgu' || profile.profile.user_type === 'blgu') {
+            const userType = profile.profile.user_type;
+            if (userType === 'lgu' || userType === 'blgu' || userType === 'admin') {
                 router.replace('/dashboard/map');
-            }
-            if (profile.profile.user_type === 'responder') {
-                router.replace('/responder/map');
-            }
-
-            if (profile.profile.user_type === 'admin') {
-                router.replace('/admin');
+            } else if (userType !== 'responder') {
+                router.replace('/');
             }
         }
 
     }, [user, profile, isLoading, router]);
 
 
-    if (!user || isLoading || !profile) {
+    if (!user || isLoading || !profile || profile.profile.user_type !== 'responder') {
         return (
             <div className="flex items-center justify-center h-screen w-screen">
                 <div className="flex flex-col items-center gap-4 ">
