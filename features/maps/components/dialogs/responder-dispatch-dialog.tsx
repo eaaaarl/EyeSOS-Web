@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { toast } from "sonner";
 import { AvailableResponders } from "../../api/interface";
+import { formatDistance, getDistanceKm } from "../../utils/haversine";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;
@@ -91,32 +92,41 @@ const DispatchContent = ({ report, isDispatching, onDispatch, availableResponder
                         </p>
                     </div>
                 ) : (
-                    availableResponders?.responders.map((resp) => (
-                        <div
-                            key={resp.id}
-                            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group transition-all hover:border-blue-300 hover:shadow-md hover:shadow-blue-50/50"
-                        >
-                            <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-blue-50 transition-colors">
-                                    <Ambulance className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
-                                </div>
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-xs font-bold text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
-                                    {/* <span className="text-[10px] font-semibold text-gray-500 truncate">{resp.unit} • {resp.distance}</span> */}
-                                </div>
-                            </div>
-                            <button
-                                disabled={isDispatching !== null}
-                                onClick={() => onDispatch(resp.id, resp.profiles.name)}
-                                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.id
-                                    ? "bg-blue-100 text-blue-400 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
-                                    }`}
+                    availableResponders?.responders.map((resp) => {
+
+                        const latitude = resp.latitude;
+                        const longitude = resp.longitude;
+
+                        const distance = latitude && longitude
+                            ? formatDistance(getDistanceKm(latitude, longitude, report.latitude, report.longitude))
+                            : null;
+                        return (
+                            <div
+                                key={resp.id}
+                                className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group transition-all hover:border-blue-300 hover:shadow-md hover:shadow-blue-50/50"
                             >
-                                {isDispatching === resp.id ? "Assigning..." : "Dispatch"}
-                            </button>
-                        </div>
-                    ))
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-blue-50 transition-colors">
+                                        <Ambulance className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-xs font-bold text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
+                                        <span className="text-[10px] font-semibold text-gray-500 truncate">{/* {resp.unit} •  */}{distance}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    disabled={isDispatching !== null}
+                                    onClick={() => onDispatch(resp.id, resp.profiles.name)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.id
+                                        ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
+                                        }`}
+                                >
+                                    {isDispatching === resp.id ? "Assigning..." : "Dispatch"}
+                                </button>
+                            </div>
+                        )
+                    })
                 )}
             </div>
         </div>

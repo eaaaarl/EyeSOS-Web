@@ -139,6 +139,35 @@ export const mapApi = createApi({
         };
       },
     }),
+    updateResponderLocation: builder.mutation<
+      { status: boolean; message: string },
+      { userId: string; latitude: number; longitude: number }
+    >({
+      queryFn: async ({ userId, latitude, longitude }) => {
+        const { error } = await supabase
+          .from("responder_details")
+          .update({
+            latitude,
+            longitude,
+            last_location_updated_at: new Date().toISOString(),
+          })
+          .eq("profile_id", userId);
+
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+        return {
+          data: {
+            status: true,
+            message: "Location updated.",
+          },
+        };
+      },
+    }),
   }),
 });
 
@@ -146,4 +175,5 @@ export const {
   useGetAllReportsBystanderQuery,
   useSendAccidentResponseMutation,
   useGetAvailableRespondersQuery,
+  useUpdateResponderLocationMutation,
 } = mapApi;

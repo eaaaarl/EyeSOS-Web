@@ -1,27 +1,28 @@
 "use client";
-
 import { useState } from "react";
 import { BaseMap } from "./base-map";
 import { MapNavigation } from "./map-navigation";
-import { ProfileSheet } from "../dialogs/profile-sheet";
+import { ResponderProfileSheet } from "../dialogs/responder-profile-sheet";
 import { ResponderDispatchAlert } from "./responder-dispatch-alert";
+import { LocationMarker } from "./location-marker";
+import { LocationButton } from "./location-button";
 
 export function ResponderMap() {
     const [isOpen, setIsOpen] = useState(false);
-
     return (
-        <>
+        <div className="h-screen w-screen relative">
             <BaseMap>
-                {/* Responders might see assigned markers here in the future */}
+                <LocationMarker />
             </BaseMap>
 
+            <LocationButton />
             <MapNavigation
                 isResponder={true}
                 reports={[]}
                 onMenuClick={() => setIsOpen(true)}
             />
-            <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+            <ResponderProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
             <ResponderDispatchAlert />
-        </>
+        </div>
     );
 }

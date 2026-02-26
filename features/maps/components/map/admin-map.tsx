@@ -8,7 +8,7 @@ import { MapNavigation } from "./map-navigation";
 import { createPinMarkerIcon } from "./marker";
 import { useDirections } from "../../hooks/use-directions";
 import { useGetAllReportsBystanderQuery, useGetAvailableRespondersQuery } from "../../api/mapApi";
-import { ProfileSheet } from "../dialogs/profile-sheet";
+import { AdminProfileSheet } from "../dialogs/admin-profile-sheet";
 import BottomReports from "../shared/bottom-reports";
 
 export function AdminMap() {
@@ -18,9 +18,6 @@ export function AdminMap() {
     const { data: allReports } = useGetAllReportsBystanderQuery();
     const { data: availableResponders, isLoading: availableRespondersLoading } = useGetAvailableRespondersQuery();
     const reports = allReports?.reports || [];
-
-    console.log('availableResponders', JSON.stringify(availableResponders, null, 2));
-
     return (
         <>
             <BaseMap reports={reports}>
@@ -45,7 +42,7 @@ export function AdminMap() {
                 reports={reports}
                 onMenuClick={() => setIsOpen(true)}
             />
-            <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
+            <AdminProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
             <BottomReports reports={reports} />
         </>
     );

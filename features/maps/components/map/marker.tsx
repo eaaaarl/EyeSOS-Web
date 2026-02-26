@@ -194,3 +194,44 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
   });
 };
 
+
+export const createBlueDotIcon = () => {
+  return L.divIcon({
+    className: 'blue-dot-marker',
+    html: `
+      <div style="position: relative; width: 24px; height: 24px;">
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 24px;
+          height: 24px;
+          margin: -12px 0 0 -12px;
+          background: rgba(59, 130, 246, 0.2);
+          border-radius: 50%;
+          animation: blue-pulse 2s ease-out infinite;
+        "></div>
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 12px;
+          height: 12px;
+          margin: -6px 0 0 -6px;
+          background: #3B82F6;
+          border: 2px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        "></div>
+        <style>
+          @keyframes blue-pulse {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.4); opacity: 0; }
+          }
+        </style>
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
