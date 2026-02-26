@@ -1,83 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import {
-  ReportsResponse,
-  Report,
-} from "../interfaces/get-all-reports-bystander.interface";
-import { AvailableResponders, sendAccidentResponse } from "./interface";
+
+import { sendAccidentResponse } from "./interface";
 
 export const mapApi = createApi({
   reducerPath: "mapApi",
   baseQuery: fakeBaseQuery(),
   tagTypes: ["getAccidents"],
   endpoints: (builder) => ({
-    getAllReportsBystander: builder.query<ReportsResponse, void>({
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("accidents")
-          .select("*, accident_images(*)")
-          .neq("accident_status", "RESOLVED");
-        if (error) {
-          return {
-            error: {
-              message: error.message,
-            },
-          };
-        }
-
-        return {
-          data: {
-            reports: data,
-            meta: {
-              success: true,
-              message: "All reports fetched.",
-            },
-          },
-        };
-      },
-      providesTags: ["getAccidents"],
-      async onCacheEntryAdded(
-        arg,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
-      ) {
-        try {
-          await cacheDataLoaded;
-
-          const channel = supabase
-            .channel("lgu-blgu-accidents-realtime")
-            .on(
-              "postgres_changes",
-              { event: "*", schema: "public", table: "accidents" },
-              (payload) => {
-                updateCachedData((draft) => {
-                  if (payload.eventType === "INSERT") {
-                    draft.reports.unshift(payload.new as Report);
-                  } else if (payload.eventType === "UPDATE") {
-                    const index = draft.reports.findIndex(
-                      (r) => r.id === (payload.new as Report).id,
-                    );
-
-                    if (index !== -1) {
-                      draft.reports[index] = payload.new as Report;
-                    }
-                  } else if (payload.eventType === "DELETE") {
-                    draft.reports = draft.reports.filter(
-                      (r) => r.id !== (payload.old as Report).id,
-                    );
-                  }
-                });
-              },
-            )
-            .subscribe();
-
-          await cacheEntryRemoved;
-          supabase.removeChannel(channel);
-        } catch (error) {
-          console.error("❌ RTK Query realtime error:", error);
-        }
-      },
-    }),
-
     sendAccidentResponse: builder.mutation<
       { status: boolean; message: string },
       sendAccidentResponse
@@ -112,69 +42,6 @@ export const mapApi = createApi({
         };
       },
       invalidatesTags: ["getAccidents"],
-    }),
-
-    getAvailableResponders: builder.query<AvailableResponders, void>({
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from("responder_details")
-          .select("*, profiles(*)")
-          .eq("is_available", true);
-
-        if (error) return { error: { message: error.message } };
-
-        return {
-          data: {
-            responders: data,
-            meta: { success: true, message: "Available responders fetched." },
-          },
-        };
-      },
-
-      async onCacheEntryAdded(
-        args,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
-      ) {
-        // Wait for initial query to finish
-        await cacheDataLoaded;
-
-        const channel = supabase
-          .channel("responder_details_changes")
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "responder_details",
-            },
-            async (payload) => {
-              if (payload.eventType === "DELETE") {
-                updateCachedData((draft) => {
-                  draft.responders = draft.responders.filter(
-                    (r) => r.id !== payload.old.id,
-                  );
-                });
-              } else {
-                // INSERT or UPDATE — refetch to get profiles joined
-                const { data } = await supabase
-                  .from("responder_details")
-                  .select("*, profiles(*)")
-                  .eq("is_available", true);
-
-                if (data) {
-                  updateCachedData((draft) => {
-                    draft.responders = data;
-                  });
-                }
-              }
-            },
-          )
-          .subscribe();
-
-        // Cleanup when cache entry is removed
-        await cacheEntryRemoved;
-        supabase.removeChannel(channel);
-      },
     }),
 
     updateResponderLocation: builder.mutation<
@@ -314,151 +181,12 @@ export const mapApi = createApi({
         supabase.removeChannel(channel);
       },
     }),
-
-    // RESPONDER CONTEXT
-    getResponderDispatch: builder.query<
-      { accident: Report | null; status: string | null },
-      string
-    >({
-      queryFn: async (responderId) => {
-        const { data, error } = await supabase
-          .from("accident_responses")
-          .select("*, accidents(*, accident_images(*))")
-          .eq("responder_id", responderId)
-          .in("response_type", ["dispatched", "accepted"])
-          .order("responded_at", { ascending: false })
-          .limit(1)
-          .single();
-
-        if (error) return { data: { accident: null, status: null } };
-
-        return {
-          data: {
-            accident: (data?.accidents as Report) ?? null,
-            status: data?.response_type ?? null,
-          },
-        };
-      },
-
-      async onCacheEntryAdded(
-        responderId,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
-      ) {
-        await cacheDataLoaded;
-
-        const channel = supabase
-          .channel(`dispatch_${responderId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "accident_responses",
-              filter: `responder_id=eq.${responderId}`,
-            },
-            async (payload) => {
-              if (payload.eventType === "DELETE") {
-                updateCachedData((draft) => {
-                  draft.accident = null;
-                });
-                return;
-              }
-
-              const responseType = payload.new.response_type;
-              if (
-                responseType !== "dispatched" &&
-                responseType !== "accepted"
-              ) {
-                updateCachedData((draft) => {
-                  draft.accident = null;
-                });
-                return;
-              }
-
-              const { data: accident } = await supabase
-                .from("accidents")
-                .select("*, accident_images(*)")
-                .eq("id", payload.new.accident_id)
-                .single();
-
-              if (accident) {
-                updateCachedData((draft) => {
-                  draft.accident = accident as Report;
-                  draft.status = payload.new.response_type;
-                });
-              }
-            },
-          )
-          .subscribe();
-
-        await cacheEntryRemoved;
-        supabase.removeChannel(channel);
-      },
-    }),
-
-    updateResponderAvailability: builder.mutation<
-      { meta: { success: boolean; message: string } },
-      { responderId: string; is_available: boolean }
-    >({
-      queryFn: async ({ responderId, is_available }) => {
-        const { error } = await supabase
-          .from("responder_details")
-          .update({ is_available })
-          .eq("profile_id", responderId);
-
-        if (error) return { error: { message: error.message } };
-        return {
-          data: { meta: { success: true, message: "Update Available Status" } },
-        };
-      },
-    }),
-
-    updateAccidentStatus: builder.mutation<
-      { meta: { success: boolean; message: string } },
-      { accidentId: string; status: string }
-    >({
-      queryFn: async ({ accidentId, status }) => {
-        const { error } = await supabase
-          .from("accidents")
-          .update({ accident_status: status })
-          .eq("id", accidentId);
-
-        if (error) return { error: { message: error.message } };
-        return {
-          data: { meta: { success: true, message: "Update Accident Status" } },
-        };
-      },
-    }),
-
-    updateAccidentResponseStatus: builder.mutation<
-      { meta: { success: boolean; message: string } },
-      { responderId: string; accidentId: string; status: string }
-    >({
-      queryFn: async ({ responderId, accidentId, status }) => {
-        const { error } = await supabase
-          .from("accident_responses")
-          .update({ response_type: status })
-          .eq("responder_id", responderId)
-          .eq("accident_id", accidentId);
-
-        if (error) return { error: { message: error.message } };
-        return {
-          data: { meta: { success: true, message: "Update Responder Status" } },
-        };
-      },
-    }),
   }),
 });
 
 export const {
-  useGetAllReportsBystanderQuery,
   useSendAccidentResponseMutation,
-  useGetAvailableRespondersQuery,
   useUpdateResponderLocationMutation,
   useDispatchResponderMutation,
-  useGetResponderDispatchQuery,
   useGetAccidentStatusQuery,
-  useUpdateResponderAvailabilityMutation,
-  useUpdateAccidentStatusMutation,
-  useUpdateAccidentResponseStatusMutation,
 } = mapApi;

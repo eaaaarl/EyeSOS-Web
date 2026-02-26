@@ -1,11 +1,11 @@
 "use client";
-import { useCurrentLocation } from "../../hooks/use-current-location";
+import { useCurrentLocation } from "../../maps/hooks/use-current-location";
 
 export function LocationButton() {
     const { getCurrentLocation, isLoading } = useCurrentLocation();
 
     return (
-        <div className="absolute bottom-32 right-3 z-[1000]">
+        <div className="absolute bottom-32 right-3">
             <button
                 onClick={getCurrentLocation}
                 disabled={isLoading}

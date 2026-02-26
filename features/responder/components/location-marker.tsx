@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
-import { useCurrentLocation } from "../../hooks/use-current-location";
+import { useCurrentLocation } from "../../maps/hooks/use-current-location";
 
 export function LocationMarker({ autoRequest = false }: { autoRequest?: boolean }) {
     const map = useMap();

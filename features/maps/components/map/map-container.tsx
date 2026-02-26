@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapPopup } from "./map-popup";
+import { MapPopup } from "../../../dispatcher/components/map-popup";
 import { MapNavigation } from "./map-navigation";
 import { createPinMarkerIcon } from "./marker";
 import { useDirections } from "../../hooks/use-directions";
@@ -13,7 +13,7 @@ import { MapAutoZoom } from "./map-auto-zoom";
 import L from "leaflet";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
-import { ResponderDispatchAlert } from "./responder-dispatch-alert";
+import { ResponderDispatchAlert } from "../../../responder/components/responder-dispatch-alert";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();

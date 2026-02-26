@@ -15,8 +15,8 @@ import {
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { getSeverityColor } from "../../utils/severityColor";
 import { DateTime } from 'luxon';
-import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
-import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
+import { AccidentReportDetailsDialog } from "../../../dispatcher/components/accident-report-details-dialog";
+import { ResponderDispatchDialog } from "../../../dispatcher/components/responder-dispatch-dialog";
 import { useCurrentLocation } from "../../hooks/use-current-location";
 import { toast } from "sonner";
 import {
@@ -29,7 +29,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
-import { useGetAvailableRespondersQuery } from "../../api/mapApi";
+import { useGetAvailableRespondersQuery } from '@/features/dispatcher/api/dispatcherApi';
 
 interface BottomReportsProps {
   reports?: Report[];

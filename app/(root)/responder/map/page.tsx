@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const ResponderMap = dynamic(() => import("@/features/maps/components/map/responder-map").then(mod => mod.ResponderMap), {
+const ResponderMap = dynamic(() => import("@/features/responder/components/responder-map").then(mod => mod.ResponderMap), {
     ssr: false,
 });
 
