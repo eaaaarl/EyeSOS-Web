@@ -23,47 +23,54 @@ export function useCurrentLocation(autoRequest = false) {
   });
 
   const getCurrentLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
+    return new Promise<{ latitude: number; longitude: number }>(
+      (resolve, reject) => {
+        if (!navigator.geolocation) {
+          toast.error("Geolocation is not supported by your browser");
+          reject(new Error("Geolocation not supported"));
+          return;
+        }
 
-    sharedLoading = true;
-    notify();
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        sharedLocation = [latitude, longitude];
-        sharedLoading = false;
+        sharedLoading = true;
         notify();
 
-        if (user?.id) {
-          try {
-            await updateLocation({
-              userId: user.id,
-              latitude,
-              longitude,
-            }).unwrap();
-          } catch (error) {
-            console.error("Failed to update location:", error);
-          }
-        }
-      },
-      (error) => {
-        sharedLoading = false;
-        notify();
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            sharedLocation = [latitude, longitude];
+            sharedLoading = false;
+            notify();
 
-        let message = "Unable to retrieve your location";
-        if (error.code === error.PERMISSION_DENIED) {
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-          message = isIOS
-            ? "Go to Settings → Privacy & Security → Location Services → Safari → Allow"
-            : "Location denied. Enable it in your browser settings.";
-        }
-        toast.error(message, { duration: 6000 });
+            if (user?.id) {
+              try {
+                await updateLocation({
+                  userId: user.id,
+                  latitude,
+                  longitude,
+                }).unwrap();
+              } catch (error) {
+                console.error("Failed to update location:", error);
+              }
+            }
+            resolve({ latitude, longitude });
+          },
+          (error) => {
+            sharedLoading = false;
+            notify();
+
+            let message = "Unable to retrieve your location";
+            if (error.code === error.PERMISSION_DENIED) {
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              message = isIOS
+                ? "Go to Settings → Privacy & Security → Location Services → Safari → Allow"
+                : "Location denied. Enable it in your browser settings.";
+            }
+            toast.error(message, { duration: 6000 });
+            reject(new Error(message));
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }, [user, updateLocation]);
 

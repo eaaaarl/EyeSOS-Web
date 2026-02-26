@@ -47,11 +47,7 @@ export function ResponderDispatchDialog({
         { skip: !report?.id || !isOpen }
     );
 
-
-
     const dispatchStatus = accidentStatusData?.responseType === "dispatched" ? "waiting" : accidentStatusData?.responseType === "accepted" ? "accepted" : accidentStatusData?.responseType === "rejected" ? "idle" : "idle";
-
-    console.log('dispatchStatus', dispatchStatus)
 
     useEffect(() => {
         if (accidentStatusData?.responderId) {

@@ -9,12 +9,16 @@ import {
   Info,
   Shield,
   Eye,
+  CheckCircle2,
+  Navigation,
 } from 'lucide-react';
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { getSeverityColor } from "../../utils/severityColor";
 import { DateTime } from 'luxon';
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
 import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
+import { useCurrentLocation } from "../../hooks/use-current-location";
+import { toast } from "sonner";
 import {
   Drawer,
   DrawerContent,
@@ -29,6 +33,7 @@ import { useGetAvailableRespondersQuery } from "../../api/mapApi";
 
 interface BottomReportsProps {
   reports?: Report[];
+  isResponder?: boolean;
 }
 
 interface BottomTriggerProps {
@@ -65,9 +70,11 @@ const BottomTrigger = ({ reports, isMobile, isExpanded, hasCritical }: BottomTri
   </div>
 );
 
-export default function BottomReports({ reports = [] }: BottomReportsProps) {
+export default function BottomReports({ reports = [], isResponder = false }: BottomReportsProps) {
   const isMobile = useIsMobile();
   const { user } = useAppSelector((state) => state.auth);
+  const { getCurrentLocation, isLoading: isFetchingLocation } = useCurrentLocation();
+  const [isNavigating, setIsNavigating] = useState(false);
   const { data: profileData } = useGetUserProfileQuery(
     { user_id: user?.id || "" },
     { skip: !user?.id }
@@ -105,10 +112,16 @@ export default function BottomReports({ reports = [] }: BottomReportsProps) {
           >
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className={`${getSeverityColor(report.severity)} text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight`}>
                     {report.severity}
                   </span>
+                  {report.accident_status === "RESOLVED" && (
+                    <span className="bg-green-600 text-white px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tight flex items-center gap-0.5">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      Resolved
+                    </span>
+                  )}
                   <span className="text-[9px] font-poppins text-gray-400">#{report.report_number.slice(-4)}</span>
                 </div>
                 <span className="text-[9px] text-gray-400">
@@ -126,27 +139,80 @@ export default function BottomReports({ reports = [] }: BottomReportsProps) {
 
               {isAdmin && (
                 <div className="flex gap-1.5 pt-0.5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedReport(report);
-                      setIsDispatchOpen(true);
-                    }}
-                    className="flex-1 h-7.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all shadow-sm shadow-blue-100 active:scale-95"
-                  >
-                    <Shield className="w-3 h-3" />
-                    Dispatch
-                  </button>
+                  {report.accident_status !== "RESOLVED" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReport(report);
+                        setIsDispatchOpen(true);
+                      }}
+                      className="flex-1 h-7.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all shadow-sm shadow-blue-100 active:scale-95"
+                    >
+                      <Shield className="w-3 h-3" />
+                      Dispatch
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedReport(report);
                       setIsDetailsOpen(true);
                     }}
-                    className="flex-1 h-7.5 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all active:scale-95"
+                    className={`${report.accident_status === "RESOLVED" ? "w-full" : "flex-1"} h-7.5 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all active:scale-95`}
                   >
                     <Eye className="w-3 h-3" />
-                    Details
+                    {report.accident_status === "RESOLVED" ? "View Resolved Details" : "Details"}
+                  </button>
+                </div>
+              )}
+
+              {isResponder && (
+                <div className="flex gap-1.5 pt-0.5">
+                  {report.accident_status !== "RESOLVED" && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!report?.latitude || !report?.longitude) return;
+                        setIsNavigating(true);
+                        const win = window.open("", "_blank");
+                        if (!win) {
+                          setIsNavigating(false);
+                          toast.error("Popup blocked. Please allow popups for this site.");
+                          return;
+                        }
+
+                        try {
+                          const location = await getCurrentLocation();
+                          const url = `https://www.google.com/maps/dir/?api=1&origin=${location.latitude},${location.longitude}&destination=${report.latitude},${report.longitude}&travelmode=driving`;
+                          win.location.href = url;
+                        } catch (error) {
+                          console.error("Failed to get current location:", error);
+                          win.location.href = `https://www.google.com/maps/dir/?api=1&destination=${report.latitude},${report.longitude}&travelmode=driving`;
+                        } finally {
+                          setIsNavigating(false);
+                        }
+                      }}
+                      disabled={isNavigating || isFetchingLocation}
+                      className="flex-1 h-7.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all shadow-sm shadow-blue-100 active:scale-95 disabled:opacity-50"
+                    >
+                      {isNavigating || isFetchingLocation ? (
+                        <Navigation className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Navigation className="w-3 h-3" />
+                      )}
+                      Navigate
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedReport(report);
+                      setIsDetailsOpen(true);
+                    }}
+                    className={`${report.accident_status === "RESOLVED" ? "w-full" : "flex-1"} h-7.5 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all active:scale-95`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    {report.accident_status === "RESOLVED" ? "View Resolved Details" : "Details"}
                   </button>
                 </div>
               )}

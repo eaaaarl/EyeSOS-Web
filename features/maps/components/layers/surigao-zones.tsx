@@ -11,33 +11,28 @@ interface MunicipalityAccidentZonesProps {
     }>;
 }
 
+interface GeoJsonFeature {
+    properties: {
+        NAME_2: string;
+        PROVINCE?: string;
+    };
+}
+
+interface GeoJsonData {
+    features: GeoJsonFeature[];
+}
+
 export function MunicipalityAccidentZones({ reports }: MunicipalityAccidentZonesProps) {
-    const [geoJsonData, setGeoJsonData] = useState<any>(null);
+    const [geoJsonData, setGeoJsonData] = useState<GeoJsonData | null>(null);
     const [municipalityStats, setMunicipalityStats] = useState<Map<string, any>>(new Map());
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const url = '/geojson/surigao-del-sur.json';
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                setGeoJsonData(data);
-                calculateStats(data);
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error('Error loading GeoJSON:', error);
-                setLoading(false);
-            });
-    }, []);
-
-    const calculateStats = (geoData: any) => {
+    const calculateStats = (geoData: GeoJsonData) => {
         if (!geoData || !geoData.features) return;
 
-        const stats = new Map();
+        const stats = new Map<string, any>();
 
-        geoData.features.forEach((feature: any) => {
+        geoData.features.forEach((feature: GeoJsonFeature) => {
             const municipalityName = feature.properties.NAME_2;
 
             if (!municipalityName) return;
@@ -93,12 +88,24 @@ export function MunicipalityAccidentZones({ reports }: MunicipalityAccidentZones
     };
 
     useEffect(() => {
-        if (geoJsonData) {
-            calculateStats(geoJsonData);
-        }
-    }, [reports]);
+        const url = '/geojson/surigao-del-sur.json';
 
-    const getStyle = (feature: any) => {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                setGeoJsonData(data);
+                calculateStats(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON:', error);
+                setLoading(false);
+            });
+    }, [reports]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
+    const getStyle = (feature: GeoJsonFeature) => {
         const municipalityName = feature.properties.NAME_2;
         const stats = municipalityStats.get(municipalityName);
         const severity = stats?.severity || 'low';
@@ -139,7 +146,7 @@ export function MunicipalityAccidentZones({ reports }: MunicipalityAccidentZones
         return styles[severity as keyof typeof styles] || styles.low;
     };
 
-    const onEachFeature = (feature: any, layer: any) => {
+    const onEachFeature = (feature: GeoJsonFeature, layer: L.Layer) => {
         const municipalityName = feature.properties.NAME_2;
         const province = feature.properties.PROVINCE;
         const stats = municipalityStats.get(municipalityName);
@@ -227,16 +234,16 @@ export function MunicipalityAccidentZones({ reports }: MunicipalityAccidentZones
 
         // Hover effects
         layer.on({
-            mouseover: (e: any) => {
-                const layer = e.target;
+            mouseover: (eKind: L.LeafletMouseEvent) => {
+                const layer = eKind.target;
                 const currentStyle = getStyle(feature);
                 layer.setStyle({
                     fillOpacity: currentStyle.fillOpacity + 0.15,
                     weight: currentStyle.weight + 1,
                 });
             },
-            mouseout: (e: any) => {
-                const layer = e.target;
+            mouseout: (eKind: L.LeafletMouseEvent) => {
+                const layer = eKind.target;
                 layer.setStyle(getStyle(feature));
             },
         });

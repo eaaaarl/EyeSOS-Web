@@ -15,7 +15,8 @@ export const mapApi = createApi({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("accidents")
-          .select("*, accident_images(*)");
+          .select("*, accident_images(*)")
+          .neq("accident_status", "RESOLVED");
         if (error) {
           return {
             error: {
@@ -207,7 +208,7 @@ export const mapApi = createApi({
     }),
 
     dispatchResponder: builder.mutation<
-      void,
+      { meta: { success: boolean; message: string } },
       {
         accidentId: string;
         responderId: string;
@@ -233,9 +234,12 @@ export const mapApi = createApi({
         if (availabilityResult.error)
           return { error: { message: availabilityResult.error.message } };
 
-        return { data: undefined };
+        return {
+          data: { meta: { success: true, message: "Responder dispatched." } },
+        };
       },
     }),
+
     getAccidentStatus: builder.query<
       {
         responseType: string | null;
@@ -258,7 +262,8 @@ export const mapApi = createApi({
 
         return {
           data: {
-            responderName: data?.profiles?.name ?? null,
+            responderName:
+              (data?.profiles as unknown as { name: string })?.name ?? null,
             responseType: data?.response_type ?? null,
             responderId: data?.responder_id ?? null,
             responseId: data?.id ?? null,
@@ -283,11 +288,12 @@ export const mapApi = createApi({
               filter: `accident_id=eq.${accidentId}`,
             },
             async (payload) => {
-              // Refetch to get the profile and joined data
+              const newRecord = payload.new as { id: string };
+
               const { data } = await supabase
                 .from("accident_responses")
                 .select("id, response_type, responder_id, profiles(name)")
-                .eq("id", payload.new.id)
+                .eq("id", newRecord.id)
                 .single();
 
               if (data) {
@@ -296,8 +302,8 @@ export const mapApi = createApi({
                   draft.responderId = data.responder_id;
                   draft.responseId = data.id;
                   draft.responderName =
-                    (data.profiles as { name: string | null } | null)?.name ??
-                    null;
+                    (data.profiles as unknown as { name: string | null } | null)
+                      ?.name ?? null;
                 });
               }
             },
@@ -310,22 +316,26 @@ export const mapApi = createApi({
     }),
 
     // RESPONDER CONTEXT
-    getResponderDispatch: builder.query<{ accident: Report | null }, string>({
+    getResponderDispatch: builder.query<
+      { accident: Report | null; status: string | null },
+      string
+    >({
       queryFn: async (responderId) => {
         const { data, error } = await supabase
           .from("accident_responses")
           .select("*, accidents(*, accident_images(*))")
           .eq("responder_id", responderId)
-          .eq("response_type", "dispatched")
+          .in("response_type", ["dispatched", "accepted"])
           .order("responded_at", { ascending: false })
           .limit(1)
           .single();
 
-        if (error) return { data: { accident: null } };
+        if (error) return { data: { accident: null, status: null } };
 
         return {
           data: {
             accident: (data?.accidents as Report) ?? null,
+            status: data?.response_type ?? null,
           },
         };
       },
@@ -341,12 +351,30 @@ export const mapApi = createApi({
           .on(
             "postgres_changes",
             {
-              event: "INSERT",
+              event: "*",
               schema: "public",
               table: "accident_responses",
               filter: `responder_id=eq.${responderId}`,
             },
             async (payload) => {
+              if (payload.eventType === "DELETE") {
+                updateCachedData((draft) => {
+                  draft.accident = null;
+                });
+                return;
+              }
+
+              const responseType = payload.new.response_type;
+              if (
+                responseType !== "dispatched" &&
+                responseType !== "accepted"
+              ) {
+                updateCachedData((draft) => {
+                  draft.accident = null;
+                });
+                return;
+              }
+
               const { data: accident } = await supabase
                 .from("accidents")
                 .select("*, accident_images(*)")
@@ -356,6 +384,7 @@ export const mapApi = createApi({
               if (accident) {
                 updateCachedData((draft) => {
                   draft.accident = accident as Report;
+                  draft.status = payload.new.response_type;
                 });
               }
             },

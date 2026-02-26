@@ -12,6 +12,7 @@ import {
   Navigation,
   Eye,
   Shield,
+  CheckCircle2
 } from "lucide-react";
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
@@ -50,7 +51,7 @@ export function MapPopup({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const hasMultipleReports = totalCount > 1 && additionalReports;
-
+  const resolved = accident.accident_status === "RESOLVED";
   const handleGetDirectionsClick = (lat: number, lng: number) => {
     setPendingCoordinates({ lat, lng });
     setIsConfirmationOpen(true);
@@ -117,9 +118,17 @@ export function MapPopup({
             <h3 className="text-[10px] font-bold text-gray-900">
               #{selectedReport.report_number}
             </h3>
-            <span className={`${getSeverityColor(selectedReport.severity)} text-white px-1 py-0.5 rounded text-[8px] font-bold uppercase`}>
-              {selectedReport.severity}
-            </span>
+            <div className="flex items-center gap-1">
+              <span className={`${getSeverityColor(selectedReport.severity)} text-white px-1 py-0.5 rounded text-[8px] font-bold uppercase`}>
+                {selectedReport.severity}
+              </span>
+              {resolved && (
+                <span className="bg-green-600 text-white px-1 py-0.5 rounded text-[8px] font-bold uppercase flex items-center gap-0.5">
+                  <CheckCircle2 className="w-2 h-2" />
+                  Resolved
+                </span>
+              )}
+            </div>
           </div>
           <p className="text-[9px] text-gray-500 font-medium">
             {DateTime.fromISO(selectedReport.created_at).toFormat("MMM dd, h:mm a")}
@@ -134,7 +143,15 @@ export function MapPopup({
         </div>
 
         <div className="flex flex-col gap-2">
-          {isAdmin ? (
+          {resolved ? (
+            <button
+              onClick={() => setIsDetailsOpen(true)}
+              className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm"
+            >
+              <Eye className="w-3 h-3" />
+              View Resolved Details
+            </button>
+          ) : isAdmin ? (
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setIsDispatchOpen(true)}

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
     AlertTriangle, MapPin, CheckCircle, XCircle,
-    Navigation, Clock, ShieldCheck, ChevronRight, Bell
+    Clock, ShieldCheck, ChevronRight, Bell,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,33 +20,29 @@ import {
 } from "../../api/mapApi";
 
 interface ResponderDispatchAlertProps {
+    status: "notified" | "accepted" | "resolved" | null;
+    onStatusChange: (status: "notified" | "accepted" | "resolved" | null) => void;
     onAccept?: (report: Report) => void;
     onReject?: () => void;
 }
 
-export function ResponderDispatchAlert({ onAccept, onReject }: ResponderDispatchAlertProps) {
+export function ResponderDispatchAlert({ status, onStatusChange, onAccept, onReject }: ResponderDispatchAlertProps) {
     const { user } = useAppSelector((state) => state.auth);
     const { data } = useGetResponderDispatchQuery(user?.id ?? "", {
         skip: !user?.id,
     });
-    const [status, setStatus] = useState<"notified" | "accepted" | "resolved" | null>(null);
-    const [handledId, setHandledId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [activeAction, setActiveAction] = useState<"accept" | "reject" | null>(null);
 
     const dispatch = data?.accident ?? null;
-    const [updateResponderAvailability, { isLoading: updateResponderAvailabilityLoading }] = useUpdateResponderAvailabilityMutation();
-    const [updateAccidentStatus, { isLoading: updateAccidentStatusLoading }] = useUpdateAccidentStatusMutation();
-    const [updateAccidentResponseStatus, { isLoading: updateAccidentResponseStatusLoading }] = useUpdateAccidentResponseStatusMutation();
-    useEffect(() => {
-        if (dispatch?.id && dispatch.id !== handledId) {
-            setHandledId(dispatch.id);
-            setStatus("notified");
-        }
-    }, [dispatch?.id]); // eslint-disable-line
+    const [updateResponderAvailability, { isLoading: isUpdatingAvailability }] = useUpdateResponderAvailabilityMutation();
+    const [updateAccidentStatus, { isLoading: isUpdatingAccidentStatus }] = useUpdateAccidentStatusMutation();
+    const [updateAccidentResponseStatus, { isLoading: isUpdatingResponseStatus }] = useUpdateAccidentResponseStatusMutation();
+
+    const isMutationLoading = isUpdatingAvailability || isUpdatingAccidentStatus || isUpdatingResponseStatus;
 
     const handleAccept = async () => {
         if (!dispatch || !user?.id) return;
-        setIsLoading(true);
+        setActiveAction("accept");
         try {
             await Promise.all([
                 updateAccidentResponseStatus({
@@ -57,20 +54,24 @@ export function ResponderDispatchAlert({ onAccept, onReject }: ResponderDispatch
                     accidentId: dispatch.id,
                     status: "IN_PROGRESS",
                 }).unwrap(),
+                updateResponderAvailability({
+                    responderId: user.id,
+                    is_available: false,
+                }).unwrap(),
             ]);
-            setStatus("accepted");
+            onStatusChange("accepted");
             toast.success("Dispatch accepted. Navigate to the location immediately.");
             if (onAccept) onAccept(dispatch);
         } catch {
             toast.error("Failed to accept dispatch. Try again.");
         } finally {
-            setIsLoading(false);
+            setActiveAction(null);
         }
     };
 
     const handleReject = async () => {
         if (!dispatch || !user?.id) return;
-        setIsLoading(true);
+        setActiveAction("reject");
         try {
             await Promise.all([
                 updateAccidentResponseStatus({
@@ -87,46 +88,13 @@ export function ResponderDispatchAlert({ onAccept, onReject }: ResponderDispatch
                     is_available: true,
                 }).unwrap(),
             ]);
-            setStatus(null);
-            setHandledId(null);
+            onStatusChange(null);
             toast.error("Dispatch rejected.");
             if (onReject) onReject();
         } catch {
             toast.error("Failed to reject dispatch. Try again.");
         } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleResolve = async () => {
-        if (!dispatch || !user?.id) return;
-        setIsLoading(true);
-        try {
-            await Promise.all([
-                updateAccidentResponseStatus({
-                    responderId: user.id,
-                    accidentId: dispatch.id,
-                    status: 'resolved'
-                }).unwrap(),
-                updateAccidentStatus({
-                    accidentId: dispatch.id,
-                    status: "RESOLVED",
-                }).unwrap(),
-                updateResponderAvailability({
-                    responderId: user.id,
-                    is_available: true,
-                }).unwrap(),
-            ]);
-            setStatus("resolved");
-            toast.success("Incident marked as resolved. Great job!");
-            setTimeout(() => {
-                setStatus(null);
-                setHandledId(null);
-            }, 3000);
-        } catch {
-            toast.error("Failed to resolve incident. Try again.");
-        } finally {
-            setIsLoading(false);
+            setActiveAction(null);
         }
     };
 
@@ -202,37 +170,28 @@ export function ResponderDispatchAlert({ onAccept, onReject }: ResponderDispatch
                                 <div className="grid grid-cols-2 gap-3">
                                     <Button
                                         onClick={handleReject}
-                                        disabled={isLoading}
+                                        disabled={isMutationLoading}
                                         variant="outline"
                                         className="border-red-200 text-red-600 hover:bg-red-50 font-bold h-11"
                                     >
-                                        <XCircle className="w-4 h-4 mr-2" />
+                                        {isMutationLoading && activeAction === "reject" ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4 mr-2" />
+                                        )}
                                         REJECT
                                     </Button>
                                     <Button
                                         onClick={handleAccept}
-                                        disabled={isLoading}
+                                        disabled={isMutationLoading}
                                         className="bg-green-600 hover:bg-green-700 text-white font-bold h-11"
                                     >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        {isMutationLoading && activeAction === "accept" ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                        )}
                                         ACCEPT
-                                    </Button>
-                                </div>
-                            )}
-
-                            {status === "accepted" && (
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-center gap-2 py-2 text-green-700 animate-pulse bg-green-100/50 rounded-lg border border-green-200">
-                                        <Navigation className="w-4 h-4" />
-                                        <span className="text-[11px] font-bold uppercase">En Route to Incident</span>
-                                    </div>
-                                    <Button
-                                        onClick={handleResolve}
-                                        disabled={isLoading}
-                                        className="w-full bg-zinc-900 hover:bg-black text-white font-bold h-11"
-                                    >
-                                        <ShieldCheck className="w-4 h-4 mr-2" />
-                                        MARK AS RESOLVED
                                     </Button>
                                 </div>
                             )}
