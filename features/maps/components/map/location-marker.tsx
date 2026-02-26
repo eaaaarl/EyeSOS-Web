@@ -4,9 +4,9 @@ import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { useCurrentLocation } from "../../hooks/use-current-location";
 
-export function LocationMarker() {
+export function LocationMarker({ autoRequest = false }: { autoRequest?: boolean }) {
     const map = useMap();
-    const { location } = useCurrentLocation();
+    const { location } = useCurrentLocation(autoRequest);
     const markerRef = useRef<L.CircleMarker | null>(null);
     const pulseRef = useRef<L.CircleMarker | null>(null);
 

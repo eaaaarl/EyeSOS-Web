@@ -9,10 +9,11 @@ import { LocationButton } from "./location-button";
 
 export function ResponderMap() {
     const [isOpen, setIsOpen] = useState(false);
+
     return (
         <div className="h-screen w-screen relative">
             <BaseMap>
-                <LocationMarker />
+                <LocationMarker autoRequest={false} />
             </BaseMap>
 
             <LocationButton />

@@ -4,10 +4,12 @@ import { authReducer } from "./state/authSlice";
 import { mapApi } from "@/features/maps/api/mapApi";
 import { adminApi } from "@/features/admin/api/adminApi";
 import { notificationReducer } from "./state/notificationSlice";
+import { dispatchStatusReducer } from "./state/dispatchStatus";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   notification: notificationReducer,
+  dispatchStatus: dispatchStatusReducer,
 
   [authApi.reducerPath]: authApi.reducer,
   [mapApi.reducerPath]: mapApi.reducer,
