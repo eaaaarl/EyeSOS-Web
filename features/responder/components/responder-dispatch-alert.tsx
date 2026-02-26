@@ -10,14 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { DateTime } from "luxon";
-import { Report } from "../../interfaces/get-all-reports-bystander.interface";
+import { Report } from "../../maps/interfaces/get-all-reports-bystander.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
-import {
-    useGetResponderDispatchQuery,
-    useUpdateAccidentResponseStatusMutation,
-    useUpdateAccidentStatusMutation,
-    useUpdateResponderAvailabilityMutation,
-} from "../../api/mapApi";
+import { useGetResponderDispatchQuery, useUpdateAccidentResponseStatusMutation, useUpdateAccidentStatusMutation, useUpdateResponderAvailabilityMutation } from "../api/responderApi";
 
 interface ResponderDispatchAlertProps {
     status: "notified" | "accepted" | "resolved" | null;

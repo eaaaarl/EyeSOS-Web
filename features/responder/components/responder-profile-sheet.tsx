@@ -1,6 +1,6 @@
 "use client";
 
-import { BaseProfileSheet, ProfileSheetConfig } from "./base-profile-sheet";
+import { BaseProfileSheet, ProfileSheetConfig } from "../../maps/components/dialogs/base-profile-sheet";
 import { Activity } from "lucide-react";
 
 const responderConfig: ProfileSheetConfig = {

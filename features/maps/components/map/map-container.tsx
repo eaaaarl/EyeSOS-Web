@@ -13,7 +13,7 @@ import { MapAutoZoom } from "./map-auto-zoom";
 import L from "leaflet";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
-import { ResponderDispatchAlert } from "./responder-dispatch-alert";
+import { ResponderDispatchAlert } from "../../../responder/components/responder-dispatch-alert";
 
 export function MapContainerComponent() {
   const { openDirections } = useDirections();
