@@ -14,7 +14,6 @@ import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 import { getSeverityColor } from "../../utils/severityColor";
 import { DateTime } from 'luxon';
 import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-dialog";
-import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
 import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
 import {
   Drawer,
@@ -26,10 +25,10 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
+import { useGetAvailableRespondersQuery } from "../../api/mapApi";
 
 interface BottomReportsProps {
   reports?: Report[];
-  onGetDirections: (lat: number, lng: number) => void;
 }
 
 interface BottomTriggerProps {
@@ -66,13 +65,14 @@ const BottomTrigger = ({ reports, isMobile, isExpanded, hasCritical }: BottomTri
   </div>
 );
 
-export default function BottomReports({ reports = [], onGetDirections }: BottomReportsProps) {
+export default function BottomReports({ reports = [] }: BottomReportsProps) {
   const isMobile = useIsMobile();
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData } = useGetUserProfileQuery(
     { user_id: user?.id || "" },
     { skip: !user?.id }
   );
+  const { data: availableResponders, isLoading: availableRespondersLoading } = useGetAvailableRespondersQuery();
 
   const isAdmin = profileData?.profile?.user_type === "lgu" || profileData?.profile?.user_type === "blgu";
 
@@ -80,30 +80,6 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [pendingCoordinates, setPendingCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-
-  const handleGetDirectionsClick = (lat: number, lng: number) => {
-    setPendingCoordinates({ lat, lng });
-    setIsConfirmationOpen(true);
-  };
-
-  const handleConfirmResponse = async () => {
-    if (pendingCoordinates && selectedReport) {
-      try {
-        onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-      } catch (error) {
-        console.error("Failed to update status:", error);
-      }
-    }
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    setIsConfirmationOpen(open);
-    if (!open) {
-      setPendingCoordinates(null);
-    }
-  };
 
   if (!reports || reports.length === 0) {
     return null;
@@ -149,26 +125,27 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
               </div>
 
               {isAdmin && (
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-1.5 pt-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedReport(report);
                       setIsDispatchOpen(true);
                     }}
-                    className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-tighter rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm shadow-blue-100 active:scale-95"
+                    className="flex-1 h-7.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all shadow-sm shadow-blue-100 active:scale-95"
                   >
-                    <Shield className="w-3.5 h-3.5" />
+                    <Shield className="w-3 h-3" />
                     Dispatch
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedReport(report);
                       setIsDetailsOpen(true);
                     }}
-                    className="flex-1 h-9 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[11px] font-bold uppercase tracking-tighter rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                    className="flex-1 h-7.5 bg-slate-100 hover:bg-slate-200 text-gray-700 text-[10px] font-bold uppercase tracking-tighter rounded-md flex items-center justify-center gap-1 transition-all active:scale-95"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-3 h-3" />
                     Details
                   </button>
                 </div>
@@ -217,25 +194,16 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
               isOpen={isDetailsOpen}
               onOpenChange={setIsDetailsOpen}
               report={selectedReport}
-              onGetDirections={handleGetDirectionsClick}
             />
             <ResponderDispatchDialog
               isOpen={isDispatchOpen}
               onOpenChange={setIsDispatchOpen}
               report={selectedReport}
+              availableResponders={availableResponders ?? null}
+              isLoading={availableRespondersLoading}
             />
           </>
         )}
-        <ResponderConfirmationDialog
-          isOpen={isConfirmationOpen}
-          onOpenChange={handleOpenChange}
-          onConfirm={handleConfirmResponse}
-          onReopenDirections={() => {
-            if (pendingCoordinates) {
-              onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-            }
-          }}
-        />
       </>
     );
   }
@@ -267,25 +235,16 @@ export default function BottomReports({ reports = [], onGetDirections }: BottomR
             isOpen={isDetailsOpen}
             onOpenChange={setIsDetailsOpen}
             report={selectedReport}
-            onGetDirections={handleGetDirectionsClick}
           />
           <ResponderDispatchDialog
             isOpen={isDispatchOpen}
             onOpenChange={setIsDispatchOpen}
             report={selectedReport}
+            availableResponders={availableResponders ?? null}
+            isLoading={availableRespondersLoading}
           />
         </>
       )}
-      <ResponderConfirmationDialog
-        isOpen={isConfirmationOpen}
-        onOpenChange={handleOpenChange}
-        onConfirm={handleConfirmResponse}
-        onReopenDirections={() => {
-          if (pendingCoordinates) {
-            onGetDirections(pendingCoordinates.lat, pendingCoordinates.lng);
-          }
-        }}
-      />
     </div>
   );
 }

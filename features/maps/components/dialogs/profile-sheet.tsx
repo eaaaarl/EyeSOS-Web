@@ -208,12 +208,11 @@ export function ProfileSheet({ isOpen, onOpenChange }: ProfileSheetProps) {
                 onClick={handleLogout}
                 disabled={isLoggingOut}
                 variant="destructive"
-                className="w-full flex items-center justify-center gap-2 h-9 bg-red-600 hover:bg-red-700 text-sm"
+                className={`w-full flex items-center justify-center gap-2 h-9 ${admin ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'} text-sm`}
               >
                 {isLoggingOut ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Logging out...
                   </>
                 ) : (
                   <>

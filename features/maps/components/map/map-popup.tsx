@@ -17,19 +17,24 @@ import { AccidentReportDetailsDialog } from "../dialogs/accident-report-details-
 import { ResponderConfirmationDialog } from "../dialogs/responder-confirmation-dialog";
 import { ResponderDispatchDialog } from "../dialogs/responder-dispatch-dialog";
 import { toast } from "sonner";
+import { AvailableResponders } from "../../api/interface";
 
 interface MapPopupProps {
   accident: Report;
   onGetDirections: (lat: number, lng: number) => void;
   additionalReports?: Report[];
   totalCount?: number;
+  availableResponders?: AvailableResponders;
+  isRespondersLoading?: boolean;
 }
 
 export function MapPopup({
   accident,
   onGetDirections,
   additionalReports,
-  totalCount = 1
+  totalCount = 1,
+  availableResponders,
+  isRespondersLoading
 }: MapPopupProps) {
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData } = useGetUserProfileQuery(
@@ -52,7 +57,6 @@ export function MapPopup({
   };
 
   const map = useMap();
-
   const handleConfirmResponse = async () => {
     if (pendingCoordinates) {
       try {
@@ -172,13 +176,14 @@ export function MapPopup({
         isOpen={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         report={selectedReport}
-        onGetDirections={handleGetDirectionsClick}
       />
 
       <ResponderDispatchDialog
         isOpen={isDispatchOpen}
         onOpenChange={setIsDispatchOpen}
         report={selectedReport}
+        availableResponders={availableResponders ?? null}
+        isLoading={isRespondersLoading}
       />
 
       <ResponderConfirmationDialog

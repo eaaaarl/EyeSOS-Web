@@ -6,7 +6,7 @@ import { MapPopup } from "./map-popup";
 import { MapNavigation } from "./map-navigation";
 import { createPinMarkerIcon } from "./marker";
 import { useDirections } from "../../hooks/use-directions";
-import { useGetAllReportsBystanderQuery } from "../../api/mapApi";
+import { useGetAllReportsBystanderQuery, useGetAvailableRespondersQuery } from "../../api/mapApi";
 import { ProfileSheet } from "../dialogs/profile-sheet";
 import BottomReports from "../shared/bottom-reports";
 import { MapAutoZoom } from "./map-auto-zoom";
@@ -30,6 +30,7 @@ export function MapContainerComponent() {
     { user_id: user?.id || "" },
     { skip: !user?.id }
   );
+  const { data: availableResponders, isLoading: availableRespondersLoading } = useGetAvailableRespondersQuery();
   const isResponder = profileData?.profile.user_type === "responder";
   const reports = !isResponder ? (allReports?.reports || []) : [];
 
@@ -101,7 +102,12 @@ export function MapContainerComponent() {
             position={[report.latitude, report.longitude]}
             icon={createPinMarkerIcon(report.severity, 1)}
           >
-            <MapPopup accident={report} onGetDirections={openDirections} />
+            <MapPopup
+              availableResponders={availableResponders}
+              isRespondersLoading={availableRespondersLoading}
+              accident={report}
+              onGetDirections={openDirections}
+            />
           </Marker>
         ))}
       </MapContainer>
@@ -217,7 +223,7 @@ export function MapContainerComponent() {
 
       <MapNavigation isResponder={isResponder} reports={reports} onMenuClick={() => setIsOpen(true)} />
       <ProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
-      {isResponder ? null : <BottomReports reports={reports} onGetDirections={openDirections} />}
+      {isResponder ? null : <BottomReports reports={reports} />}
       {isResponder && <ResponderDispatchAlert />}
     </div>
   );

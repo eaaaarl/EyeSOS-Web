@@ -13,32 +13,29 @@ import {
     DrawerTitle,
     DrawerDescription,
 } from "@/components/ui/drawer";
-import { Shield, Truck, MapPin } from "lucide-react";
+import { Shield, Truck, MapPin, Ambulance } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { toast } from "sonner";
+import { AvailableResponders } from "../../api/interface";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     report: Report | null;
+    availableResponders: AvailableResponders | null;
+    isLoading?: boolean;
 }
-
-// Mock responder data
-const availableResponders = [
-    { id: 1, name: "SPO1 Reyes", unit: "PNP Patrol", distance: "0.8km", status: "Available" },
-    { id: 2, name: "SF02 Santos", unit: "BFP Fire Truck", distance: "1.2km", status: "Available" },
-    { id: 3, name: "Dr. Garcia", unit: "EMS Ambulance", distance: "2.5km", status: "Available" },
-    { id: 4, name: "Engr. Lopez", unit: "Engineering Team", distance: "3.1km", status: "Near Area" },
-];
 
 interface DispatchContentProps {
     report: Report;
-    isDispatching: number | null;
-    onDispatch: (id: number, name: string) => void;
+    isDispatching: string | null;
+    onDispatch: (id: string, name: string) => void;
+    availableResponders: AvailableResponders | null;
+    isLoading?: boolean;
 }
 
-const DispatchContent = ({ report, isDispatching, onDispatch }: DispatchContentProps) => (
+const DispatchContent = ({ report, isDispatching, onDispatch, availableResponders, isLoading }: DispatchContentProps) => (
     <div className="space-y-4 px-1 pb-6 font-poppins">
         <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-start gap-3">
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
@@ -71,37 +68,56 @@ const DispatchContent = ({ report, isDispatching, onDispatch }: DispatchContentP
                     </div>
                 </div>
                 <div className="px-2 py-1 bg-white rounded-md border border-blue-200 shadow-xs">
-                    <span className="text-[10px] font-bold text-blue-700 leading-none">{availableResponders.length} ONLINE</span>
+                    <span className="text-[10px] font-bold text-blue-700 leading-none">{availableResponders?.responders.length} ONLINE</span>
                 </div>
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pr-0.5">
-                {availableResponders.map((resp) => (
-                    <div
-                        key={resp.id}
-                        className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group transition-all hover:border-blue-300 hover:shadow-md hover:shadow-blue-50/50"
-                    >
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-blue-50 transition-colors">
-                                <Truck className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-bold text-gray-900 truncate tracking-tight">{resp.name}</span>
-                                <span className="text-[10px] font-semibold text-gray-500 truncate">{resp.unit} • {resp.distance}</span>
-                            </div>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pr-0.5 min-h-[100px] flex flex-col">
+                {isLoading ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-8 gap-3">
+                        <div className="relative">
+                            <Shield className="w-8 h-8 text-blue-600 animate-pulse" />
+                            <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20" />
                         </div>
-                        <button
-                            disabled={isDispatching !== null}
-                            onClick={() => onDispatch(resp.id, resp.name)}
-                            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.id
-                                ? "bg-blue-100 text-blue-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
-                                }`}
-                        >
-                            {isDispatching === resp.id ? "Assigning..." : "Dispatch"}
-                        </button>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+                            Searching Responders...
+                        </p>
                     </div>
-                ))}
+                ) : availableResponders?.responders.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-8 gap-2 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                        <Truck className="w-6 h-6 text-slate-300" />
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">
+                            No Responders Online
+                        </p>
+                    </div>
+                ) : (
+                    availableResponders?.responders.map((resp) => (
+                        <div
+                            key={resp.id}
+                            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group transition-all hover:border-blue-300 hover:shadow-md hover:shadow-blue-50/50"
+                        >
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-blue-50 transition-colors">
+                                    <Ambulance className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-xs font-bold text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
+                                    {/* <span className="text-[10px] font-semibold text-gray-500 truncate">{resp.unit} • {resp.distance}</span> */}
+                                </div>
+                            </div>
+                            <button
+                                disabled={isDispatching !== null}
+                                onClick={() => onDispatch(resp.id, resp.profiles.name)}
+                                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.id
+                                    ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
+                                    }`}
+                            >
+                                {isDispatching === resp.id ? "Assigning..." : "Dispatch"}
+                            </button>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     </div>
@@ -111,13 +127,15 @@ export function ResponderDispatchDialog({
     isOpen,
     onOpenChange,
     report,
+    availableResponders,
+    isLoading,
 }: ResponderDispatchDialogProps) {
     const isMobile = useIsMobile();
-    const [isDispatching, setIsDispatching] = useState<number | null>(null);
+    const [isDispatching, setIsDispatching] = useState<string | null>(null);
 
     if (!report) return null;
 
-    const handleDispatch = (responderId: number, responderName: string) => {
+    const handleDispatch = (responderId: string, responderName: string) => {
         setIsDispatching(responderId);
         toast.success(`Dispatching ${responderName} to incident #${report.report_number}`);
         setTimeout(() => {
@@ -151,6 +169,8 @@ export function ResponderDispatchDialog({
                             report={report}
                             isDispatching={isDispatching}
                             onDispatch={handleDispatch}
+                            availableResponders={availableResponders}
+                            isLoading={isLoading}
                         />
                     </div>
                 </DrawerContent>
@@ -180,6 +200,8 @@ export function ResponderDispatchDialog({
                         report={report}
                         isDispatching={isDispatching}
                         onDispatch={handleDispatch}
+                        availableResponders={availableResponders}
+                        isLoading={isLoading}
                     />
                 </div>
             </DialogContent>

@@ -4,7 +4,7 @@ import {
   ReportsResponse,
   Report,
 } from "../interfaces/get-all-reports-bystander.interface";
-import { sendAccidentResponse } from "./interface";
+import { AvailableResponders, sendAccidentResponse } from "./interface";
 
 export const mapApi = createApi({
   reducerPath: "mapApi",
@@ -113,10 +113,37 @@ export const mapApi = createApi({
       },
       invalidatesTags: ["getAccidents"],
     }),
+
+    getAvailableResponders: builder.query<AvailableResponders, void>({
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("responder_details")
+          .select("*, profiles(*)")
+          .eq("is_available", true);
+
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+        return {
+          data: {
+            responders: data,
+            meta: {
+              success: true,
+              message: "Available responders fetched.",
+            },
+          },
+        };
+      },
+    }),
   }),
 });
 
 export const {
   useGetAllReportsBystanderQuery,
   useSendAccidentResponseMutation,
+  useGetAvailableRespondersQuery,
 } = mapApi;

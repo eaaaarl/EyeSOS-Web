@@ -37,7 +37,6 @@ interface AccidentReportDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   report: Report;
-  onGetDirections: (lat: number, lng: number) => void;
 }
 
 const getLocationQualityInfo = (quality?: string) => {
@@ -249,15 +248,8 @@ export function AccidentReportDetailsDialog({
   isOpen,
   onOpenChange,
   report,
-  onGetDirections,
 }: AccidentReportDetailsDialogProps) {
   const isMobile = useIsMobile();
-
-  const handleGetDirectionsClick = () => {
-    onGetDirections(report.latitude, report.longitude);
-    onOpenChange(false);
-  };
-
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onOpenChange}>
