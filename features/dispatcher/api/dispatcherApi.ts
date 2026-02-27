@@ -49,24 +49,47 @@ export const dispatcherApi = createApi({
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: "accidents" },
-              (payload) => {
-                updateCachedData((draft) => {
-                  if (payload.eventType === "INSERT") {
-                    draft.reports.unshift(payload.new as Report);
-                  } else if (payload.eventType === "UPDATE") {
-                    const index = draft.reports.findIndex(
-                      (r) => r.id === (payload.new as Report).id,
-                    );
+              async (payload) => {
+                if (payload.eventType === "INSERT") {
+                  // Re-fetch the full record with accident_images
+                  const { data, error } = await supabase
+                    .from("accidents")
+                    .select("*, accident_images(*)")
+                    .eq("id", payload.new.id)
+                    .single();
 
-                    if (index !== -1) {
-                      draft.reports[index] = payload.new as Report;
-                    }
-                  } else if (payload.eventType === "DELETE") {
+                  if (!error && data) {
+                    updateCachedData((draft) => {
+                      draft.reports.unshift(data);
+                    });
+                  }
+                } else if (payload.eventType === "UPDATE") {
+                  // Same issue — re-fetch on UPDATE too
+                  const { data, error } = await supabase
+                    .from("accidents")
+                    .select("*, accident_images(*)")
+                    .eq("id", payload.new.id)
+                    .single();
+
+                  if (!error && data) {
+                    updateCachedData((draft) => {
+                      const index = draft.reports.findIndex(
+                        (r) => r.id === data.id,
+                      );
+                      if (index !== -1) {
+                        draft.reports[index] = data;
+                      } else {
+                        draft.reports.unshift(data);
+                      }
+                    });
+                  }
+                } else if (payload.eventType === "DELETE") {
+                  updateCachedData((draft) => {
                     draft.reports = draft.reports.filter(
                       (r) => r.id !== (payload.old as Report).id,
                     );
-                  }
-                });
+                  });
+                }
               },
             )
             .subscribe();

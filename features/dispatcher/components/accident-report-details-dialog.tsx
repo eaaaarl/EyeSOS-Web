@@ -129,7 +129,7 @@ const ReportContent = ({ report }: ReportContentProps) => {
         </div>
       )}
 
-      {report.accident_images.length > 0 && (
+      {(report.accident_images?.length ?? 0) > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

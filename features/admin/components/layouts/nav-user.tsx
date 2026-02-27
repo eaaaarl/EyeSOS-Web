@@ -30,6 +30,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks"
 import { supabase } from "@/lib/supabase"
 import { setClearUserSession } from "@/lib/redux/state/authSlice"
 import { useRouter } from "next/navigation";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi"
 
 export function NavUser() {
     const { isMobile } = useSidebar()
@@ -37,7 +38,9 @@ export function NavUser() {
     const dispatch = useAppDispatch();
     const router = useRouter();
 
-    console.log('profile', user)
+
+    const { data } = useGetUserProfileQuery({ user_id: user?.id || "" });
+
     const handleSignOut = async () => {
         await supabase.auth.signOut();
         dispatch(setClearUserSession());
@@ -53,11 +56,11 @@ export function NavUser() {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg grayscale">
-                                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
-                                <AvatarFallback className="rounded-lg">{user?.user_metadata?.name?.split(" ").map((name) => name[0]).join("").toUpperCase()}</AvatarFallback>
+                                <AvatarImage src={data?.profile?.avatarUrl} alt={data?.profile?.name} />
+                                <AvatarFallback className="rounded-lg">{data?.profile?.name?.split(" ").map((name) => name[0]).join("").toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{user?.user_metadata?.name}</span>
+                                <span className="truncate font-medium">{data?.profile?.name}</span>
                                 <span className="text-muted-foreground truncate text-xs">
                                     {user?.email}
                                 </span>
@@ -74,13 +77,13 @@ export function NavUser() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
+                                    <AvatarImage src={data?.profile?.avatarUrl} alt={data?.profile?.name} />
                                     <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">{user?.user_metadata?.name}</span>
+                                    <span className="truncate font-medium">{data?.profile?.name}</span>
                                     <span className="text-muted-foreground truncate text-xs">
-                                        {user?.email}
+                                        {data?.profile?.email}
                                     </span>
                                 </div>
                             </div>
