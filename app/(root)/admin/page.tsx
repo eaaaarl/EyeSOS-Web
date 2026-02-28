@@ -2,11 +2,12 @@
 import * as React from "react"
 const SiteHeader = React.lazy(() => import("@/features/admin/components/layouts/site-header").then(module => ({ default: module.SiteHeader })))
 import { AccidentStatsCards } from "@/features/admin/dashboard/components/accident-stats-cards"
-import { AccidentTrendsChart } from "@/features/admin/dashboard/components/accident-trends-chart"
+import { AccidentStatusDonut } from "@/features/admin/dashboard/components/accident-status-donut"
+import { AccidentTimeDistribution } from "@/features/admin/dashboard/components/accident-time-distribution"
 import { useGetAllAccidentsQuery } from "@/features/admin/api/adminApi"
+import { AccidentTrendsChart } from "@/features/admin/dashboard/components/accident-trends-chart"
 
 export default function AdminPage() {
-
     const {
         data: accidents,
         isLoading,
@@ -56,8 +57,22 @@ export default function AdminPage() {
                             isError={isError}
                             isLoading={isLoading}
                         />
+
                         <div className="px-4 lg:px-6">
                             <AccidentTrendsChart
+                                data={accidents?.accidents}
+                                isLoading={isLoading}
+                                isError={isError}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 xl:grid-cols-2">
+                            <AccidentStatusDonut
+                                data={accidents?.accidents}
+                                isLoading={isLoading}
+                                isError={isError}
+                            />
+                            <AccidentTimeDistribution
                                 data={accidents?.accidents}
                                 isLoading={isLoading}
                                 isError={isError}
