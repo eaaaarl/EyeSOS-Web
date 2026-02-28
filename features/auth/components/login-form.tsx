@@ -38,14 +38,15 @@ export function LoginForm({
 
   const handleLogin = async (payload: z.infer<typeof formSchema>) => {
     try {
-      const res = await signIn(payload)
+      const res = await signIn(payload).unwrap()
 
-      if (res.error) {
-        toast.error((res.error as { message: string }).message)
+      if (!res.success) {
+        toast.error(res.message || "Login failed")
       }
 
     } catch (error) {
       console.log(error)
+      toast.error("An error occurred during login")
     }
   }
 

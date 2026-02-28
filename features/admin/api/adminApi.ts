@@ -77,14 +77,12 @@ export const adminApi = createApi({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("accidents")
-          .select("*, accident_images(*)")
+          .select("*, accident_images(*), accident_responses(*)")
           .order("updated_at", { ascending: false });
 
         if (error) {
           return { error: error.message };
         }
-
-        console.log("accidents response:", data);
 
         return {
           data: {
@@ -109,8 +107,6 @@ export const adminApi = createApi({
               "postgres_changes",
               { event: "*", schema: "public", table: "accidents" },
               (payload) => {
-                console.log("Payload", JSON.stringify(payload));
-
                 updateCachedData((draft) => {
                   if (payload.eventType === "INSERT") {
                     draft.accidents.unshift(payload.new as AccidentReport);

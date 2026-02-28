@@ -9,6 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface AccidentStatsCardsProps {
     countTotalReport: number;
@@ -26,12 +27,27 @@ export function AccidentStatsCards({
     countTotalReport,
     countActiveReport,
     countResolvedReport,
-    countIncidents,
     countResolvedToday,
     countAvgResponseTime,
     isError,
     isLoading
 }: AccidentStatsCardsProps) {
+    if (isLoading) {
+        return (
+            <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                    <Card key={i} className="border-l-4">
+                        <CardHeader>
+                            <CardDescription><Skeleton className="h-4 w-24" /></CardDescription>
+                            <CardTitle><Skeleton className="h-8 w-16" /></CardTitle>
+                        </CardHeader>
+                        <CardFooter><Skeleton className="h-4 w-32" /></CardFooter>
+                    </Card>
+                ))}
+            </div>
+        )
+    }
+
     return (
         <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
             <Card className="@container/card border-l-4 border-l-red-500">
@@ -46,7 +62,7 @@ export function AccidentStatsCards({
                     <CardAction>
                         <Badge variant="outline" className="bg-red-50 dark:bg-red-950">
                             <IconTrendingUp className="text-red-600 dark:text-red-400" />
-                            <span className="text-red-600 dark:text-red-400">+3 today</span>
+                            <span className="text-red-600 dark:text-red-400">+{countResolvedToday} today</span>
                         </Badge>
                     </CardAction>
                 </CardHeader>
@@ -67,21 +83,15 @@ export function AccidentStatsCards({
                         Avg Response Time
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        9.8 min
+                        {countAvgResponseTime?.toFixed(1) || 0} min
                     </CardTitle>
-                    <CardAction>
-                        <Badge variant="outline" className="bg-green-50 dark:bg-green-950">
-                            <IconTrendingUp className="text-green-600 dark:text-green-400" />
-                            <span className="text-green-600 dark:text-green-400">-2.3 min</span>
-                        </Badge>
-                    </CardAction>
                 </CardHeader>
                 <CardFooter className="flex-col items-start gap-1.5 text-sm">
                     <div className="line-clamp-1 flex gap-2 font-medium">
                         Improved performance
                     </div>
                     <div className="text-muted-foreground">
-                        Faster than last week
+                        Time from report to acceptance
                     </div>
                 </CardFooter>
             </Card>
@@ -93,7 +103,7 @@ export function AccidentStatsCards({
                         Active Incidents
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        4
+                        {countActiveReport}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950">
@@ -106,7 +116,7 @@ export function AccidentStatsCards({
                         Ongoing emergency response
                     </div>
                     <div className="text-muted-foreground">
-                        3 major, 1 moderate
+                        New emergency reports
                     </div>
                 </CardFooter>
             </Card>
@@ -115,14 +125,14 @@ export function AccidentStatsCards({
                 <CardHeader>
                     <CardDescription className="flex items-center gap-2">
                         <IconAlertTriangle className="size-4 text-green-500" />
-                        Resolved Today
+                        Resolved Count
                     </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        5
+                        {countResolvedReport}
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline" className="bg-green-50 dark:bg-green-950">
-                            <span className="text-green-600 dark:text-green-400">83% rate</span>
+                            <span className="text-green-600 dark:text-green-400">Life time</span>
                         </Badge>
                     </CardAction>
                 </CardHeader>
