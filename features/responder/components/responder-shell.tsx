@@ -56,7 +56,7 @@ export function ResponderShell() {
                             className={cn(
                                 "flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors",
                                 activeTab === id
-                                    ? "text-primary"
+                                    ? "text-red-600"
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
@@ -69,7 +69,7 @@ export function ResponderShell() {
                             />
                             <span className="text-[10px] font-medium tracking-wide">{label}</span>
                             {activeTab === id && (
-                                <span className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-full" />
+                                <span className="absolute bottom-0 w-8 h-0.5 bg-red-600 rounded-full" />
                             )}
                         </button>
                     ))}

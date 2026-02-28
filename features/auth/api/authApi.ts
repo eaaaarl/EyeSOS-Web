@@ -16,6 +16,14 @@ export const authApi = createApi({
           password,
         });
 
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+
         if (data.user) {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
@@ -31,6 +39,22 @@ export const authApi = createApi({
             };
           }
 
+          const allowedUserTypes = [
+            "lgu",
+            "blgu",
+            "admin",
+            "responder",
+          ] as const;
+
+          if (!allowedUserTypes.includes(profileData.user_type)) {
+            await supabase.auth.signOut();
+            return {
+              error: {
+                message: `Invalid credentials`,
+              },
+            };
+          }
+
           return {
             data: {
               user: data.user,
@@ -42,13 +66,6 @@ export const authApi = createApi({
           };
         }
 
-        if (error) {
-          return {
-            error: {
-              message: error.message,
-            },
-          };
-        }
         return {
           data: {
             user: data.user,

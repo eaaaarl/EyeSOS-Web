@@ -1,11 +1,12 @@
 'use client'
-import { useAppDispatch } from '@/lib/redux/hooks'
+import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks'
 import { setClearUserSession, setUserSession } from '@/lib/redux/state/authSlice'
 import { supabase } from '@/lib/supabase'
 import React, { ReactNode, useEffect } from 'react'
 
 function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch()
+  const { isSigningIn } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
     let mounted = true
@@ -13,7 +14,8 @@ function AuthProvider({ children }: { children: ReactNode }) {
     const checkInitialSession = async () => {
       const isRecovery = window.location.pathname.includes("/reset-password")
       const isForgot = window.location.pathname.includes("/forgot-password")
-      if (isRecovery || isForgot) return
+      const isLogin = window.location.pathname === "/"
+      if (isRecovery || isForgot || isLogin) return
 
       const { data } = await supabase.auth.getSession()
       if (!mounted) return
@@ -30,6 +32,12 @@ function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const isRecoveryPage = window.location.pathname.includes("/reset-password")
       const isForgotPage = window.location.pathname.includes("/forgot-password")
+
+      // Don't sync session during sign-in attempts to prevent flickering
+      // The signIn mutation will handle setting the session or error
+      if (isSigningIn && event === "SIGNED_IN") {
+        return
+      }
 
       // Don't sync session to Redux if we're in recovery mode or on a recovery-related page.
       // Supabase automatically signs the user in during recovery, but we don't want
@@ -53,7 +61,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [dispatch])
+  }, [dispatch, isSigningIn])
 
   return <>{children}</>
 }
