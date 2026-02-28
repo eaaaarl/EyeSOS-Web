@@ -57,8 +57,8 @@ export function ProfileTab() {
     return (
         <div className="h-full overflow-y-auto bg-background">
 
-            {/* Hero gradient banner */}
-            <div className="relative shrink-0">
+            {/* Hero gradient banner — Sticky */}
+            <div className="sticky top-0 z-20 shrink-0 shadow-sm">
                 <div className="h-24 bg-gradient-to-br from-red-600 to-red-800 relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/10" />
                     <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
@@ -68,7 +68,7 @@ export function ProfileTab() {
                     </div>
                 </div>
 
-                {/* Avatar */}
+                {/* Avatar — Inside sticky container to maintain relative positioning or adjusted */}
                 <div className="absolute left-1/2 -translate-x-1/2 -bottom-12">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-white p-1 shadow-xl">
@@ -219,6 +219,6 @@ export function ProfileTab() {
                     </Button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

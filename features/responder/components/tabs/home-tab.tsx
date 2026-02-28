@@ -87,7 +87,7 @@ export function HomeTab({ onAcceptDispatch }: HomeTabProps) {
         <div className="h-full overflow-y-auto bg-background">
 
             {/* Hero Header — red gradient banner matching ProfileTab */}
-            <div className="relative shrink-0">
+            <div className="sticky top-0 z-20 shrink-0 shadow-sm">
                 <div className="h-28 bg-gradient-to-br from-red-600 to-red-800 relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/10" />
                     <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-2xl" />

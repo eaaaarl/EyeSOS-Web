@@ -10,7 +10,6 @@ type Tab = "home" | "map" | "profile";
 
 export function ResponderShell() {
     const [activeTab, setActiveTab] = useState<Tab>("home");
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     const tabs = [
         { id: "home" as Tab, label: "Home", icon: Home },
@@ -19,7 +18,7 @@ export function ResponderShell() {
     ];
 
     return (
-        <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
+        <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
 
             {/* Tab content area */}
             <div className="flex-1 min-h-0 relative">
@@ -36,7 +35,6 @@ export function ResponderShell() {
                 )}>
                     <MapTab
                         onBack={() => setActiveTab("home")}
-                        onDrawerChange={setIsDrawerOpen}
                     />
                 </div>
 
@@ -48,11 +46,8 @@ export function ResponderShell() {
                 </div>
             </div>
 
-            {/* Bottom nav — hidden when any drawer/modal is open */}
-            <nav className={cn(
-                "relative z-[9999] bg-background border-t border-border shrink-0 transition-all duration-200",
-                isDrawerOpen ? "invisible h-0 overflow-hidden border-0" : "visible"
-            )}>
+            {/* Bottom nav — always visible per user request */}
+            <nav className="relative z-[9999] bg-background border-t border-border shrink-0">
                 <div className="flex items-center justify-around h-16 px-4">
                     {tabs.map(({ id, label, icon: Icon }) => (
                         <button
