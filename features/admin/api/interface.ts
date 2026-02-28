@@ -25,7 +25,7 @@ export interface Meta {
   message: string;
 }
 
-export type UserType = "bystander" | "lgu" | "admin" | "blgu";
+export type UserType = "bystander" | "lgu" | "admin" | "blgu" | "responder";
 
 export interface AccidentReport {
   id: string;
@@ -46,8 +46,25 @@ export interface AccidentReport {
   landmark: string | null;
   location_accuracy?: string;
   location_quality?: string;
-  accident_status: string;
+  accident_status:
+    | "NEW"
+    | "VERIFIED"
+    | "RESOLVED"
+    | "DELETED"
+    | "IN_PROGRESS"
+    | "CLOSED"
+    | "PENDING";
   accident_images: AccidentImage[];
+  accident_responses: AccidentResponse[];
+}
+
+export interface AccidentResponse {
+  id: string;
+  accident_id: string;
+  responder_id: string;
+  response_type: string;
+  responded_at: string;
+  created_at: string;
 }
 
 export interface AccidentImage {
