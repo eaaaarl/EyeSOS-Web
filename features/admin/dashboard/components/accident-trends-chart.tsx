@@ -25,16 +25,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { AccidentReport } from "../../api/interface"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const chartData = [
-    { date: "2024-02-08", critical: 1, high: 0, moderate: 1, minor: 0 },
-    { date: "2024-02-09", critical: 0, high: 1, moderate: 0, minor: 1 },
-    { date: "2024-02-10", critical: 1, high: 0, moderate: 1, minor: 0 },
-    { date: "2024-02-11", critical: 0, high: 1, moderate: 0, minor: 0 },
-    { date: "2024-02-12", critical: 1, high: 0, moderate: 1, minor: 0 },
-    { date: "2024-02-13", critical: 1, high: 1, moderate: 0, minor: 1 },
-    { date: "2024-02-14", critical: 0, high: 0, moderate: 0, minor: 0 },
-]
+export interface AccidentTrendsChartProps {
+    data?: AccidentReport[]
+    isLoading?: boolean
+    isError?: boolean
+}
 
 const chartConfig = {
     critical: {
@@ -55,10 +53,63 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function AccidentTrendsChart() {
+export function AccidentTrendsChart({ data, isLoading, isError }: AccidentTrendsChartProps) {
     const [timeRange, setTimeRange] = React.useState("7d")
 
-    const filteredData = chartData
+    const processedData = React.useMemo(() => {
+        if (!data) return []
+
+        const days = parseInt(timeRange)
+        const startDate = new Date()
+        startDate.setHours(0, 0, 0, 0)
+        startDate.setDate(startDate.getDate() - (days - 1))
+
+        const aggregated: Record<string, { date: string, critical: number, high: number, moderate: number, minor: number }> = {}
+
+        // Initialize all days in range
+        for (let i = 0; i < days; i++) {
+            const date = new Date(startDate)
+            date.setDate(date.getDate() + i)
+            const dateStr = date.toISOString().split('T')[0]
+            aggregated[dateStr] = { date: dateStr, critical: 0, high: 0, moderate: 0, minor: 0 }
+        }
+
+        // Fill with actual data
+        data.forEach((accident) => {
+            const dateStr = new Date(accident.created_at).toISOString().split('T')[0]
+            if (aggregated[dateStr]) {
+                aggregated[dateStr][accident.severity]++
+            }
+        })
+
+        return Object.values(aggregated).sort((a, b) => a.date.localeCompare(b.date))
+    }, [data, timeRange])
+
+    if (isLoading) {
+        return (
+            <Card className="border-l-4 border-l-blue-500 overflow-hidden min-w-0">
+                <CardHeader className="flex flex-col gap-2 space-y-0 border-b py-5 sm:flex-row">
+                    <div className="grid flex-1 gap-1">
+                        <Skeleton className="h-6 w-[200px]" />
+                        <Skeleton className="h-4 w-[300px]" />
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                    <Skeleton className="h-[250px] w-full" />
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (isError) {
+        return (
+            <Card className="border-l-4 border-l-destructive overflow-hidden min-w-0">
+                <CardContent className="p-10 flex flex-col items-center justify-center text-center">
+                    <p className="text-muted-foreground italic">Failed to load trend data.</p>
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card className="border-l-4 border-l-blue-500 overflow-hidden min-w-0">
@@ -66,7 +117,7 @@ export function AccidentTrendsChart() {
                 <div className="grid flex-1 gap-1 text-center sm:text-left">
                     <CardTitle>Accident Reports Trends</CardTitle>
                     <CardDescription>
-                        Showing accident reports by severity over the last 7 days
+                        Showing accident reports by severity over the last {timeRange === "7d" ? "7 days" : timeRange === "30d" ? "30 days" : "90 days"}
                     </CardDescription>
                 </div>
                 <Select value={timeRange} onValueChange={setTimeRange}>
@@ -94,7 +145,7 @@ export function AccidentTrendsChart() {
                     config={chartConfig}
                     className="aspect-auto h-[250px] w-full"
                 >
-                    <AreaChart data={filteredData}>
+                    <AreaChart data={processedData}>
                         <defs>
                             <linearGradient id="fillCritical" x1="0" y1="0" x2="0" y2="1">
                                 <stop

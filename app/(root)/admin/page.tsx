@@ -1,7 +1,8 @@
 'use client'
-import { SiteHeader } from "@/features/admin/components/layouts/site-header"
-import { AccidentStatsCards } from "@/features/admin/components/accidents/accident-stats-cards"
-import { AccidentTrendsChart } from "@/features/admin/components/accidents/accident-trends-chart"
+import * as React from "react"
+const SiteHeader = React.lazy(() => import("@/features/admin/components/layouts/site-header").then(module => ({ default: module.SiteHeader })))
+import { AccidentStatsCards } from "@/features/admin/dashboard/components/accident-stats-cards"
+import { AccidentTrendsChart } from "@/features/admin/dashboard/components/accident-trends-chart"
 import { useGetAllAccidentsQuery } from "@/features/admin/api/adminApi"
 
 export default function AdminPage() {
@@ -56,7 +57,11 @@ export default function AdminPage() {
                             isLoading={isLoading}
                         />
                         <div className="px-4 lg:px-6">
-                            <AccidentTrendsChart />
+                            <AccidentTrendsChart
+                                data={accidents?.accidents}
+                                isLoading={isLoading}
+                                isError={isError}
+                            />
                         </div>
                     </div>
                 </div>
