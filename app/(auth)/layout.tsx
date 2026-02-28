@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       if (userType === 'lgu' || userType === 'blgu') {
         router.replace('/dashboard/map');
       } else if (userType === 'responder') {
-        router.replace('/responder/map');
+        router.replace('/responder');
       } else if (userType === 'admin') {
         router.replace('/admin');
       }

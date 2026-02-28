@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { BaseMap } from "../../maps/components/map/base-map";
-import { MapNavigation } from "../../maps/components/map/map-navigation";
-import { ResponderProfileSheet } from "./responder-profile-sheet";
-import { ResponderDispatchAlert } from "./responder-dispatch-alert";
 import { LocationMarker } from "./location-marker";
-import { LocationButton } from "./location-button";
-import BottomReports from "../../maps/components/shared/bottom-reports";
+import { ResponderBottomReports } from "./responder-bottom-reports";
 import { useAppSelector } from "@/lib/redux/hooks";
-import { Marker, Popup } from "react-leaflet";
+import { useMap, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { toast } from "sonner";
 import { IncidentPopupContent } from "@/features/responder/components/incident-popup-content";
-import { useGetResponderDispatchQuery, useUpdateAccidentResponseStatusMutation, useUpdateAccidentStatusMutation, useUpdateResponderAvailabilityMutation } from "../api/responderApi";
+import { ChevronLeft } from "lucide-react";
+import {
+    useGetResponderDispatchQuery,
+    useUpdateAccidentResponseStatusMutation,
+    useUpdateAccidentStatusMutation,
+    useUpdateResponderAvailabilityMutation,
+} from "../api/responderApi";
+import { LocationButton } from "./location-button";
 
 const incidentIcon = L.divIcon({
     className: "custom-div-icon",
@@ -25,39 +28,46 @@ const incidentIcon = L.divIcon({
     popupAnchor: [0, -32],
 });
 
-type DispatchStatus = "notified" | "accepted" | "resolved" | null;
+type DispatchStatus = "accepted" | "resolved" | null;
 
+function MapController({ center }: { center: [number, number] }) {
+    const map = useMap();
+    useEffect(() => {
+        map.setView(center, 16);
+    }, [center, map]);
+    return null;
+}
 
-export function ResponderMap() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [status, setStatus] = useState<DispatchStatus>(null);
-    const [handledId, setHandledId] = useState<string | null>(null);
+interface ResponderMapProps {
+    onBack?: () => void;
+    onDrawerChange?: (open: boolean) => void;
+}
+
+export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
     const markerRef = useRef<L.Marker>(null);
-
     const { user } = useAppSelector((state) => state.auth);
+
     const { data: dispatchData } = useGetResponderDispatchQuery(user?.id || "", {
         skip: !user?.id,
+        pollingInterval: 5000,
     });
 
     const activeDispatch = dispatchData?.accident;
+
+    // Derive status directly from server data — no extra state needed
+    const status: DispatchStatus = activeDispatch
+        ? dispatchData?.status === "accepted"
+            ? "accepted"
+            : dispatchData?.status === "resolved"
+                ? "resolved"
+                : null
+        : null;
 
     const [updateResponderAvailability, { isLoading: isUpdatingAvailability }] = useUpdateResponderAvailabilityMutation();
     const [updateAccidentStatus, { isLoading: isUpdatingAccidentStatus }] = useUpdateAccidentStatusMutation();
     const [updateAccidentResponseStatus, { isLoading: isUpdatingResponseStatus }] = useUpdateAccidentResponseStatusMutation();
 
     const isMutationLoading = isUpdatingAvailability || isUpdatingAccidentStatus || isUpdatingResponseStatus;
-
-    if (activeDispatch && activeDispatch.id !== handledId) {
-        setHandledId(activeDispatch.id);
-        const mappedStatus =
-            dispatchData?.status === 'accepted' ? 'accepted' :
-                dispatchData?.status === 'dispatched' ? 'notified' :
-                    null;
-        setStatus(mappedStatus);
-    } else if (!activeDispatch && handledId !== null) {
-        setHandledId(null);
-        setStatus(null);
-    }
 
     useEffect(() => {
         if (status === "accepted" && markerRef.current) {
@@ -72,7 +82,7 @@ export function ResponderMap() {
                 updateAccidentResponseStatus({
                     responderId: user.id,
                     accidentId: activeDispatch.id,
-                    status: 'resolved'
+                    status: "resolved",
                 }).unwrap(),
                 updateAccidentStatus({
                     accidentId: activeDispatch.id,
@@ -83,57 +93,49 @@ export function ResponderMap() {
                     is_available: true,
                 }).unwrap(),
             ]);
-            setStatus("resolved");
-            toast.success("Incident marked as resolved. Great job!");
-            setTimeout(() => {
-                setStatus(null);
-                setHandledId(null);
-            }, 3000);
         } catch {
             toast.error("Failed to resolve incident. Try again.");
         }
     };
 
     return (
-        <div className="h-screen w-screen relative">
+        <div className="h-full w-full relative">
             <BaseMap>
                 <LocationMarker autoRequest={false} />
                 {activeDispatch && status === "accepted" && (
-                    <Marker
-                        position={[activeDispatch.latitude, activeDispatch.longitude]}
-                        icon={incidentIcon}
-                        ref={markerRef}
-                    >
-                        <Popup className="incident-popup">
-                            <IncidentPopupContent
-                                dispatch={activeDispatch}
-                                onResolve={handleResolve}
-                                isResolving={isMutationLoading}
-                            />
-                        </Popup>
-                    </Marker>
+                    <>
+                        <MapController center={[activeDispatch.latitude, activeDispatch.longitude]} />
+                        <Marker
+                            position={[activeDispatch.latitude, activeDispatch.longitude]}
+                            icon={incidentIcon}
+                            ref={markerRef}
+                        >
+                            <Popup className="incident-popup">
+                                <IncidentPopupContent
+                                    dispatch={activeDispatch}
+                                    onResolve={handleResolve}
+                                    isResolving={isMutationLoading}
+                                />
+                            </Popup>
+                        </Marker>
+                    </>
                 )}
             </BaseMap>
 
-            <LocationButton />
 
-            <MapNavigation
-                isResponder={true}
-                reports={[]}
-                onMenuClick={() => setIsOpen(true)}
-            />
+            <button
+                onClick={onBack}
+                className="absolute top-4 left-4 z-[1000] flex items-center gap-1.5 bg-white shadow-md rounded-full pl-2 pr-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-95 transition-all"
+            >
+                <ChevronLeft size={18} />
+                Home
+            </button>
 
-            <ResponderProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
 
-            {(status === "notified" || status === "resolved") && (
-                <ResponderDispatchAlert
-                    status={status}
-                    onStatusChange={setStatus}
-                />
-            )}
+            <LocationButton isHaveReport={!!(activeDispatch && status === "accepted")} />
 
             {activeDispatch && status === "accepted" && (
-                <BottomReports reports={[activeDispatch]} isResponder={true} />
+                <ResponderBottomReports report={activeDispatch} onDrawerChange={onDrawerChange} />
             )}
         </div>
     );

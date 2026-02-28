@@ -27,7 +27,7 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
                 router.replace('/dashboard/map');
             }
             if (profile.profile.user_type === 'responder') {
-                router.replace('/responder/map');
+                router.replace('/responder');
             }
 
             if (profile.profile.user_type === 'admin') {

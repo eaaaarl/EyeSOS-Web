@@ -25,7 +25,7 @@ export default function ProtectedDashboard({ children }: { children: ReactNode }
         if (!isLoading && profile) {
             const userType = profile.profile.user_type;
             if (userType === 'responder') {
-                router.replace('/responder/map');
+                router.replace('/responder');
             } else if (userType !== 'lgu' && userType !== 'blgu' && userType !== 'admin') {
                 router.replace('/');
             }

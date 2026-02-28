@@ -1,7 +1,7 @@
 import { Report } from "../../interfaces/get-all-reports-bystander.interface";
 
 interface MapNavigationProps {
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
   reports: Report[]
   isResponder: boolean;
 }

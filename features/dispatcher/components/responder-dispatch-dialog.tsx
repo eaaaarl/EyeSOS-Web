@@ -55,6 +55,13 @@ export function ResponderDispatchDialog({
         }
     }, [accidentStatusData?.responderId, accidentStatusData]);
 
+    useEffect(() => {
+        if (accidentStatusData?.responseType === "resolved" && isOpen) {
+            onOpenChange(false);
+            toast.success(`${dispatchedResponderName || "Responder"} has resolved the incident.`);
+        }
+    }, [accidentStatusData?.responseType, isOpen, onOpenChange, dispatchedResponderName]);
+
     if (!report) return null;
 
     const handleDispatch = async (responderId: string, responderName: string) => {
