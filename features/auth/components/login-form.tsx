@@ -12,6 +12,8 @@ import { useSignInMutation } from "../api/authApi"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAppDispatch } from "@/lib/redux/hooks"
+import { setClearUserSession, setSigningIn } from "@/lib/redux/state/authSlice"
 
 export const formSchema = z.object({
   email: z.string().min(2, {
@@ -26,6 +28,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const dispatch = useAppDispatch()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,16 +40,23 @@ export function LoginForm({
   const [signIn, { isLoading }] = useSignInMutation()
 
   const handleLogin = async (payload: z.infer<typeof formSchema>) => {
+    // Set signing in state to prevent AuthLayout flickering
+    dispatch(setSigningIn(true))
+    
     try {
       const res = await signIn(payload).unwrap()
-
       if (!res.success) {
         toast.error(res.message || "Login failed")
       }
-
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.log(error)
-      toast.error("An error occurred during login")
+      // Clear Redux state if there's an error (e.g., unauthorized user type)
+      dispatch(setClearUserSession())
+      toast.error(error?.message || "An error occurred during login")
+    } finally {
+      // Clear signing in state
+      dispatch(setSigningIn(false))
     }
   }
 
@@ -145,13 +155,13 @@ export function LoginForm({
       </Card>
       <p className="px-6 text-center text-[10px] text-muted-foreground leading-relaxed max-w-[280px] mx-auto opacity-70">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="underline underline-offset-2 hover:text-red-600 transition-colors">
+        <Link href="/terms-of-service" className="underline underline-offset-2 hover:text-red-600 transition-colors">
           Terms of Service
-        </a>{" "}
+        </Link>{" "}
         and{" "}
-        <a href="#" className="underline underline-offset-2 hover:text-red-600 transition-colors">
+        <Link href="/privacy-policy" className="underline underline-offset-2 hover:text-red-600 transition-colors">
           Privacy Policy
-        </a>.
+        </Link>.
       </p>
     </div>
   )

@@ -1,11 +1,15 @@
 "use client";
 import { useCurrentLocation } from "../../maps/hooks/use-current-location";
 
-export function LocationButton() {
+interface LocationButtonProps {
+    isHaveReport?: boolean;
+}
+
+export function LocationButton({ isHaveReport }: LocationButtonProps) {
     const { getCurrentLocation, isLoading } = useCurrentLocation();
 
     return (
-        <div className="absolute bottom-32 right-3">
+        <div className={`absolute ${isHaveReport ? "bottom-24" : "bottom-4"} right-4 z-[1000] transition-all duration-300`}>
             <button
                 onClick={getCurrentLocation}
                 disabled={isLoading}

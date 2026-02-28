@@ -1,0 +1,17 @@
+ M app/(auth)/layout.tsx
+ M components/ProtectedAdmin.tsx
+ M components/ProtectedDashboard.tsx
+ M features/dispatcher/components/responder-dispatch-dialog.tsx
+ M features/maps/components/map/map-navigation.tsx
+ M features/responder/api/responderApi.ts
+ M features/responder/components/location-button.tsx
+ D features/responder/components/responder-dispatch-alert.tsx
+ M features/responder/components/responder-map.tsx
+?? app/(root)/responder/page.tsx
+?? components/ui/switch.tsx
+?? features/responder/components/responder-bottom-reports.tsx
+?? features/responder/components/responder-report-details-drawer.tsx
+?? features/responder/components/responder-shell.tsx
+?? features/responder/components/tabs/
+?? status.txt
+?? status_clean.txt

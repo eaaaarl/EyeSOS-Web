@@ -26,15 +26,18 @@ export default function ProtectedResponder({ children }: { children: ReactNode }
             const userType = profile.profile.user_type;
             if (userType === 'lgu' || userType === 'blgu' || userType === 'admin') {
                 router.replace('/dashboard/map');
-            } else if (userType !== 'responder') {
+                return;
+            }
+            if (userType !== 'responder') {
                 router.replace('/');
+                return;
             }
         }
 
     }, [user, profile, isLoading, router]);
 
 
-    if (!user || isLoading || !profile || profile.profile.user_type !== 'responder') {
+    if (!user || isLoading || !profile) {
         return (
             <div className="flex items-center justify-center h-screen w-screen">
                 <div className="flex flex-col items-center gap-4 ">

@@ -5,6 +5,7 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 export const responderApi = createApi({
   reducerPath: "responderApi",
   baseQuery: fakeBaseQuery(),
+  tagTypes: ["ResponderDispatch"],
   endpoints: (builder) => ({
     getResponderDispatch: builder.query<
       { accident: Report | null; status: string | null },
@@ -84,6 +85,7 @@ export const responderApi = createApi({
         await cacheEntryRemoved;
         supabase.removeChannel(channel);
       },
+      providesTags: ["ResponderDispatch"],
     }),
 
     updateAccidentResponseStatus: builder.mutation<

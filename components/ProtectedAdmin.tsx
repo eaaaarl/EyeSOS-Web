@@ -23,15 +23,18 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
         }
 
         if (!isLoading && profile) {
-            if (profile.profile.user_type === 'lgu' || profile.profile.user_type === 'blgu') {
+            const userType = profile.profile.user_type;
+            if (userType === 'lgu' || userType === 'blgu') {
                 router.replace('/dashboard/map');
+                return;
             }
-            if (profile.profile.user_type === 'responder') {
-                router.replace('/responder/map');
+            if (userType === 'responder') {
+                router.replace('/responder');
+                return;
             }
-
-            if (profile.profile.user_type === 'admin') {
-                router.replace('/admin');
+            if (userType !== 'admin') {
+                router.replace('/');
+                return;
             }
         }
 
