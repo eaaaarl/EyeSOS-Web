@@ -180,6 +180,15 @@ export function ResponderReportDetailsDrawer({
                                 <p className="text-[14px] font-bold text-slate-900 leading-snug">{report.location_address}</p>
                             </div>
 
+                            {report.latitude && report.longitude && (
+                                <div>
+                                    <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-1">GPS Coordinates</p>
+                                    <p className="text-[14px] font-bold text-slate-900 font-mono tracking-tight">
+                                        {report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <div>
                                     <div className="flex items-center gap-1.5 mb-1 text-slate-400">
