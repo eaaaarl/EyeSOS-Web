@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Navigation, Eye, Siren, Loader2 } from "lucide-react";
+import { Navigation, Eye, Loader2, CheckCircle2 } from "lucide-react";
 import { Report } from "../../maps/interfaces/get-all-reports-bystander.interface";
 import { getSeverityColor } from "../../maps/utils/severityColor";
 import { ResponderReportDetailsDrawer } from "./responder-report-details-drawer";
@@ -10,9 +10,11 @@ import { useCurrentLocation } from "../../maps/hooks/use-current-location";
 interface ResponderBottomReportsProps {
     report: Report;
     onDrawerChange?: (open: boolean) => void;
+    onResolve?: () => void;
+    isResolving?: boolean;
 }
 
-export function ResponderBottomReports({ report, onDrawerChange }: ResponderBottomReportsProps) {
+export function ResponderBottomReports({ report, onDrawerChange, onResolve, isResolving }: ResponderBottomReportsProps) {
     const { getCurrentLocation, isLoading: isFetchingLocation } = useCurrentLocation();
     const [isNavigating, setIsNavigating] = useState(false);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -51,10 +53,6 @@ export function ResponderBottomReports({ report, onDrawerChange }: ResponderBott
                     <div className={`h-0.5 w-full ${getSeverityColor(report.severity)}`} />
                     <div className="px-3 py-2.5 flex items-center gap-2.5">
 
-                        <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                            <Siren className="w-4 h-4 text-red-600 animate-pulse" />
-                        </div>
-
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                                 <span className={`${getSeverityColor(report.severity)} text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase`}>
@@ -69,14 +67,14 @@ export function ResponderBottomReports({ report, onDrawerChange }: ResponderBott
                         <div className="flex items-center gap-1.5 shrink-0">
                             <button
                                 onClick={() => handleDetailsChange(true)}
-                                className="w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center transition-all active:scale-90"
+                                className="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center transition-all active:scale-90"
                             >
                                 <Eye className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={handleNavigate}
-                                disabled={isNavigating || isFetchingLocation || isResolved}
-                                className="h-9 px-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center gap-1.5 font-bold text-xs transition-all active:scale-95"
+                                disabled={isNavigating || isFetchingLocation || isResolved || isResolving}
+                                className="h-8 px-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center gap-1.5 font-bold text-[11px] transition-all active:scale-95"
                             >
                                 {(isNavigating || isFetchingLocation) ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -85,6 +83,24 @@ export function ResponderBottomReports({ report, onDrawerChange }: ResponderBott
                                 )}
                                 Go
                             </button>
+
+                            {!isResolved && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onResolve?.();
+                                    }}
+                                    disabled={isResolving}
+                                    className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center gap-1.5 font-bold text-[11px] transition-all active:scale-95"
+                                >
+                                    {isResolving ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                    )}
+                                    Resolve
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

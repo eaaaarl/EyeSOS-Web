@@ -34,3 +34,17 @@ export interface Profiles {
   emergency_contact_name: string | null;
   emergency_contact_number: string | null;
 }
+
+export interface DispatcherStats {
+  totalManaged: number;
+  thisMonth: number;
+  efficiency: number | null;
+}
+
+export interface DispatcherStatsResponse {
+  stats: DispatcherStats;
+  meta: {
+    success: boolean;
+    message: string;
+  };
+}

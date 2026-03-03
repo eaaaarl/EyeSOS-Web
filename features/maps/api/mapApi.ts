@@ -1,49 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { sendAccidentResponse } from "./interface";
-
 export const mapApi = createApi({
   reducerPath: "mapApi",
   baseQuery: fakeBaseQuery(),
   tagTypes: ["getAccidents"],
   endpoints: (builder) => ({
-    sendAccidentResponse: builder.mutation<
-      { status: boolean; message: string },
-      sendAccidentResponse
-    >({
-      queryFn: async ({
-        accidentId,
-        actionTaken,
-        responderId,
-        responseType,
-      }) => {
-        const { error } = await supabase.from("accident_responses").insert({
-          accident_id: accidentId,
-          responder_id: responderId,
-          action_taken: actionTaken,
-          response_type: responseType,
-          response_notes: null,
-          responded_at: new Date().toISOString(),
-        });
-
-        if (error) {
-          return {
-            error: {
-              message: error.message,
-            },
-          };
-        }
-        return {
-          data: {
-            status: true,
-            message: "Accident response added.",
-          },
-        };
-      },
-      invalidatesTags: ["getAccidents"],
-    }),
-
     updateResponderLocation: builder.mutation<
       { status: boolean; message: string },
       { userId: string; latitude: number; longitude: number }
@@ -70,39 +32,6 @@ export const mapApi = createApi({
             status: true,
             message: "Location updated.",
           },
-        };
-      },
-    }),
-
-    dispatchResponder: builder.mutation<
-      { meta: { success: boolean; message: string } },
-      {
-        accidentId: string;
-        responderId: string;
-      }
-    >({
-      queryFn: async ({ accidentId, responderId }) => {
-        const [responseResult, availabilityResult] = await Promise.all([
-          supabase.from("accident_responses").insert({
-            accident_id: accidentId,
-            responder_id: responderId,
-            response_type: "dispatched",
-            action_taken: "Dispatched by admin",
-            responded_at: new Date().toISOString(),
-          }),
-          supabase
-            .from("responder_details")
-            .update({ is_available: false })
-            .eq("profile_id", responderId),
-        ]);
-
-        if (responseResult.error)
-          return { error: { message: responseResult.error.message } };
-        if (availabilityResult.error)
-          return { error: { message: availabilityResult.error.message } };
-
-        return {
-          data: { meta: { success: true, message: "Responder dispatched." } },
         };
       },
     }),
@@ -184,9 +113,5 @@ export const mapApi = createApi({
   }),
 });
 
-export const {
-  useSendAccidentResponseMutation,
-  useUpdateResponderLocationMutation,
-  useDispatchResponderMutation,
-  useGetAccidentStatusQuery,
-} = mapApi;
+export const { useUpdateResponderLocationMutation, useGetAccidentStatusQuery } =
+  mapApi;
