@@ -4,7 +4,6 @@ import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.int
 import { Clock, Loader2, Navigation, ShieldCheck } from "lucide-react";
 import { DateTime } from "luxon";
 import { useState } from "react";
-import { toast } from "sonner";
 
 const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -28,19 +27,17 @@ export function IncidentPopupContent({ dispatch, onResolve, isResolving }: Incid
     const handleNavigate = async () => {
         if (!dispatch?.latitude || !dispatch?.longitude) return;
         setIsNavigating(true);
-        const win = window.open("", "_blank");
-        if (!win) {
-            setIsNavigating(false);
-            toast.error("Popup blocked. Please allow popups for this site.");
-            return;
-        }
+
         try {
+            // First, get current location
             const location = await getCurrentLocation();
+            // Then redirect to Google Maps with origin and destination
             const url = `https://www.google.com/maps/dir/?api=1&origin=${location.latitude},${location.longitude}&destination=${dispatch.latitude},${dispatch.longitude}&travelmode=driving`;
-            win.location.href = url;
+            window.location.href = url;
         } catch (error) {
             console.error("Failed to get current location:", error);
-            win.location.href = `https://www.google.com/maps/dir/?api=1&destination=${dispatch.latitude},${dispatch.longitude}&travelmode=driving`;
+            // Fallback: redirect without origin (Google Maps will use device location)
+            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${dispatch.latitude},${dispatch.longitude}&travelmode=driving`;
         } finally {
             setIsNavigating(false);
         }

@@ -2,6 +2,8 @@
 
 import { BaseProfileSheet, ProfileSheetConfig } from "../../maps/components/dialogs/base-profile-sheet";
 import { Activity } from "lucide-react";
+import { useGetResponderDetailsQuery } from "../api/responderApi";
+import { useAppSelector } from "@/lib/redux/hooks";
 
 const responderConfig: ProfileSheetConfig = {
     roleLabel: "Responder",
@@ -25,6 +27,7 @@ interface ResponderProfileSheetProps {
 }
 
 export function ResponderProfileSheet({ isOpen, onOpenChange }: ResponderProfileSheetProps) {
+
     return (
         <BaseProfileSheet
             isOpen={isOpen}

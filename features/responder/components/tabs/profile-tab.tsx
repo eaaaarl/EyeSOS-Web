@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useGetResponderDetailsQuery } from "@/features/responder/api/responderApi";
 
 const menuItems = [
     { icon: Bell, label: "Notifications" },
@@ -32,6 +33,12 @@ export function ProfileTab() {
         { skip: !user?.id }
     );
 
+    const { data: responderData } = useGetResponderDetailsQuery(
+        { responderId: user?.id || "" },
+        { skip: !user?.id }
+    );
+
+
     const profile = profileData?.profile;
     const userEmail = user?.email || profile?.email || "N/A";
     const userName = profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Responder";
@@ -40,6 +47,8 @@ export function ProfileTab() {
     const memberSince = user?.created_at
         ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
         : "N/A";
+
+    const isAvailable = responderData?.responderDetails?.[0]?.is_available ?? true;
 
     const handleLogout = async () => {
         try {
@@ -57,7 +66,6 @@ export function ProfileTab() {
     return (
         <div className="h-full overflow-y-auto bg-background">
 
-            {/* Hero gradient banner — Sticky */}
             <div className="sticky top-0 z-20 shrink-0 shadow-sm">
                 <div className="h-24 bg-gradient-to-br from-red-600 to-red-800 relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/10" />
@@ -114,11 +122,14 @@ export function ProfileTab() {
                         <p className="text-sm font-bold text-foreground">Active</p>
                     </div>
                     <div className="bg-gradient-to-br from-slate-50 to-zinc-50 dark:from-muted/40 dark:to-muted/20 border border-border rounded-xl p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-red-600" />
-                            <span className="text-[10px] font-semibold uppercase text-red-600">On Duty</span>
+                        <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-red-600" />
+                                <span className="text-[10px] font-semibold uppercase text-red-600">On Duty</span>
+                            </div>
+
                         </div>
-                        <p className="text-sm font-bold text-foreground">Available</p>
+                        <p className="text-sm font-bold text-foreground">{isAvailable ? "Available" : "Busy"}</p>
                     </div>
                 </div>
 
