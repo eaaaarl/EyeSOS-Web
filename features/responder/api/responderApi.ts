@@ -1,11 +1,12 @@
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+import { GetResponderDetailsResponse } from "./interface";
 
 export const responderApi = createApi({
   reducerPath: "responderApi",
   baseQuery: fakeBaseQuery(),
-  tagTypes: ["ResponderDispatch"],
+  tagTypes: ["ResponderDispatch", "ResponderDetails"],
   endpoints: (builder) => ({
     getResponderDispatch: builder.query<
       { accident: Report | null; status: string | null },
@@ -138,6 +139,28 @@ export const responderApi = createApi({
           data: { meta: { success: true, message: "Update Available Status" } },
         };
       },
+      invalidatesTags: ["ResponderDetails"],
+    }),
+
+    getResponderDetails: builder.query<
+      GetResponderDetailsResponse,
+      { responderId: string }
+    >({
+      queryFn: async ({ responderId }) => {
+        const { data, error } = await supabase
+          .from("responder_details")
+          .select("*")
+          .eq("profile_id", responderId);
+
+        if (error) return { error: { message: error.message } };
+        return {
+          data: {
+            responderDetails: data,
+            meta: { success: true, message: "Get Responder Details" },
+          },
+        };
+      },
+      providesTags: ["ResponderDetails"],
     }),
   }),
 });
@@ -147,4 +170,5 @@ export const {
   useUpdateAccidentResponseStatusMutation,
   useUpdateAccidentStatusMutation,
   useUpdateResponderAvailabilityMutation,
+  useGetResponderDetailsQuery,
 } = responderApi;

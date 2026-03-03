@@ -11,10 +11,12 @@ import {
     useGetResponderDispatchQuery,
     useUpdateAccidentResponseStatusMutation,
     useUpdateResponderAvailabilityMutation,
+    useGetResponderDetailsQuery,
 } from "../../api/responderApi";
 import { toast } from "sonner";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface HomeTabProps {
     onAcceptDispatch: () => void;
@@ -31,23 +33,31 @@ export function HomeTab({ onAcceptDispatch }: HomeTabProps) {
         skip: !user?.id,
     });
 
+    const { data: responderData } = useGetResponderDetailsQuery(
+        { responderId: user?.id || "" },
+        { skip: !user?.id }
+    );
+
     const [updateAccidentResponseStatus, { isLoading: isAccepting }] =
         useUpdateAccidentResponseStatusMutation();
     const [updateResponderAvailability] = useUpdateResponderAvailabilityMutation();
 
     const activeDispatch = dispatchData?.accident;
     const dispatchStatus = dispatchData?.status;
-    const isAvailable = true;
+    const [isAvailable, setIsAvailable] = useState(responderData?.responderDetails?.[0]?.is_available ?? true);
 
     const handleToggleAvailability = async (val: boolean) => {
         if (!user?.id) return;
+        // Optimistically update UI
+        setIsAvailable(val);
         try {
             await updateResponderAvailability({
                 responderId: user.id,
                 is_available: val,
             }).unwrap();
         } catch {
-            toast.error("Failed to update availability.");
+            // Revert on failure
+            setIsAvailable(!val);
         }
     };
 

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { IncidentPopupContent } from "@/features/responder/components/incident-popup-content";
 import { ChevronLeft } from "lucide-react";
 import {
+    useGetResponderDetailsQuery,
     useGetResponderDispatchQuery,
     useUpdateAccidentResponseStatusMutation,
     useUpdateAccidentStatusMutation,
@@ -49,8 +50,14 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
 
     const { data: dispatchData } = useGetResponderDispatchQuery(user?.id || "", {
         skip: !user?.id,
-        pollingInterval: 5000,
     });
+
+    const { data: responderDetails, isLoading } = useGetResponderDetailsQuery(
+        { responderId: user?.id || "" },
+        { skip: !user?.id }
+    );
+
+    console.log('responderDetails', JSON.stringify(responderDetails, null, 2))
 
     const activeDispatch = dispatchData?.accident;
 
