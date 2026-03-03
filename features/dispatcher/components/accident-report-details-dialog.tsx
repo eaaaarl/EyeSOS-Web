@@ -174,6 +174,15 @@ const ReportContent = ({ report }: ReportContentProps) => {
             <p className="text-[13px] sm:text-[15px] font-semibold text-gray-900 leading-snug">{report.location_address}</p>
           </div>
 
+          {report.latitude && report.longitude && (
+            <div>
+              <p className="text-[9px] sm:text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-1">GPS Coordinates</p>
+              <p className="text-[13px] sm:text-[15px] font-semibold text-gray-900 font-mono tracking-tight">
+                {report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center gap-1.5 mb-1.5 text-gray-500">
