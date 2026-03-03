@@ -39,9 +39,21 @@ interface BaseProfileSheetProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     config: ProfileSheetConfig;
+    stats?: {
+        managed: number;
+        thisMonth: number;
+        efficiency: number | null;
+    };
+    statsLoading?: boolean;
 }
 
-export function BaseProfileSheet({ isOpen, onOpenChange, config }: BaseProfileSheetProps) {
+export function BaseProfileSheet({
+    isOpen,
+    onOpenChange,
+    config,
+    stats,
+    statsLoading = false
+}: BaseProfileSheetProps) {
     const isMobile = useIsMobile();
     const { user } = useAppSelector((state) => state.auth);
     const dispatch = useAppDispatch();
@@ -160,15 +172,21 @@ export function BaseProfileSheet({ isOpen, onOpenChange, config }: BaseProfileSh
                             </div>
                             <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
                                 <div className="min-w-0">
-                                    <p className="text-lg sm:text-xl font-bold text-gray-900">0</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900">
+                                        {statsLoading ? "..." : (stats?.managed ?? 0)}
+                                    </p>
                                     <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">{config.statsManagedLabel}</p>
                                 </div>
                                 <div className={`min-w-0 border-x px-1 border-slate-200`}>
-                                    <p className="text-lg sm:text-xl font-bold text-gray-900">0</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900">
+                                        {statsLoading ? "..." : (stats?.thisMonth ?? 0)}
+                                    </p>
                                     <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">This Month</p>
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-lg sm:text-xl font-bold text-gray-900">-</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900">
+                                        {statsLoading ? "..." : (stats?.efficiency !== null ? `${stats?.efficiency}%` : "-")}
+                                    </p>
                                     <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 truncate">Efficiency</p>
                                 </div>
                             </div>

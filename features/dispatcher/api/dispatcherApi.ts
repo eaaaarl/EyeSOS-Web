@@ -5,7 +5,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { fakeBaseQuery } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { AvailableResponders } from "./inteface";
+import { AvailableResponders, DispatcherStatsResponse } from "./inteface";
 
 export const dispatcherApi = createApi({
   reducerPath: "dispatcherApi",
@@ -164,10 +164,136 @@ export const dispatcherApi = createApi({
         supabase.removeChannel(channel);
       },
     }),
+
+    getDispatcherStats: builder.query<
+      DispatcherStatsResponse,
+      { userId: string }
+    >({
+      queryFn: async ({ userId }) => {
+        try {
+          const now = new Date();
+          const startOfMonth = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            1,
+          ).toISOString();
+
+          // 1. Get all dispatches by this user
+          const { data: dispatches, error: dispatchError } = await supabase
+            .from("accident_responses")
+            .select("accident_id, responded_at")
+            .eq("dispatched_by", userId)
+            .eq("response_type", "dispatched");
+
+          if (dispatchError) throw dispatchError;
+
+          const totalManaged = dispatches?.length || 0;
+          const thisMonth =
+            dispatches?.filter((d) => d.responded_at >= startOfMonth).length ||
+            0;
+
+          // 2. Get the resolution status for those accidents
+          if (totalManaged === 0) {
+            return {
+              data: {
+                stats: { totalManaged: 0, thisMonth: 0, efficiency: null },
+                meta: {
+                  success: true,
+                  message: "No stats found for this dispatcher.",
+                },
+              },
+            };
+          }
+
+          const accidentIds = [
+            ...new Set(dispatches.map((d) => d.accident_id)),
+          ];
+          const { data: accidents, error: accidentError } = await supabase
+            .from("accidents")
+            .select("id, accident_status")
+            .in("id", accidentIds);
+
+          if (accidentError) throw accidentError;
+
+          const resolvedCount =
+            accidents?.filter((a) => a.accident_status === "RESOLVED").length ||
+            0;
+          const efficiency = Math.round(
+            (resolvedCount / accidentIds.length) * 100,
+          );
+
+          return {
+            data: {
+              stats: {
+                totalManaged,
+                thisMonth,
+                efficiency,
+              },
+              meta: {
+                success: true,
+                message: "Dispatcher stats fetched successfully.",
+              },
+            },
+          };
+        } catch (error: unknown) {
+          return {
+            error: {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to fetch dispatcher stats",
+            },
+          };
+        }
+      },
+    }),
+    dispatchResponder: builder.mutation<
+      { meta: { success: boolean; message: string } },
+      {
+        accidentId: string;
+        responderId: string;
+        dispatchedBy?: string;
+        actionTaken?: string;
+      }
+    >({
+      queryFn: async ({
+        accidentId,
+        responderId,
+        dispatchedBy,
+        actionTaken,
+      }) => {
+        const [responseResult, availabilityResult] = await Promise.all([
+          supabase.from("accident_responses").insert({
+            accident_id: accidentId,
+            responder_id: responderId,
+            response_type: "dispatched",
+            action_taken: actionTaken || "Dispatched by admin",
+            responded_at: new Date().toISOString(),
+            dispatched_by: dispatchedBy,
+          }),
+          supabase
+            .from("responder_details")
+            .update({ is_available: false })
+            .eq("profile_id", responderId),
+        ]);
+
+        if (responseResult.error)
+          return { error: { message: responseResult.error.message } };
+        if (availabilityResult.error)
+          return { error: { message: availabilityResult.error.message } };
+
+        return {
+          data: { meta: { success: true, message: "Responder dispatched." } },
+        };
+      },
+      invalidatesTags: ["getAccidents"],
+    }),
   }),
 });
 
 export const {
   useGetAllReportsBystanderQuery,
   useGetAvailableRespondersQuery,
+  useGetDispatcherStatsQuery,
+  useDispatchResponderMutation,
 } = dispatcherApi;

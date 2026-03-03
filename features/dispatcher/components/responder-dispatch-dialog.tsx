@@ -18,8 +18,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { toast } from "sonner";
 import { formatDistance, getDistanceKm } from "../../maps/utils/haversine";
-import { useDispatchResponderMutation, useGetAccidentStatusQuery } from "../../maps/api/mapApi";
+import { useGetAccidentStatusQuery } from "../../maps/api/mapApi";
 import { AvailableResponders } from "../api/inteface";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
+import { useDispatchResponderMutation } from "../api/dispatcherApi";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;
@@ -40,7 +43,15 @@ export function ResponderDispatchDialog({
     const isMobile = useIsMobile();
     const [isDispatching, setIsDispatching] = useState<string | null>(null);
     const [dispatchedResponderName, setDispatchedResponderName] = useState<string | null>(null);
+    const { user } = useAppSelector((state) => state.auth);
     const [dispatchResponder, { isLoading: dispatchResponderLoading }] = useDispatchResponderMutation();
+
+    const { data: profileData } = useGetUserProfileQuery(
+        { user_id: user?.id || "" },
+        { skip: !user?.id }
+    );
+
+    const dispatcherName = profileData?.profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Dispatcher";
 
     const { data: accidentStatusData } = useGetAccidentStatusQuery(
         { accidentId: report?.id ?? "" },
@@ -68,7 +79,12 @@ export function ResponderDispatchDialog({
         setIsDispatching(responderId);
         setDispatchedResponderName(responderName);
         try {
-            await dispatchResponder({ accidentId: report.id, responderId }).unwrap();
+            await dispatchResponder({
+                accidentId: report.id,
+                responderId,
+                dispatchedBy: user?.id,
+                actionTaken: `Dispatched by ${dispatcherName}`
+            }).unwrap();
             toast.info(`Waiting for ${responderName} to accept...`);
         } catch {
             toast.error("Failed to dispatch responder.");
