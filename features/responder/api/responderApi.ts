@@ -1,12 +1,12 @@
 import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.interface";
 import { supabase } from "@/lib/supabase";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { GetResponderDetailsResponse } from "./interface";
+import { GetResponderDetailsResponse, ResponderDetail } from "./interface";
 
 export const responderApi = createApi({
   reducerPath: "responderApi",
   baseQuery: fakeBaseQuery(),
-  tagTypes: ["ResponderDispatch", "ResponderDetails"],
+  tagTypes: ["ResponderDispatch", "ResponderDetails", "ResponderStats"],
   endpoints: (builder) => ({
     getResponderDispatch: builder.query<
       { accident: Report | null; status: string | null },
@@ -94,9 +94,15 @@ export const responderApi = createApi({
       { responderId: string; accidentId: string; status: string }
     >({
       queryFn: async ({ responderId, accidentId, status }) => {
+        const updateData: Record<string, string> = { response_type: status };
+
+        if (status === "resolved") {
+          updateData.resolved_at = new Date().toISOString();
+        }
+
         const { error } = await supabase
           .from("accident_responses")
-          .update({ response_type: status })
+          .update(updateData)
           .eq("responder_id", responderId)
           .eq("accident_id", accidentId);
 
@@ -105,6 +111,7 @@ export const responderApi = createApi({
           data: { meta: { success: true, message: "Update Responder Status" } },
         };
       },
+      invalidatesTags: ["ResponderStats"],
     }),
 
     updateAccidentStatus: builder.mutation<
@@ -155,12 +162,91 @@ export const responderApi = createApi({
         if (error) return { error: { message: error.message } };
         return {
           data: {
-            responderDetails: data,
+            responderDetails: data as unknown as ResponderDetail[],
             meta: { success: true, message: "Get Responder Details" },
           },
         };
       },
       providesTags: ["ResponderDetails"],
+    }),
+
+    getResponderStats: builder.query<
+      { total: number; thisMonth: number; avgTime: string },
+      string
+    >({
+      queryFn: async (responderId) => {
+        try {
+          // 1. Get all resolved responses for this responder
+          const { data, error } = await supabase
+            .from("accident_responses")
+            .select("responded_at, resolved_at")
+            .eq("responder_id", responderId)
+            .eq("response_type", "resolved");
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            return {
+              data: { total: 0, thisMonth: 0, avgTime: "-" },
+            };
+          }
+
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+          let totalResolved = 0;
+          let thisMonthResolved = 0;
+          let totalTimeMs = 0;
+          let countsForAvg = 0;
+
+          data.forEach((res) => {
+            totalResolved++;
+
+            if (res.resolved_at) {
+              const resolvedDate = new Date(res.resolved_at);
+              if (resolvedDate >= startOfMonth) {
+                thisMonthResolved++;
+              }
+
+              if (res.responded_at) {
+                const diff =
+                  resolvedDate.getTime() - new Date(res.responded_at).getTime();
+                if (diff > 0) {
+                  totalTimeMs += diff;
+                  countsForAvg++;
+                }
+              }
+            }
+          });
+
+          // Calculate average time in minutes
+          let avgTimeStr = "-";
+          if (countsForAvg > 0) {
+            const avgMinutes = Math.round(totalTimeMs / countsForAvg / 60000);
+            avgTimeStr = avgMinutes > 0 ? `${avgMinutes}m` : "< 1m";
+            if (avgMinutes >= 60) {
+              const hours = Math.floor(avgMinutes / 60);
+              const mins = avgMinutes % 60;
+              avgTimeStr = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            }
+          }
+
+          return {
+            data: {
+              total: totalResolved,
+              thisMonth: thisMonthResolved,
+              avgTime: avgTimeStr,
+            },
+          };
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred";
+          return { error: { message } };
+        }
+      },
+      providesTags: ["ResponderStats"],
     }),
   }),
 });
@@ -171,4 +257,5 @@ export const {
   useUpdateAccidentStatusMutation,
   useUpdateResponderAvailabilityMutation,
   useGetResponderDetailsQuery,
+  useGetResponderStatsQuery,
 } = responderApi;

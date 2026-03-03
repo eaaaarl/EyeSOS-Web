@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { useGetResponderDetailsQuery } from "@/features/responder/api/responderApi";
+import { useGetResponderDetailsQuery, useGetResponderStatsQuery } from "@/features/responder/api/responderApi";
 
 const menuItems = [
     { icon: Bell, label: "Notifications" },
@@ -39,6 +39,10 @@ export function ProfileTab() {
     );
 
 
+    const { data: statsData } = useGetResponderStatsQuery(user?.id || "", {
+        skip: !user?.id,
+    });
+
     const profile = profileData?.profile;
     const userEmail = user?.email || profile?.email || "N/A";
     const userName = profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Responder";
@@ -49,6 +53,8 @@ export function ProfileTab() {
         : "N/A";
 
     const isAvailable = responderData?.responderDetails?.[0]?.is_available ?? true;
+
+    const stats = statsData || { total: 0, thisMonth: 0, avgTime: "-" };
 
     const handleLogout = async () => {
         try {
@@ -141,15 +147,15 @@ export function ProfileTab() {
                     </div>
                     <div className="grid grid-cols-3 gap-1 text-center">
                         <div>
-                            <p className="text-xl font-bold text-foreground">0</p>
+                            <p className="text-xl font-bold text-foreground">{stats.total}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">Total</p>
                         </div>
                         <div className="border-x border-border px-1">
-                            <p className="text-xl font-bold text-foreground">0</p>
+                            <p className="text-xl font-bold text-foreground">{stats.thisMonth}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">This Month</p>
                         </div>
                         <div>
-                            <p className="text-xl font-bold text-foreground">-</p>
+                            <p className="text-xl font-bold text-foreground">{stats.avgTime}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">Avg. Time</p>
                         </div>
                     </div>

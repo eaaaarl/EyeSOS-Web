@@ -142,7 +142,12 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
             <LocationButton isHaveReport={!!(activeDispatch && status === "accepted")} />
 
             {activeDispatch && status === "accepted" && (
-                <ResponderBottomReports report={activeDispatch} onDrawerChange={onDrawerChange} />
+                <ResponderBottomReports
+                    report={activeDispatch}
+                    onDrawerChange={onDrawerChange}
+                    onResolve={handleResolve}
+                    isResolving={isMutationLoading}
+                />
             )}
         </div>
     );
