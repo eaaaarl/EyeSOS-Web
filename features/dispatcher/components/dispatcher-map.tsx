@@ -25,7 +25,7 @@ export function DispatcherMap() {
                     <Marker
                         key={`admin-marker-${index}-${report.id || index}`}
                         position={[report.latitude, report.longitude]}
-                        icon={createPinMarkerIcon(report.severity, 1)}
+                        icon={createPinMarkerIcon({ severity: report.severity, count: 1 })}
                     >
                         <MapPopup
                             availableResponders={availableResponders}
@@ -41,6 +41,7 @@ export function DispatcherMap() {
                 isResponder={false}
                 reports={reports}
                 onMenuClick={() => setIsOpen(true)}
+                isAdmin={false}
             />
             <DispatcherProfileSheet isOpen={isOpen} onOpenChange={setIsOpen} />
             <BottomReports reports={reports} />

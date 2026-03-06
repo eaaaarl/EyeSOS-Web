@@ -4,9 +4,10 @@ interface MapNavigationProps {
   onMenuClick?: () => void;
   reports: Report[]
   isResponder: boolean;
+  isAdmin: boolean;
 }
 
-export function MapNavigation({ onMenuClick, reports, isResponder }: MapNavigationProps) {
+export function MapNavigation({ onMenuClick, reports, isResponder, isAdmin }: MapNavigationProps) {
   const criticalCount = reports.filter(r => r.severity?.toLowerCase() === 'critical').length;
   const highCount = reports.filter(r => r.severity?.toLowerCase() === 'high').length;
   const moderateCount = reports.filter(r => r.severity?.toLowerCase() === 'moderate').length;
@@ -41,7 +42,7 @@ export function MapNavigation({ onMenuClick, reports, isResponder }: MapNavigati
             <div className="flex items-center gap-1.5 shrink-0">
               <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
               <span className="text-[10px] sm:text-xs font-semibold text-gray-700">
-                {totalCountReports} <span className="hidden sm:inline">Active</span>
+                {totalCountReports} <span className="hidden sm:inline">{isAdmin ? "Total Reports" : "Active"}</span>
               </span>
             </div>
 

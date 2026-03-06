@@ -1,6 +1,6 @@
 import L from "leaflet";
 
-export const createCircleMarkerIcon = (severity: string) => {
+export const createCircleMarkerIcon = (severity: string, isAdmin: boolean = false) => {
   const normalizedSeverity = severity?.toLowerCase() || 'minor';
   const severityConfig = {
     'critical': {
@@ -44,7 +44,7 @@ export const createCircleMarkerIcon = (severity: string) => {
     className: 'custom-circle-marker',
     html: `
       <div style="position: relative; width: ${size.outer}px; height: ${size.outer}px;">
-        ${isCritical ? `
+        ${isCritical && !isAdmin ? `
           <div class="pulse-ring" style="
             position: absolute;
             top: 50%;
@@ -77,7 +77,7 @@ export const createCircleMarkerIcon = (severity: string) => {
           width: ${size.outer}px;
           height: ${size.outer}px;
           margin: -${size.outer / 2}px 0 0 -${size.outer / 2}px;
-          background: white;
+          background: ${isAdmin && isCritical ? config.color : 'white'};
           border: 3px solid ${config.color};
           border-radius: 50%;
           box-shadow: 0 2px 8px rgba(0,0,0,0.25);
@@ -86,7 +86,7 @@ export const createCircleMarkerIcon = (severity: string) => {
           justify-content: center;
           font-weight: bold;
           font-size: ${size.font}px;
-          color: ${config.color};
+          color: ${isAdmin && isCritical ? 'white' : config.color};
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           cursor: pointer;
           transition: transform 0.2s ease;
@@ -114,7 +114,13 @@ export const createCircleMarkerIcon = (severity: string) => {
   });
 };
 
-export const createPinMarkerIcon = (severity: string, count: number = 1) => {
+interface createPinMarkerIconProps {
+  severity: string;
+  count?: number;
+  isAdmin?: boolean;
+}
+
+export const createPinMarkerIcon = ({ severity, count = 1, isAdmin = false }: createPinMarkerIconProps) => {
   const normalizedSeverity = severity?.toLowerCase() || 'minor';
   const severityColors = {
     'critical': '#DC2626',
@@ -134,7 +140,7 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
     className: 'custom-pin-marker',
     html: `
       <div style="position: relative;">
-        ${isCritical ? `
+        ${isCritical && !isAdmin ? `
           <div style="
             position: absolute;
             top: -3px;
@@ -157,12 +163,14 @@ export const createPinMarkerIcon = (severity: string, count: number = 1) => {
 
         <!-- Pin Shape -->
         <svg width="${pinWidth}" height="${pinHeight}" viewBox="0 0 32 40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); position: relative; z-index: 1;">
-          <!-- Pin body without border -->
+          <!-- Pin body -->
           <path d="M16 0 C7.2 0 0 7.2 0 16 C0 24 16 40 16 40 S32 24 32 16 C32 7.2 24.8 0 16 0 Z" 
                 fill="${color}" />
-          <!-- Inner circles -->
-          <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
-          <circle cx="16" cy="16" r="4" fill="${color}"/>
+          ${isAdmin && isCritical ? '' : `
+            <!-- Inner circles -->
+            <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
+            <circle cx="16" cy="16" r="4" fill="${color}"/>
+          `}
         </svg>
 
         ${hasMultiple ? `

@@ -261,6 +261,7 @@ export function BaseProfileSheet({
     );
 
     if (isMobile) {
+
         return (
             <Drawer open={isOpen} onOpenChange={onOpenChange}>
                 <DrawerContent className="h-[85vh] rounded-t-xl bg-white border-none border-t-0 flex flex-col p-0 overflow-hidden outline-none [&>div:first-child]:hidden">
@@ -276,6 +277,7 @@ export function BaseProfileSheet({
             <SheetContent
                 side="right"
                 className="flex flex-col w-full sm:max-w-md p-0"
+
             >
                 <ProfileInfo />
             </SheetContent>

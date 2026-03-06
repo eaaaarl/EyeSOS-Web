@@ -52,7 +52,7 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
         skip: !user?.id,
     });
 
-    const { data: responderDetails, isLoading } = useGetResponderDetailsQuery(
+    const { data: responderDetails } = useGetResponderDetailsQuery(
         { responderId: user?.id || "" },
         { skip: !user?.id }
     );
