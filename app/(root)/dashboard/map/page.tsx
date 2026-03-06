@@ -2,14 +2,14 @@
 
 import dynamic from "next/dynamic";
 
-const DispatcherMap = dynamic(() => import("@/features/dispatcher/components/dispatcher-map").then(mod => mod.DispatcherMap), {
+const AdminMap = dynamic(() => import("@/features/admin/components/maps/admin-map").then(mod => mod.AdminMap), {
     ssr: false,
 });
 
-export default function DispatcherMapPage() {
+export default function AdminMapPage() {
     return (
         <main className="h-screen w-full">
-            <DispatcherMap />
+            <AdminMap />
         </main>
     );
 }

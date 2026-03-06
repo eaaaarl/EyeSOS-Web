@@ -70,6 +70,7 @@ export interface AccidentResponse {
 export interface AccidentImage {
   id: string;
   url: string;
+  created_at: string;
 }
 
 export interface AllAccidentsResponse {
