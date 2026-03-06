@@ -8,6 +8,7 @@ import {
     IconUsers,
     IconSettings,
     IconHelp,
+    IconUsersPlus,
 } from "@tabler/icons-react"
 
 import {
@@ -40,6 +41,11 @@ const data = {
             title: "Accidents Report",
             url: "/admin/accidents",
             icon: IconReport,
+        },
+        {
+            title: "Manage Teams",
+            url: "/admin/teams",
+            icon: IconUsersPlus,
         },
         {
             title: "Live Map",
