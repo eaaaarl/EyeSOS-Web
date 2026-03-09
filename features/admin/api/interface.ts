@@ -3,6 +3,11 @@ export interface AllUsersResponse {
   meta: Meta;
 }
 
+export interface ShowMembersResponse {
+  members: Member[];
+  meta: Meta;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -18,6 +23,35 @@ export interface UserProfile {
   birth_date: string | null;
   bio: string | null;
   permanent_address: string | null;
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+  mobileNo: string | null;
+  avatarUrl: string | null;
+  created_at: string;
+  updated_at: string | null;
+  user_type: UserType;
+  organizations_id: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_number: string | null;
+  birth_date: string | null;
+  bio: string | null;
+  permanent_address: string | null;
+  responder_details: ResponderDetails;
+}
+
+export interface ResponderDetails {
+  id: string;
+  profile_id: string;
+  latitude: number | null;
+  longitude: number | null;
+  is_available: boolean;
+  last_location_updated_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Meta {
@@ -75,5 +109,35 @@ export interface AccidentImage {
 
 export interface AllAccidentsResponse {
   accidents: AccidentReport[];
+  meta: Meta;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  leader_id: string | null;
+  leader_name?: string; // Derived or joined field
+  members_count?: number; // Calculated field
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetTeamsResponse {
+  teams: Team[];
+  meta: Meta;
+}
+
+export interface AddTeamPayload {
+  name: string;
+  description?: string;
+  status: string;
+  leader_id: string;
+  member_ids: string[];
+}
+export interface TeamDetailsResponse {
+  team: Team;
+  members: UserProfile[];
   meta: Meta;
 }

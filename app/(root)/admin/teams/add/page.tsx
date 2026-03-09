@@ -15,28 +15,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogDescription,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface User {
-    id: number | string
-    name: string
-    role: string
-    avatar: string
-    email: string
-    phone?: string
-    isNew?: boolean
-}
-
-const EXISTING_USERS: User[] = [
-    { id: 1, name: 'Alice Johnson', role: 'Paramedic', avatar: 'AJ', email: 'alice@rescue.org' },
-    { id: 2, name: 'Bob Smith', role: 'Firefighter', avatar: 'BS', email: 'bob@rescue.org' },
-    { id: 3, name: 'Charlie Davis', role: 'EMT', avatar: 'CD', email: 'charlie@rescue.org' },
-    { id: 4, name: 'Diana Prince', role: 'Nurse', avatar: 'DP', email: 'diana@rescue.org' },
-    { id: 5, name: 'Ethan Hunt', role: 'Rescue Specialist', avatar: 'EH', email: 'ethan@rescue.org' },
-]
-
-const ROLES = ['Paramedic', 'Firefighter', 'EMT', 'Nurse', 'Rescue Specialist', 'Commander', 'Logistics', 'Coordinator']
+import { Info, Loader2 } from 'lucide-react'
+import { useAddMemberMutation, useShowMembersQuery, useAddTeamMutation, useGetResponderTeamsQuery } from '@/features/admin/api/adminApi'
+import { Member, AddTeamPayload } from '@/features/admin/api/interface'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const avatarColors = [
@@ -81,60 +71,117 @@ function Field({ label, required, error, children }: { label: string; required?:
     )
 }
 
-// ─── New User inline form ─────────────────────────────────────────────────────
-function NewUserForm({ onAdd, onCancel }: { onAdd: (u: User) => void; onCancel: () => void }) {
-    const [form, setForm] = useState({ name: '', email: '', role: '', phone: '' })
+// ─── New User Modal ──────────────────────────────────────────────────────────
+function NewUserModal({ open, onOpenChange, onAdd }: { open: boolean; onOpenChange: (open: boolean) => void; onAdd: (u: Member) => void }) {
+    const [form, setForm] = useState({ name: '', email: '', phone: '' })
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })) }
 
-    const submit = () => {
+    const [addMember, { isLoading }] = useAddMemberMutation()
+
+    const submit = async () => {
         const e: Record<string, string> = {}
         if (!form.name.trim()) e.name = 'Name required'
-        if (!form.role) e.role = 'Role required'
         if (!form.email.trim()) e.email = 'Email required'
         else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Invalid email'
         if (Object.keys(e).length) { setErrors(e); return }
-        const initials = form.name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-        onAdd({ id: Date.now(), name: form.name.trim(), email: form.email.trim(), role: form.role, phone: form.phone, avatar: initials, isNew: true })
+
+        const res = await addMember({
+            payload: {
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD!,
+            }
+        })
+        console.log('res', res)
+        if (res.error) return
+        if (res.data) {
+            const data = res.data as { member?: Member }
+            if (data.member) onAdd(data.member)
+        }
+        setForm({ name: '', email: '', phone: '' })
+        onOpenChange(false)
     }
 
     return (
-        <div className="border border-slate-200 rounded-xl bg-slate-50 p-5 space-y-4 animate-in slide-in-from-top-1 duration-200">
-            <p className="text-xs font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                </span>
-                New User Details
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-                <Field label="Full Name" required error={errors.name}>
-                    <Input autoFocus placeholder="Jane Doe" value={form.name} onChange={e => set('name', e.target.value)}
-                        className={cn("bg-white h-9 text-sm", errors.name && "border-rose-400")} />
-                </Field>
-                <Field label="Role" required error={errors.role}>
-                    <Select value={form.role} onValueChange={v => set('role', v)}>
-                        <SelectTrigger className={cn("bg-white h-9 text-sm", errors.role && "border-rose-400")}>
-                            <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Email" required error={errors.email}>
-                    <Input type="email" placeholder="jane@example.com" value={form.email} onChange={e => set('email', e.target.value)}
-                        className={cn("bg-white h-9 text-sm", errors.email && "border-rose-400")} />
-                </Field>
-                <Field label="Phone" error={errors.phone}>
-                    <Input placeholder="+1 555 000 0000" value={form.phone} onChange={e => set('phone', e.target.value)} className="bg-white h-9 text-sm" />
-                </Field>
-            </div>
-            <div className="flex gap-2">
-                <Button onClick={submit} size="sm" className="font-bold flex-1">Add User</Button>
-                <Button onClick={onCancel} variant="outline" size="sm" className="font-bold flex-1">Cancel</Button>
-            </div>
-        </div>
+        <Dialog open={open} onOpenChange={(val) => { if (!isLoading) onOpenChange(val) }}>
+            <DialogContent className="sm:max-w-[425px] overflow-hidden p-0 rounded-2xl border-none shadow-2xl">
+                <DialogHeader className="px-6 pt-6 pb-4 bg-slate-50/50 border-b border-slate-100">
+                    <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                        </div>
+                        Add New User
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-500 mt-1">
+                        Create a new user to add to your team pool.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="p-6 space-y-5">
+                    <div className="space-y-4">
+                        <Field label="Full Name" required error={errors.name}>
+                            <Input
+                                autoFocus
+                                placeholder="Jane Doe"
+                                value={form.name}
+                                onChange={e => set('name', e.target.value)}
+                                className={cn("bg-white h-10 text-sm border-slate-200 focus:border-slate-400 focus:ring-0 transition-all", errors.name && "border-rose-400")}
+                            />
+                        </Field>
+
+                        <Field label="Email Address" required error={errors.email}>
+                            <Input
+                                type="email"
+                                placeholder="jane@example.com"
+                                value={form.email}
+                                onChange={e => set('email', e.target.value)}
+                                className={cn("bg-white h-10 text-sm border-slate-200 focus:border-slate-400 focus:ring-0 transition-all", errors.email && "border-rose-400")}
+                            />
+                        </Field>
+
+                        <Field label="Phone Number" error={errors.phone}>
+                            <Input
+                                placeholder="+1 555 000 0000"
+                                value={form.phone}
+                                onChange={e => set('phone', e.target.value)}
+                                className="bg-white h-10 text-sm border-slate-200 focus:border-slate-400 focus:ring-0 transition-all"
+                            />
+                        </Field>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3.5 flex items-start gap-3">
+                        <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p className="text-[12px] font-bold text-amber-900">Password Generation</p>
+                            <p className="text-[11px] text-amber-700 mt-0.5">The system will generate a default password: <code className="bg-amber-100/80 px-1 rounded font-bold text-amber-900">12345678</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        onClick={() => onOpenChange(false)}
+                        className="font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        disabled={isLoading}
+                        onClick={submit}
+                        className="font-bold flex-1 shadow-md shadow-slate-200"
+                    >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add User to Pool'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -149,19 +196,23 @@ export default function AddTeams() {
     const [teamErrors, setTeamErrors] = useState<Record<string, string>>({})
 
     // User pool
-    const [userPool, setUserPool] = useState<User[]>([])
-    const [showNewUserForm, setShowNewUserForm] = useState(false)
+    const [userPool, setUserPool] = useState<Member[]>([])
+    const [showNewUserModal, setShowNewUserModal] = useState(false)
     const [search, setSearch] = useState('')
     const [showDropdown, setShowDropdown] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
     // Leader & Members
-    const [leader, setLeader] = useState<User | null>(null)
-    const [members, setMembers] = useState<User[]>([])
+    const [leader, setLeader] = useState<Member | null>(null)
+    const [members, setMembers] = useState<Member[]>([])
     const [assignErrors, setAssignErrors] = useState<Record<string, string>>({})
 
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
+
+    const [addTeam] = useAddTeamMutation()
+    const { data: assignmentsData } = useGetResponderTeamsQuery()
+    const assignments = assignmentsData?.assignments || {}
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -172,17 +223,17 @@ export default function AddTeams() {
         return () => document.removeEventListener('mousedown', handle)
     }, [])
 
-
-
+    const { data } = useShowMembersQuery()
+    console.log('members', data?.members)
     // Derived
-    const notInPool = EXISTING_USERS.filter(eu => !userPool.find(u => u.id === eu.id))
-    const filtered = notInPool.filter(u =>
+    const notInPool = data?.members?.filter(eu => !userPool.find(u => u.id === eu.id))
+    const filtered = notInPool?.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.role.toLowerCase().includes(search.toLowerCase())
+        (u.user_type?.toLowerCase().includes(search.toLowerCase()) ?? false)
     )
-    const isMember = (id: number | string) => members.some(m => m.id === id)
+    const isMember = (id: string) => members.some(m => m.id === id)
 
-    const setAsLeader = (u: User) => {
+    const setAsLeader = (u: Member) => {
         if (leader?.id === u.id) {
             setLeader(null)
         } else {
@@ -193,19 +244,19 @@ export default function AddTeams() {
         setAssignErrors(e => ({ ...e, leader: '' }))
     }
 
-    const addToPool = (u: User) => {
+    const addToPool = (u: Member) => {
         setUserPool(p => p.find(x => x.id === u.id) ? p : [...p, u])
         setSearch('')
         setShowDropdown(false)
     }
 
-    const removeFromPool = (id: number | string) => {
+    const removeFromPool = (id: string) => {
         setUserPool(p => p.filter(u => u.id !== id))
         if (leader?.id === id) setLeader(null)
         setMembers(m => m.filter(u => u.id !== id))
     }
 
-    const toggleMember = (u: User) => {
+    const toggleMember = (u: Member) => {
         setMembers(prev => prev.find(m => m.id === u.id) ? prev.filter(m => m.id !== u.id) : [...prev, u])
     }
 
@@ -216,11 +267,29 @@ export default function AddTeams() {
         if (!leader) ae.leader = 'Please select a team leader'
         if (Object.keys(te).length) { setTeamErrors(te); return }
         if (Object.keys(ae).length) { setAssignErrors(ae); return }
-        setSaving(true)
-        await new Promise(r => setTimeout(r, 1200))
-        setSaving(false)
-        setSaved(true)
-        setTimeout(() => router.push('/admin/teams'), 1800)
+
+        try {
+            setSaving(true)
+            const payload: AddTeamPayload = {
+                name: teamName,
+                description: description,
+                status: status,
+                leader_id: leader?.id || '',
+                member_ids: members.map(m => m.id)
+            }
+
+            const res = await addTeam({ payload }).unwrap()
+
+            if (res.meta.success) {
+                setSaved(true)
+                setTimeout(() => router.push('/admin/teams'), 1800)
+            }
+        } catch (error) {
+            console.error('Failed to save team:', error)
+            setTeamErrors({ teamName: 'An error occurred while saving the team. Please try again.' })
+        } finally {
+            setSaving(false)
+        }
     }
 
     return (
@@ -245,7 +314,7 @@ export default function AddTeams() {
                                 setTeamName(''); setDescription(''); setStatus('active')
                                 setTeamErrors({}); setAssignErrors({})
                                 setUserPool([]); setLeader(null); setMembers([])
-                                setSearch(''); setShowDropdown(false); setShowNewUserForm(false)
+                                setSearch(''); setShowDropdown(false); setShowNewUserModal(false)
                                 setSaving(false); setSaved(false)
                             }}
                             className="font-bold border-slate-200"
@@ -264,6 +333,8 @@ export default function AddTeams() {
                         </Button>
                     </div>
                 </div>
+
+
 
                 {/* ── Success banner ── */}
                 {saved && (
@@ -328,43 +399,78 @@ export default function AddTeams() {
 
                                         {/* Dropdown */}
                                         {showDropdown && (
-                                            <div className="absolute z-50 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-100">
-                                                {filtered.length === 0 ? (
-                                                    <div className="px-5 py-6 text-center">
-                                                        <p className="text-sm text-slate-500 font-medium">No users found.</p>
-                                                        <button onClick={() => { setShowNewUserForm(true); setShowDropdown(false) }}
-                                                            className="text-xs font-bold text-slate-700 underline mt-1">Create a new user?</button>
+                                            <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                                                <div className="px-3 py-2 bg-slate-50 hidden border-b border-slate-100">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Users</span>
+                                                </div>
+                                                {filtered?.length === 0 ? (
+                                                    <div className="px-5 py-8 text-center bg-white">
+                                                        <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                                                            <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197" /></svg>
+                                                        </div>
+                                                        <p className="text-sm text-slate-500 font-medium font-poppins">No users found</p>
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNewUserModal(true); setShowDropdown(false) }}
+                                                            className="text-xs font-bold text-primary hover:underline mt-2 flex items-center gap-1.5 mx-auto"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                                                            Create new user
+                                                        </button>
                                                     </div>
                                                 ) : (
-                                                    <div className="max-h-64 overflow-y-auto divide-y divide-slate-50">
-                                                        {filtered.map(u => (
-                                                            <button key={u.id} onClick={() => addToPool(u)}
-                                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left group transition-colors">
-                                                                <CustomAvatar initials={u.avatar} size="sm" />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-semibold text-slate-800">{u.name}</p>
-                                                                    <p className="text-xs text-slate-400">{u.role}</p>
+                                                    <div className="max-h-[320px] overflow-y-auto divide-y divide-slate-50 scrollbar-hide bg-white">
+                                                        {filtered?.map(u => (
+                                                            <button
+                                                                key={u.id}
+                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToPool(u) }}
+                                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left group transition-all"
+                                                            >
+                                                                <div className="relative">
+                                                                    <CustomAvatar initials={u.name.charAt(0)} size="sm" />
+                                                                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
                                                                 </div>
-                                                                <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity pr-1">+ Add</span>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{u.name}</p>
+                                                                        {assignments[u.id] && (
+                                                                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-bold bg-slate-100 text-slate-500 border-none">
+                                                                                In: {assignments[u.id].teamName} ({assignments[u.id].role})
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="text-[11px] text-slate-400 font-medium uppercase tracking-tight">{u.user_type}</p>
+                                                                </div>
+                                                                <Badge variant="outline" className="opacity-0 group-hover:opacity-100 transition-all text-[9px] font-black uppercase tracking-tighter bg-primary/5 text-primary border-primary/20">
+                                                                    Select
+                                                                </Badge>
                                                             </button>
                                                         ))}
                                                     </div>
                                                 )}
-                                                <div className="border-t border-slate-100 px-4 py-2.5 bg-slate-50 flex justify-between items-center">
-                                                    <button onClick={() => { setShowNewUserForm(true); setShowDropdown(false) }}
-                                                        className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1">
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                                                <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/80 flex justify-between items-center backdrop-blur-sm">
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNewUserModal(true); setShowDropdown(false) }}
+                                                        className="text-xs font-black text-slate-600 hover:text-primary flex items-center gap-2 uppercase tracking-tighter transition-colors"
+                                                    >
+                                                        <div className="w-5 h-5 rounded-md bg-white border border-slate-200 flex items-center justify-center shadow-xs">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                                                        </div>
                                                         New User
                                                     </button>
-                                                    <button onClick={() => setShowDropdown(false)} className="text-xs text-slate-400 hover:text-slate-600 font-medium">Close</button>
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDropdown(false) }}
+                                                        className="text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1 rounded-md hover:bg-white transition-all"
+                                                    >
+                                                        ESC
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
                                     <Button
-                                        variant={showNewUserForm ? "default" : "outline"}
-                                        onClick={() => { setShowNewUserForm(v => !v); setShowDropdown(false) }}
+                                        variant={showNewUserModal ? "default" : "outline"}
+                                        onClick={() => { setShowNewUserModal(true); setShowDropdown(false) }}
                                         className="font-bold border-slate-200 flex-shrink-0"
                                     >
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,13 +480,12 @@ export default function AddTeams() {
                                     </Button>
                                 </div>
 
-                                {/* New user form */}
-                                {showNewUserForm && (
-                                    <NewUserForm
-                                        onAdd={u => { addToPool(u); setShowNewUserForm(false) }}
-                                        onCancel={() => setShowNewUserForm(false)}
-                                    />
-                                )}
+                                {/* New user modal */}
+                                <NewUserModal
+                                    open={showNewUserModal}
+                                    onOpenChange={setShowNewUserModal}
+                                    onAdd={u => addToPool(u)}
+                                />
 
                                 <div className="border-t border-slate-100" />
 
@@ -446,7 +551,7 @@ export default function AddTeams() {
                                                             </svg>
                                                         </button>
 
-                                                        <CustomAvatar initials={u.avatar} size="sm" />
+                                                        <CustomAvatar initials={u.name.charAt(0)} size="sm" />
 
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2 flex-wrap">
@@ -462,10 +567,10 @@ export default function AddTeams() {
                                                                         Member
                                                                     </span>
                                                                 )}
-                                                                {u.isNew && <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider">New</Badge>}
+                                                                {/* {u.isNew && <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider">New</Badge>} */}
                                                             </div>
                                                             <p className="text-[11px] text-slate-400 mt-0.5">
-                                                                {u.role} · {u.email}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}
+                                                                {u.user_type} · {u.email}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}
                                                             </p>
                                                         </div>
 
@@ -488,10 +593,12 @@ export default function AddTeams() {
                                                         )}
 
                                                         {/* Remove button */}
-                                                        <button onClick={() => removeFromPool(u.id)}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-rose-500 p-1 rounded-lg hover:bg-rose-50 flex-shrink-0">
-                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFromPool(u.id) }}
+                                                            className="text-slate-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 flex-shrink-0 transition-all border border-transparent hover:border-rose-100"
+                                                            title="Remove from pool"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                                             </svg>
                                                         </button>
                                                     </div>
@@ -503,7 +610,7 @@ export default function AddTeams() {
                                             Click ⭐ to set leader · Check ☑ to add members
                                         </p>
                                     </>
-                                ) : !showNewUserForm && (
+                                ) : !showNewUserModal && (
                                     <div className="border-2 border-dashed border-slate-100 rounded-xl py-10 text-center">
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -574,13 +681,13 @@ export default function AddTeams() {
                                                 <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                                 </svg>
-                                                <CustomAvatar initials={leader.avatar} size="sm" />
+                                                <CustomAvatar initials={leader.name.charAt(0)} size="sm" />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
                                                         <p className="text-sm font-bold text-slate-800 truncate">{leader.name}</p>
                                                         <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Leader</span>
                                                     </div>
-                                                    <p className="text-[10px] text-slate-400">{leader.role}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
+                                                    <p className="text-[10px] text-slate-400">{leader.user_type}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -588,13 +695,13 @@ export default function AddTeams() {
                                         {/* Member rows — indented */}
                                         {members.map(m => (
                                             <div key={m.id} className="flex items-center gap-2.5 pl-12 pr-3 py-2.5 bg-slate-50/40">
-                                                <CustomAvatar initials={m.avatar} size="sm" />
+                                                <CustomAvatar initials={m.name.charAt(0)} size="sm" />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
                                                         <p className="text-sm font-semibold text-slate-700 truncate">{m.name}</p>
                                                         <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700">Member</span>
                                                     </div>
-                                                    <p className="text-[10px] text-slate-400">{m.role}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
+                                                    <p className="text-[10px] text-slate-400">{m.user_type}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -617,8 +724,29 @@ export default function AddTeams() {
                             </div>
                         </div>
                     </div>
-
                 </div>
+                {/* <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Info className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-sm font-bold text-slate-900">Team Management Guide</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-3">
+                            <div className="space-y-1">
+                                <p className="text-[11px] font-black text-primary uppercase tracking-wider">Step 1: Pool Selection</p>
+                                <p className="text-[12px] text-slate-500 leading-relaxed">Search for users and add them to your local &quot;Team Pool&quot; to start configuring roles.</p>
+                            </div>
+                            <div className="space-y-1 border-slate-100 md:border-l md:pl-6">
+                                <p className="text-[11px] font-black text-amber-600 uppercase tracking-wider">Step 2: Assign Leader</p>
+                                <p className="text-[12px] text-slate-500 leading-relaxed">Click the ⭐ icon next to a user to designate them as the team lead.</p>
+                            </div>
+                            <div className="space-y-1 border-slate-100 md:border-l md:pl-6">
+                                <p className="text-[11px] font-black text-sky-600 uppercase tracking-wider">Step 3: Define Roster</p>
+                                <p className="text-[12px] text-slate-500 leading-relaxed">Check the boxes for other members to include them in the team roster.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div> */}
             </div>
         </div>
     )

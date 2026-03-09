@@ -10,7 +10,9 @@ import {
     IconDots,
     IconEdit,
     IconTrash,
+    IconEye,
 } from "@tabler/icons-react"
+import { Loader2 } from 'lucide-react'
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -54,6 +56,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Team } from "./team-stats-cards"
 import Link from "next/link"
+import { TeamDetailsModal } from "./team-details-modal"
 
 export function TeamDataTable({
     data,
@@ -66,6 +69,13 @@ export function TeamDataTable({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+    const [viewTeamId, setViewTeamId] = React.useState<string | null>(null)
+    const [isDetailsOpen, setIsDetailsOpen] = React.useState(false)
+
+    const handleViewDetails = (id: string) => {
+        setViewTeamId(id)
+        setIsDetailsOpen(true)
+    }
 
     const columns: ColumnDef<Team>[] = [
         {
@@ -133,6 +143,7 @@ export function TeamDataTable({
             id: "actions",
             enableHiding: false,
             cell: ({ row }) => {
+                const team = row.original
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -141,14 +152,18 @@ export function TeamDataTable({
                                 <IconDots className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-[160px]">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => handleViewDetails(team.id)}>
+                                <IconEye className="size-4" />
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 cursor-pointer">
                                 <IconEdit className="size-4" />
                                 Edit Team
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="gap-2 text-destructive">
+                            <DropdownMenuItem className="gap-2 text-destructive cursor-pointer">
                                 <IconTrash className="size-4" />
                                 Delete Team
                             </DropdownMenuItem>
@@ -269,11 +284,22 @@ export function TeamDataTable({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        <p className="text-sm font-medium text-muted-foreground italic">Fetching teams data...</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className="cursor-pointer"
+                                    onClick={() => handleViewDetails(row.original.id)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -373,6 +399,12 @@ export function TeamDataTable({
                     </div>
                 </div>
             </div>
+
+            <TeamDetailsModal
+                teamId={viewTeamId}
+                isOpen={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+            />
         </div>
     )
 }
