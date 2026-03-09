@@ -118,6 +118,7 @@ export interface Team {
   description: string | null;
   status: string;
   leader_id: string | null;
+  leader?: Member;
   leader_name?: string; // Derived or joined field
   members_count?: number; // Calculated field
   created_at: string;
@@ -138,6 +139,6 @@ export interface AddTeamPayload {
 }
 export interface TeamDetailsResponse {
   team: Team;
-  members: UserProfile[];
+  members: Member[];
   meta: Meta;
 }
