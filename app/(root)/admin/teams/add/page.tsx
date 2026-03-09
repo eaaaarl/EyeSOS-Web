@@ -163,8 +163,6 @@ export default function AddTeams() {
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
 
-    const assignRef = useRef<HTMLDivElement>(null)
-
     // Close dropdown on outside click
     useEffect(() => {
         function handle(e: MouseEvent) {
@@ -174,14 +172,7 @@ export default function AddTeams() {
         return () => document.removeEventListener('mousedown', handle)
     }, [])
 
-    // Scroll to assign section when pool first gets a user
-    const prevPoolLen = useRef(0)
-    useEffect(() => {
-        if (prevPoolLen.current === 0 && userPool.length === 1) {
-            setTimeout(() => assignRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200)
-        }
-        prevPoolLen.current = userPool.length
-    }, [userPool.length])
+
 
     // Derived
     const notInPool = EXISTING_USERS.filter(eu => !userPool.find(u => u.id === eu.id))
@@ -190,6 +181,17 @@ export default function AddTeams() {
         u.role.toLowerCase().includes(search.toLowerCase())
     )
     const isMember = (id: number | string) => members.some(m => m.id === id)
+
+    const setAsLeader = (u: User) => {
+        if (leader?.id === u.id) {
+            setLeader(null)
+        } else {
+            setLeader(u)
+            // Remove from members if they were a member
+            setMembers(prev => prev.filter(m => m.id !== u.id))
+        }
+        setAssignErrors(e => ({ ...e, leader: '' }))
+    }
 
     const addToPool = (u: User) => {
         setUserPool(p => p.find(x => x.id === u.id) ? p : [...p, u])
@@ -213,7 +215,7 @@ export default function AddTeams() {
         if (!teamName.trim()) te.teamName = 'Team name is required'
         if (!leader) ae.leader = 'Please select a team leader'
         if (Object.keys(te).length) { setTeamErrors(te); return }
-        if (Object.keys(ae).length) { setAssignErrors(ae); assignRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return }
+        if (Object.keys(ae).length) { setAssignErrors(ae); return }
         setSaving(true)
         await new Promise(r => setTimeout(r, 1200))
         setSaving(false)
@@ -237,6 +239,22 @@ export default function AddTeams() {
                         <Button variant="outline" onClick={() => router.back()} className="font-bold border-slate-200">
                             Cancel
                         </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setTeamName(''); setDescription(''); setStatus('active')
+                                setTeamErrors({}); setAssignErrors({})
+                                setUserPool([]); setLeader(null); setMembers([])
+                                setSearch(''); setShowDropdown(false); setShowNewUserForm(false)
+                                setSaving(false); setSaved(false)
+                            }}
+                            className="font-bold border-slate-200"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset
+                        </Button>
                         <Button onClick={handleSave} disabled={saving || saved} className="font-bold px-7 shadow-sm">
                             {saving ? (
                                 <><svg className="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>Saving…</>
@@ -247,22 +265,36 @@ export default function AddTeams() {
                     </div>
                 </div>
 
-                {/* ── Main grid ── */}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+                {/* ── Success banner ── */}
+                {saved && (
+                    <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-4 py-3.5 text-sm font-medium animate-in fade-in slide-in-from-top-3 duration-300">
+                        <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <p>Team <strong>{teamName}</strong> created! Redirecting…</p>
+                    </div>
+                )}
+
+                {/* ── 2-Column Grid ── */}
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
                     {/* ════════════════════════════
-                        LEFT — Add Users + Assign
+                        LEFT — Add Users (larger)
                     ════════════════════════════ */}
-                    <div className="xl:col-span-8 flex flex-col gap-6">
-
-                        {/* Section 1: Add Users */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col flex-1 min-h-[400px]">
+                    <div className="xl:col-span-8">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center">1</div>
+                                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                        </svg>
+                                    </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-800">Add Users</p>
-                                        <p className="text-xs text-slate-400">Search existing or create new users to add to this team</p>
+                                        <p className="text-xs text-slate-400">Configure your team, search and add users, then assign roles</p>
                                     </div>
                                 </div>
                                 {userPool.length > 0 && (
@@ -270,8 +302,9 @@ export default function AddTeams() {
                                 )}
                             </div>
 
-                            <div className="px-6 py-5 space-y-4">
-                                {/* Toolbar */}
+                            <div className="px-6 py-5 space-y-5">
+
+                                {/* ── Search & add users ── */}
                                 <div className="flex gap-3">
                                     <div className="relative flex-1" ref={dropdownRef}>
                                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -349,30 +382,129 @@ export default function AddTeams() {
                                     />
                                 )}
 
-                                {/* Pool list */}
-                                {userPool.length > 0 ? (
-                                    <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-50">
-                                        {userPool.map(u => (
-                                            <div key={u.id} className="flex items-center gap-3 px-4 py-3 group hover:bg-slate-50 transition-colors">
-                                                <CustomAvatar initials={u.avatar} size="sm" />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm font-semibold text-slate-800 truncate">{u.name}</p>
-                                                        {u.isNew && <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider">New</Badge>}
-                                                    </div>
-                                                    <p className="text-xs text-slate-400">{u.role} · {u.email}</p>
-                                                </div>
-                                                <button onClick={() => removeFromPool(u.id)}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ))}
+                                <div className="border-t border-slate-100" />
+
+                                {/* ── Team details fields (vertical, compact) ── */}
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <Field label="Team Name" required error={teamErrors.teamName}>
+                                            <Input
+                                                className={cn("bg-white h-9", teamErrors.teamName && "border-rose-400 focus-visible:ring-rose-400")}
+                                                placeholder="e.g. Alpha Unit"
+                                                value={teamName}
+                                                onChange={e => { setTeamName(e.target.value); setTeamErrors(er => ({ ...er, teamName: '' })) }}
+                                            />
+                                        </Field>
+
+                                        <Field label="Status">
+                                            <Select value={status} onValueChange={setStatus}>
+                                                <SelectTrigger className="w-full bg-white h-9 capitalize">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {['active', 'standby', 'inactive'].map(s => (
+                                                        <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </Field>
                                     </div>
+
+                                    <Field label="Description">
+                                        <Textarea
+                                            className="bg-white min-h-[56px] resize-none text-sm"
+                                            placeholder="Team mission or area of operation…"
+                                            value={description}
+                                            onChange={e => setDescription(e.target.value)}
+                                        />
+                                    </Field>
+                                </div>
+
+                                {/* ── User pool with inline role assignment ── */}
+                                {userPool.length > 0 ? (
+                                    <>
+                                        <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-50">
+                                            {userPool.map(u => {
+                                                const isLeaderUser = leader?.id === u.id
+                                                const isMemberUser = isMember(u.id)
+                                                return (
+                                                    <div key={u.id} className={cn(
+                                                        "flex items-center gap-3 py-3 pr-4 transition-all duration-200 group",
+                                                        isLeaderUser ? "bg-amber-50/60 pl-4" : isMemberUser ? "bg-slate-50/60 pl-10" : "bg-white hover:bg-slate-50 pl-4"
+                                                    )}>
+                                                        {/* Star button for leader */}
+                                                        <button
+                                                            onClick={() => setAsLeader(u)}
+                                                            className={cn(
+                                                                "flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-all",
+                                                                isLeaderUser ? "text-amber-500" : "text-slate-300 hover:text-amber-400"
+                                                            )}
+                                                            title={isLeaderUser ? "Remove as leader" : "Set as leader"}
+                                                        >
+                                                            <svg className="w-4 h-4" fill={isLeaderUser ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                            </svg>
+                                                        </button>
+
+                                                        <CustomAvatar initials={u.avatar} size="sm" />
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <p className="text-sm font-semibold text-slate-800 truncate">{u.name}</p>
+                                                                {isLeaderUser && (
+                                                                    <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                                                        Leader
+                                                                    </span>
+                                                                )}
+                                                                {isMemberUser && (
+                                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700">
+                                                                        Member
+                                                                    </span>
+                                                                )}
+                                                                {u.isNew && <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider">New</Badge>}
+                                                            </div>
+                                                            <p className="text-[11px] text-slate-400 mt-0.5">
+                                                                {u.role} · {u.email}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Member checkbox (only if not the leader) */}
+                                                        {!isLeaderUser && (
+                                                            <button
+                                                                onClick={() => toggleMember(u)}
+                                                                className={cn(
+                                                                    "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                                                                    isMemberUser ? "border-sky-500 bg-sky-500" : "border-slate-200 bg-white hover:border-slate-300"
+                                                                )}
+                                                                title={isMemberUser ? "Remove from team" : "Add as member"}
+                                                            >
+                                                                {isMemberUser && (
+                                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                )}
+                                                            </button>
+                                                        )}
+
+                                                        {/* Remove button */}
+                                                        <button onClick={() => removeFromPool(u.id)}
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-rose-500 p-1 rounded-lg hover:bg-rose-50 flex-shrink-0">
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <p className="text-[10px] text-slate-400">
+                                            Click ⭐ to set leader · Check ☑ to add members
+                                        </p>
+                                    </>
                                 ) : !showNewUserForm && (
-                                    <div className="border-2 border-dashed border-slate-100 rounded-xl py-12 text-center">
+                                    <div className="border-2 border-dashed border-slate-100 rounded-xl py-10 text-center">
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -384,234 +516,108 @@ export default function AddTeams() {
                                 )}
                             </div>
                         </div>
-
-                        {/* Section 2: Assign Leader & Members — appears once pool has users */}
-                        {userPool.length > 0 && (
-                            <div
-                                ref={assignRef}
-                                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300"
-                            >
-                                <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-                                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center">2</div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-800">Assign Leader & Members</p>
-                                        <p className="text-xs text-slate-400">Pick a leader first, then select who joins this team</p>
-                                    </div>
-                                </div>
-
-                                <div className="px-6 py-5 space-y-6">
-
-                                    {/* ── Leader picker ── */}
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                                Team Leader <span className="text-rose-500">*</span>
-                                            </p>
-                                        </div>
-
-                                        {assignErrors.leader && (
-                                            <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1.5">
-                                                <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                </svg>
-                                                {assignErrors.leader}
-                                            </p>
-                                        )}
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                            {userPool.map(u => {
-                                                const selected = leader?.id === u.id
-                                                return (
-                                                    <button
-                                                        key={u.id}
-                                                        onClick={() => { setLeader(selected ? null : u); setAssignErrors(e => ({ ...e, leader: '' })) }}
-                                                        className={cn(
-                                                            "flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all duration-150 w-full",
-                                                            selected
-                                                                ? "border-amber-400 bg-amber-50 shadow-sm"
-                                                                : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
-                                                        )}
-                                                    >
-                                                        <CustomAvatar initials={u.avatar} size="sm" />
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-bold text-slate-800 truncate">{u.name}</p>
-                                                            <p className="text-[10px] text-slate-400 truncate">{u.role}</p>
-                                                        </div>
-                                                        <div className={cn(
-                                                            "w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all",
-                                                            selected ? "border-amber-500 bg-amber-500" : "border-slate-300"
-                                                        )}>
-                                                            {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                                                        </div>
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* ── Members picker ── */}
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Team Members</p>
-                                            {members.length > 0 && (
-                                                <span className="bg-slate-800 text-white text-[10px] font-bold rounded-full px-2 py-0.5">{members.length}</span>
-                                            )}
-                                        </div>
-
-                                        <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-50">
-                                            {userPool.map(u => {
-                                                const selected = isMember(u.id)
-                                                const isLeaderUser = leader?.id === u.id
-                                                return (
-                                                    <button
-                                                        key={u.id}
-                                                        onClick={() => toggleMember(u)}
-                                                        className={cn(
-                                                            "w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors",
-                                                            selected ? "bg-slate-800 hover:bg-slate-700" : "bg-white hover:bg-slate-50"
-                                                        )}
-                                                    >
-                                                        <CustomAvatar initials={u.avatar} size="sm" />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <p className={cn("text-sm font-semibold truncate", selected ? "text-white" : "text-slate-800")}>{u.name}</p>
-                                                                {isLeaderUser && (
-                                                                    <span className={cn(
-                                                                        "flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full",
-                                                                        selected ? "bg-amber-500/25 text-amber-300" : "bg-amber-100 text-amber-600"
-                                                                    )}>
-                                                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                                                        Leader
-                                                                    </span>
-                                                                )}
-                                                                {u.isNew && (
-                                                                    <Badge variant="secondary" className={cn("px-1.5 py-0 text-[9px] font-bold uppercase", selected && "bg-slate-700 text-slate-300")}>New</Badge>
-                                                                )}
-                                                            </div>
-                                                            <p className={cn("text-xs mt-0.5", selected ? "text-slate-400" : "text-slate-400")}>{u.role} · {u.email}</p>
-                                                        </div>
-                                                        <div className={cn(
-                                                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                                                            selected ? "border-white bg-white" : "border-slate-200 bg-white"
-                                                        )}>
-                                                            {selected && (
-                                                                <svg className="w-3 h-3 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            )}
-                                                        </div>
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* ════════════════════════════
-                        RIGHT — Team Info (sticky)
+                        RIGHT — Team Info Preview (smaller, sticky)
                     ════════════════════════════ */}
-                    <div className="xl:col-span-4 space-y-4">
-
-                        {/* Success banner */}
-                        {saved && (
-                            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-4 py-3.5 text-sm font-medium animate-in fade-in slide-in-from-top-3 duration-300">
-                                <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                                    </svg>
+                    <div className="xl:col-span-4">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm sticky top-6">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/60">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800">Team Information</p>
+                                        <p className="text-xs text-slate-400">Live preview</p>
+                                    </div>
                                 </div>
-                                <p>Team <strong>{teamName}</strong> created! Redirecting…</p>
-                            </div>
-                        )}
-
-                        {/* Team Info card — sticky */}
-                        {/* Team Info card — sticky */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm sticky top-6 flex flex-col flex-1 min-h-[500px]">
-                            <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-                                <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">Team Information</p>
-                                    <p className="text-xs text-slate-400">Name, status & description</p>
-                                </div>
-                            </div>
-
-                            <div className="px-6 py-5 space-y-5">
-                                <Field label="Team Name" required error={teamErrors.teamName}>
-                                    <Input
-                                        className={cn("bg-white h-11", teamErrors.teamName && "border-rose-400 focus-visible:ring-rose-400")}
-                                        placeholder="e.g. Alpha Unit"
-                                        value={teamName}
-                                        onChange={e => { setTeamName(e.target.value); setTeamErrors(er => ({ ...er, teamName: '' })) }}
-                                    />
-                                </Field>
-
-                                <Field label="Status">
-                                    <Select value={status} onValueChange={setStatus}>
-                                        <SelectTrigger className="w-full bg-white h-11 capitalize">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {['active', 'standby', 'inactive'].map(s => (
-                                                <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
-
-                                <Field label="Description">
-                                    <Textarea
-                                        className="bg-white min-h-[100px] resize-none"
-                                        placeholder="Team mission or area of operation…"
-                                        value={description}
-                                        onChange={e => setDescription(e.target.value)}
-                                    />
-                                </Field>
-
-                                {/* Live summary — shows once leader or members selected */}
                                 {(leader || members.length > 0) && (
-                                    <div className="border border-slate-100 rounded-xl p-4 space-y-3 bg-slate-50/60 animate-in fade-in duration-200">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Team Summary</p>
+                                    <span className="text-xs font-bold bg-slate-800 text-white rounded-full px-2.5 py-1">
+                                        {(leader ? 1 : 0) + members.length}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="px-5 py-5">
+                                {/* Team name + status + description */}
+                                {teamName.trim() ? (
+                                    <div className="mb-4">
+                                        <h3 className="text-base font-bold text-slate-900 leading-tight">{teamName.trim()}</h3>
+                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                            <span className={cn(
+                                                "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                                                status === 'active' ? "bg-emerald-100 text-emerald-700"
+                                                    : status === 'standby' ? "bg-amber-100 text-amber-700"
+                                                        : "bg-slate-100 text-slate-500"
+                                            )}>{status}</span>
+                                            {description.trim() && (
+                                                <p className="text-[11px] text-slate-400 leading-tight">{description.trim()}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="mb-4">
+                                        <p className="text-sm text-slate-300 italic">Team name not set</p>
+                                    </div>
+                                )}
+
+                                {/* Roster — leader & members */}
+                                {(leader || members.length > 0) ? (
+                                    <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-50">
+                                        {/* Leader row — not indented */}
                                         {leader && (
-                                            <div className="flex items-center gap-2">
-                                                <svg className="w-3 h-3 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                                <p className="text-xs text-slate-600 font-medium">Leader: <span className="font-bold text-slate-900">{leader.name}</span></p>
-                                            </div>
-                                        )}
-                                        {members.length > 0 && (
-                                            <div className="flex items-start gap-2">
-                                                <svg className="w-3 h-3 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <div className="flex items-center gap-2.5 px-3 py-2.5 bg-amber-50/60">
+                                                <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                                 </svg>
-                                                <div>
-                                                    <p className="text-xs text-slate-600 font-medium">{members.length} Member{members.length !== 1 ? 's' : ''}</p>
-                                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                                        {members.map(m => (
-                                                            <span key={m.id} className="text-[10px] bg-white border border-slate-200 rounded-full px-2 py-0.5 font-medium text-slate-600">{m.name}</span>
-                                                        ))}
+                                                <CustomAvatar initials={leader.avatar} size="sm" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <p className="text-sm font-bold text-slate-800 truncate">{leader.name}</p>
+                                                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Leader</span>
                                                     </div>
+                                                    <p className="text-[10px] text-slate-400">{leader.role}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
                                                 </div>
                                             </div>
                                         )}
+
+                                        {/* Member rows — indented */}
+                                        {members.map(m => (
+                                            <div key={m.id} className="flex items-center gap-2.5 pl-12 pr-3 py-2.5 bg-slate-50/40">
+                                                <CustomAvatar initials={m.avatar} size="sm" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <p className="text-sm font-semibold text-slate-700 truncate">{m.name}</p>
+                                                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700">Member</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400">{m.role}{teamName.trim() && <span className="text-slate-300"> · {teamName.trim()}</span>}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
+                                ) : (
+                                    <div className="border-2 border-dashed border-slate-100 rounded-xl py-6 text-center">
+                                        <p className="text-xs text-slate-400 font-medium">No members assigned</p>
+                                        <p className="text-[10px] text-slate-300 mt-0.5">Assign roles on the left</p>
+                                    </div>
+                                )}
+
+                                {assignErrors.leader && (
+                                    <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1.5 mt-3">
+                                        <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                        {assignErrors.leader}
+                                    </p>
                                 )}
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
