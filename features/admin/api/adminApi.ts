@@ -410,6 +410,35 @@ export const adminApi = createApi({
       },
       providesTags: (result, error, id) => [{ type: "getTeams", id }],
     }),
+
+    // Delete Team
+    deleteTeam: builder.mutation<{ meta: Meta }, string>({
+      queryFn: async (id) => {
+        try {
+          // Note: team_members should be deleted automatically if cascade is set in DB
+          // but we can be explicit or just rely on DB logic.
+          const { error } = await supabase.from("teams").delete().eq("id", id);
+
+          if (error) return { error: error.message };
+
+          return {
+            data: {
+              meta: {
+                success: true,
+                message: "Team deleted successfully.",
+              },
+            },
+          };
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred";
+          return { error: errorMessage };
+        }
+      },
+      invalidatesTags: ["getTeams", "getMembers"],
+    }),
   }),
 });
 
@@ -423,4 +452,5 @@ export const {
   useGetTeamsQuery,
   useGetResponderTeamsQuery,
   useGetTeamDetailsQuery,
+  useDeleteTeamMutation,
 } = adminApi;
