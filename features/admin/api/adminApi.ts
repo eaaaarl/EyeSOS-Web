@@ -9,7 +9,7 @@ import {
   ShowMembersResponse,
   AllUsersResponse,
   TeamDetailsResponse,
-  UserProfile,
+  Member,
   Team,
 } from "./interface";
 import { UserFormValues } from "../components/users/edit-user-dialog";
@@ -206,9 +206,18 @@ export const adminApi = createApi({
           };
         }
 
+        const transformedMembers = (data as unknown[]).map((m) => {
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          const profile = m as any;
+          return {
+            ...profile,
+            responder_details: profile.responder_details?.[0] || null,
+          };
+        });
+
         return {
           data: {
-            members: data,
+            members: transformedMembers as unknown as Member[],
             meta: {
               success: true,
               message: "Get All Available Responder",
@@ -267,7 +276,73 @@ export const adminApi = createApi({
           return { error: errorMessage };
         }
       },
-      invalidatesTags: ["getMembers"],
+      invalidatesTags: ["getMembers", "getTeams"],
+    }),
+
+    // Update Team
+    updateTeam: builder.mutation<
+      { meta: Meta },
+      { id: string; payload: AddTeamPayload }
+    >({
+      queryFn: async ({ id, payload }) => {
+        try {
+          // 1. Update Team Info
+          const { error: teamError } = await supabase
+            .from("teams")
+            .update({
+              name: payload.name,
+              description: payload.description,
+              status: payload.status,
+              leader_id: payload.leader_id,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", id);
+
+          if (teamError) return { error: teamError.message };
+
+          // 2. Delete existing members
+          const { error: deleteError } = await supabase
+            .from("team_members")
+            .delete()
+            .eq("team_id", id);
+
+          if (deleteError) return { error: deleteError.message };
+
+          // 3. Insert new members (if any)
+          if (payload.member_ids && payload.member_ids.length > 0) {
+            const memberInserts = payload.member_ids.map((mid: string) => ({
+              team_id: id,
+              member_id: mid,
+            }));
+
+            const { error: membersError } = await supabase
+              .from("team_members")
+              .insert(memberInserts);
+
+            if (membersError) return { error: membersError.message };
+          }
+
+          return {
+            data: {
+              meta: {
+                success: true,
+                message: "Team updated successfully.",
+              },
+            },
+          };
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred";
+          return { error: errorMessage };
+        }
+      },
+      invalidatesTags: (result, error, { id }) => [
+        { type: "getTeams", id },
+        "getTeams",
+        "getMembers",
+      ],
     }),
 
     // Get All Teams
@@ -366,7 +441,7 @@ export const adminApi = createApi({
           .select(
             `
             *,
-            leader:profiles!leader_id(name)
+            leader:profiles!leader_id(*, responder_details(*))
           `,
           )
           .eq("id", id)
@@ -379,7 +454,7 @@ export const adminApi = createApi({
           .from("team_members")
           .select(
             `
-            member:profiles(*)
+            member:profiles(*, responder_details(*))
           `,
           )
           .eq("team_id", id);
@@ -390,17 +465,29 @@ export const adminApi = createApi({
           ...team,
           /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           leader_name: (team.leader as any)?.name || "N/A",
+          leader: team.leader
+            ? {
+                ...(team.leader as unknown as Member),
+                responder_details:
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (team.leader as any).responder_details?.[0] || null,
+              }
+            : undefined,
         };
 
-        const memberProfiles = (members as unknown[]).map((m) => {
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          return (m as any).member;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const memberProfiles = (members as unknown[]).map((m: any) => {
+          const profile = m.member;
+          return {
+            ...profile,
+            responder_details: profile.responder_details?.[0] || null,
+          };
         });
 
         return {
           data: {
             team: transformedTeam as Team,
-            members: memberProfiles as UserProfile[],
+            members: memberProfiles as unknown as Member[],
             meta: {
               success: true,
               message: "Team details fetched successfully.",
@@ -410,6 +497,67 @@ export const adminApi = createApi({
       },
       providesTags: (result, error, id) => [{ type: "getTeams", id }],
     }),
+
+    // Update Team
+    /* updateTeam: builder.mutation<
+      { meta: Meta },
+      { id: string; payload: AddTeamPayload }
+    >({
+      queryFn: async ({ id, payload }) => {
+        try {
+          // 1. Update Team Details
+          const { error: teamError } = await supabase
+            .from("teams")
+            .update({
+              name: payload.name,
+              description: payload.description,
+              status: payload.status,
+              leader_id: payload.leader_id,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", id);
+
+          if (teamError) return { error: teamError.message };
+
+          // 2. Clear existing members
+          const { error: deleteError } = await supabase
+            .from("team_members")
+            .delete()
+            .eq("team_id", id);
+
+          if (deleteError) return { error: deleteError.message };
+
+          // 3. Insert fresh members
+          if (payload.member_ids && payload.member_ids.length > 0) {
+            const memberInserts = payload.member_ids.map((mid) => ({
+              team_id: id,
+              member_id: mid,
+            }));
+            const { error: insertError } = await supabase
+              .from("team_members")
+              .insert(memberInserts);
+
+            if (insertError) return { error: insertError.message };
+          }
+
+          return {
+            data: {
+              meta: {
+                success: true,
+                message: "Team updated successfully.",
+              },
+            },
+          };
+        } catch (error: any) {
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: (result, error, { id }) => [
+        { type: "getTeams", id },
+        "getTeams",
+        "getMembers",
+      ],
+    }), */
 
     // Delete Team
     deleteTeam: builder.mutation<{ meta: Meta }, string>({
@@ -453,4 +601,5 @@ export const {
   useGetResponderTeamsQuery,
   useGetTeamDetailsQuery,
   useDeleteTeamMutation,
+  useUpdateTeamMutation,
 } = adminApi;
