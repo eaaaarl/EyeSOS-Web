@@ -53,7 +53,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from "@/components/ui/badge"
 import { Team } from "./team-stats-cards"
-import { AddTeamDialog } from "./add-team-dialog"
+import Link from "next/link"
 
 export function TeamDataTable({
     data,
@@ -240,7 +240,11 @@ export function TeamDataTable({
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <AddTeamDialog />
+                    <Link href="/admin/teams/add">
+                        <Button>
+                            Add Team
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
