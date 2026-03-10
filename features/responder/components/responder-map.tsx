@@ -107,7 +107,7 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
     return (
         <div className="h-full w-full relative">
             <BaseMap>
-                <LocationMarker autoRequest={false} />
+                <LocationMarker autoRequest={true} />
                 {activeDispatch && status === "accepted" && (
                     <>
                         <MapController center={[activeDispatch.latitude, activeDispatch.longitude]} />

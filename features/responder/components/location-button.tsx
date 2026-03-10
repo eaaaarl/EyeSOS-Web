@@ -8,10 +8,19 @@ interface LocationButtonProps {
 export function LocationButton({ isHaveReport }: LocationButtonProps) {
     const { getCurrentLocation, isLoading } = useCurrentLocation();
 
+    const handleLocationClick = async () => {
+        try {
+            await getCurrentLocation();
+            window.dispatchEvent(new Event("focus-location-event"));
+        } catch {
+            // Error handled in the hook
+        }
+    };
+
     return (
         <div className={`absolute ${isHaveReport ? "bottom-24" : "bottom-4"} right-4 z-[1000] transition-all duration-300`}>
             <button
-                onClick={getCurrentLocation}
+                onClick={handleLocationClick}
                 disabled={isLoading}
                 title="My location"
                 style={{
