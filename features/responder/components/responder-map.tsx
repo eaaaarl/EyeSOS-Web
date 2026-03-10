@@ -52,12 +52,6 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
         skip: !user?.id,
     });
 
-    const { data: responderDetails } = useGetResponderDetailsQuery(
-        { responderId: user?.id || "" },
-        { skip: !user?.id }
-    );
-
-
     const activeDispatch = dispatchData?.accident;
 
     // Derive status directly from server data — no extra state needed

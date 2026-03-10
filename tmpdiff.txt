@@ -1,0 +1,49 @@
+diff --git a/features/admin/components/accidents/accident-details-dialog.tsx b/features/admin/components/accidents/accident-details-dialog.tsx
+index 78a1c48..e742f2d 100644
+--- a/features/admin/components/accidents/accident-details-dialog.tsx
++++ b/features/admin/components/accidents/accident-details-dialog.tsx
+@@ -20,7 +20,7 @@ import { getSeverityColor } from '../../helpers/accident-helpers'
+ import { AccidentReport } from '../../api/interface'
+ import { useState } from 'react'
+ import Image from 'next/image'
+-
++import { DateTime } from 'luxon'
+ 
+ export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
+     const [imgError, setImgError] = useState(false)
+@@ -175,12 +175,16 @@ export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
+                     <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-2">
+                             <Label className="text-muted-foreground text-xs">Response Time</Label>
+-                            <p className="font-medium">{report.created_at}</p>
++                            <p className="font-medium text-sm">
++                                {report.accident_responses?.[0]
++                                    ? DateTime.fromISO(report.accident_responses[0].responded_at || report.accident_responses[0].created_at).toFormat('LLL dd, yyyy, hh:mm a')
++                                    : "No response yet"}
++                            </p>
+                         </div>
+                         <div className="space-y-2">
+                             <Label className="text-muted-foreground text-xs">Reported At</Label>
+                             <p className="text-sm">
+-                                {new Date(report.created_at).toLocaleString()}
++                                {DateTime.fromISO(report.created_at).toFormat('LLL dd, yyyy, hh:mm a')}
+                             </p>
+                         </div>
+                     </div>
+diff --git a/features/responder/components/responder-map.tsx b/features/responder/components/responder-map.tsx
+index ce1a5a1..eb427d3 100644
+--- a/features/responder/components/responder-map.tsx
++++ b/features/responder/components/responder-map.tsx
+@@ -52,12 +52,6 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
+         skip: !user?.id,
+     });
+ 
+-    const { data: responderDetails } = useGetResponderDetailsQuery(
+-        { responderId: user?.id || "" },
+-        { skip: !user?.id }
+-    );
+-
+-
+     const activeDispatch = dispatchData?.accident;
+ 
+     // Derive status directly from server data — no extra state needed

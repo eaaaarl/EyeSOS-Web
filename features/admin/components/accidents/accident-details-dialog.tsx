@@ -20,7 +20,7 @@ import { getSeverityColor } from '../../helpers/accident-helpers'
 import { AccidentReport } from '../../api/interface'
 import { useState } from 'react'
 import Image from 'next/image'
-
+import { DateTime } from 'luxon'
 
 export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
     const [imgError, setImgError] = useState(false)
@@ -175,12 +175,16 @@ export function AccidentDetailsDialog({ report }: { report: AccidentReport }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label className="text-muted-foreground text-xs">Response Time</Label>
-                            <p className="font-medium">{report.created_at}</p>
+                            <p className="font-medium text-sm">
+                                {report.accident_responses?.[0]
+                                    ? DateTime.fromISO(report.accident_responses[0].responded_at || report.accident_responses[0].created_at).toFormat('LLL dd, yyyy, hh:mm a')
+                                    : "No response yet"}
+                            </p>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-muted-foreground text-xs">Reported At</Label>
                             <p className="text-sm">
-                                {new Date(report.created_at).toLocaleString()}
+                                {DateTime.fromISO(report.created_at).toFormat('LLL dd, yyyy, hh:mm a')}
                             </p>
                         </div>
                     </div>
