@@ -57,7 +57,6 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
         { skip: !user?.id }
     );
 
-    console.log('responderDetails', JSON.stringify(responderDetails, null, 2))
 
     const activeDispatch = dispatchData?.accident;
 

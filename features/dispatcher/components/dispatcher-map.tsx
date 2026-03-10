@@ -21,20 +21,30 @@ export function DispatcherMap() {
     return (
         <>
             <BaseMap reports={reports}>
-                {reports.map((report, index) => (
-                    <Marker
-                        key={`admin-marker-${index}-${report.id || index}`}
-                        position={[report.latitude, report.longitude]}
-                        icon={createPinMarkerIcon({ severity: report.severity, count: 1 })}
-                    >
-                        <MapPopup
-                            availableResponders={availableResponders}
-                            isRespondersLoading={availableRespondersLoading}
-                            accident={report}
-                            onGetDirections={openDirections}
-                        />
-                    </Marker>
-                ))}
+                {reports.map((report, index) => {
+                    const isDispatched = report.accident_responses?.some(
+                        (resp) => resp.response_type === "dispatched" || resp.response_type === "accepted"
+                    );
+                    return (
+                        <Marker
+                            key={`admin-marker-${index}-${report.id || index}`}
+                            position={[report.latitude, report.longitude]}
+                            icon={createPinMarkerIcon({
+                                severity: report.severity,
+                                count: 1,
+                                isDispatched
+                            })}
+                        >
+                            <MapPopup
+                                availableResponders={availableResponders}
+                                isRespondersLoading={availableRespondersLoading}
+                                accident={report}
+                                onGetDirections={openDirections}
+                                isDispatched={isDispatched}
+                            />
+                        </Marker>
+                    );
+                })}
             </BaseMap>
 
             <MapNavigation

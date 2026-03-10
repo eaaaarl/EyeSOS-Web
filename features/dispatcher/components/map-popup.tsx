@@ -27,6 +27,7 @@ interface MapPopupProps {
   totalCount?: number;
   availableResponders?: AvailableResponders;
   isRespondersLoading?: boolean;
+  isDispatched?: boolean;
 }
 
 export function MapPopup({
@@ -35,7 +36,8 @@ export function MapPopup({
   additionalReports,
   totalCount = 1,
   availableResponders,
-  isRespondersLoading
+  isRespondersLoading,
+  isDispatched
 }: MapPopupProps) {
   const { user } = useAppSelector((state) => state.auth);
   const { data: profileData } = useGetUserProfileQuery(
@@ -152,14 +154,16 @@ export function MapPopup({
               View Resolved Details
             </button>
           ) : isAdmin ? (
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setIsDispatchOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm shadow-blue-100"
-              >
-                <Shield className="w-3 h-3" />
-                Dispatch
-              </button>
+            <div className={`grid gap-2 ${isDispatched ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {!isDispatched && (
+                <button
+                  onClick={() => setIsDispatchOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm shadow-blue-100"
+                >
+                  <Shield className="w-3 h-3" />
+                  Dispatch
+                </button>
+              )}
               <button
                 onClick={() => setIsDetailsOpen(true)}
                 className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-1.5 px-2 rounded text-[10px] transition-colors flex items-center justify-center gap-1 shadow-sm"

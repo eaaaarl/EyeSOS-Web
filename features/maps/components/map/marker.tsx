@@ -118,9 +118,10 @@ interface createPinMarkerIconProps {
   severity: string;
   count?: number;
   isAdmin?: boolean;
+  isDispatched?: boolean;
 }
 
-export const createPinMarkerIcon = ({ severity, count = 1, isAdmin = false }: createPinMarkerIconProps) => {
+export const createPinMarkerIcon = ({ severity, count = 1, isAdmin = false, isDispatched = false }: createPinMarkerIconProps) => {
   const normalizedSeverity = severity?.toLowerCase() || 'minor';
   const severityColors = {
     'critical': '#DC2626',
@@ -169,9 +170,31 @@ export const createPinMarkerIcon = ({ severity, count = 1, isAdmin = false }: cr
           ${isAdmin && isCritical ? '' : `
             <!-- Inner circles -->
             <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
-            <circle cx="16" cy="16" r="4" fill="${color}"/>
+            <circle cx="16" cy="16" r="4" fill="${isDispatched ? '#3B82F6' : color}"/>
           `}
         </svg>
+
+        ${isDispatched ? `
+          <div style="
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 14px;
+            height: 14px;
+            background: #3B82F6;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 3;
+          ">
+            <svg viewBox="0 0 24 24" width="8" height="8" stroke="white" stroke-width="4" fill="none">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        ` : ''}
 
         ${hasMultiple ? `
           <div style="

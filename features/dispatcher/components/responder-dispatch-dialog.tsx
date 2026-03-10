@@ -23,6 +23,7 @@ import { AvailableResponders } from "../api/inteface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 import { useDispatchResponderMutation } from "../api/dispatcherApi";
+import { useGetResponderTeamsQuery } from "@/features/admin/api/adminApi";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;
@@ -44,12 +45,15 @@ export function ResponderDispatchDialog({
     const [isDispatching, setIsDispatching] = useState<string | null>(null);
     const [dispatchedResponderName, setDispatchedResponderName] = useState<string | null>(null);
     const { user } = useAppSelector((state) => state.auth);
-    const [dispatchResponder, { isLoading: dispatchResponderLoading }] = useDispatchResponderMutation();
+    const [dispatchResponder] = useDispatchResponderMutation();
 
     const { data: profileData } = useGetUserProfileQuery(
         { user_id: user?.id || "" },
         { skip: !user?.id }
     );
+
+    const { data: teamAssignmentsData } = useGetResponderTeamsQuery();
+    const teamAssignments = teamAssignmentsData?.assignments || {};
 
     const dispatcherName = profileData?.profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Dispatcher";
 
@@ -86,6 +90,7 @@ export function ResponderDispatchDialog({
                 actionTaken: `Dispatched by ${dispatcherName}`
             }).unwrap();
             toast.info(`Waiting for ${responderName} to accept...`);
+            onOpenChange(false);
         } catch {
             toast.error("Failed to dispatch responder.");
             setIsDispatching(null);
@@ -121,9 +126,10 @@ export function ResponderDispatchDialog({
                             onDispatch={handleDispatch}
                             availableResponders={availableResponders}
                             isLoading={isLoading}
-                            dispatchLoading={dispatchResponderLoading}
+                            /* dispatchLoading={dispatchResponderLoading} */
                             dispatchStatus={dispatchStatus}
                             dispatchedResponderName={dispatchedResponderName}
+                            teamAssignments={teamAssignments}
                         />
                     </div>
                 </DrawerContent>
@@ -155,9 +161,10 @@ export function ResponderDispatchDialog({
                         onDispatch={handleDispatch}
                         availableResponders={availableResponders}
                         isLoading={isLoading}
-                        dispatchLoading={dispatchResponderLoading}
-                        dispatchStatus={dispatchStatus}
+/*                         dispatchLoading={dispatchResponderLoading}
+ */                        dispatchStatus={dispatchStatus}
                         dispatchedResponderName={dispatchedResponderName}
+                        teamAssignments={teamAssignments}
                     />
                 </div>
             </DialogContent>
@@ -171,14 +178,15 @@ interface DispatchContentProps {
     onDispatch: (id: string, name: string) => void;
     availableResponders: AvailableResponders | null;
     isLoading?: boolean;
-    dispatchLoading?: boolean;
     dispatchStatus: "idle" | "waiting" | "accepted" | "rejected"; // add this
     dispatchedResponderName: string | null;                        // add this
+    teamAssignments: Record<string, { teamName: string; role: string }>;
 }
 
 const DispatchContent = ({
     report, isDispatching, onDispatch, availableResponders,
-    isLoading, dispatchLoading, dispatchStatus, dispatchedResponderName
+    isLoading, dispatchStatus, dispatchedResponderName,
+    teamAssignments
 }: DispatchContentProps) => (
     <div className="space-y-4 px-1 pb-6 font-poppins">
         <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-start gap-3">
@@ -222,62 +230,68 @@ const DispatchContent = ({
                 )}
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar pr-0.5 min-h-[100px] flex flex-col">
+            <div className="space-y-2 max-h-[350px] overflow-y-auto no-scrollbar pr-0.5 min-h-[100px] flex flex-col">
                 {dispatchStatus === "waiting" && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-4">
-                        <div className="relative w-16 h-16">
-                            <div className="w-16 h-16 rounded-full border-4 border-blue-100 flex items-center justify-center">
-                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                            </div>
+                    <div className="bg-blue-600/10 border border-blue-200 rounded-xl p-4 mb-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
                         </div>
-                        <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-slate-800">Waiting for Response</p>
-                            <p className="text-xs text-slate-500">
-                                <span className="font-semibold text-blue-600">{dispatchedResponderName}</span> has been notified
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-blue-900 leading-tight">Waiting for Response</p>
+                            <p className="text-[11px] text-blue-700 font-medium truncate">
+                                Dispatched <span className="font-bold underline">{dispatchedResponderName}</span>
                             </p>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-100">
+                        <div className="bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-blue-100 flex items-center gap-1">
                             <Clock className="w-3 h-3 text-blue-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Pending Acceptance</span>
+                            <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter">PENDING</span>
                         </div>
                     </div>
                 )}
 
                 {dispatchStatus === "accepted" && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3">
-                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center py-8 gap-3 bg-green-50 rounded-xl border border-green-100 mb-2">
+                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center shadow-lg shadow-green-100">
                             <CheckCircle className="w-8 h-8 text-green-600" />
                         </div>
                         <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-green-700">Dispatch Accepted!</p>
-                            <p className="text-xs text-slate-500">
-                                <span className="font-semibold">{dispatchedResponderName}</span> is en route
+                            <p className="text-sm font-bold text-green-700 uppercase tracking-tight">Dispatch Accepted!</p>
+                            <p className="text-xs text-slate-600">
+                                <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is en route
                             </p>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 rounded-full border border-green-100">
-                            <Navigation className="w-3 h-3 text-green-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">En Route to Incident</span>
+                        <div className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 rounded-full shadow-md shadow-green-200">
+                            <Navigation className="w-3.5 h-3.5 text-white animate-pulse" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-wider">UNIT EN ROUTE</span>
                         </div>
                     </div>
                 )}
 
                 {dispatchStatus === "rejected" && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3">
-                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center py-8 gap-3 bg-red-50 rounded-xl border border-red-100 mb-2">
+                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center shadow-lg shadow-red-100">
                             <XCircle className="w-8 h-8 text-red-500" />
                         </div>
                         <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-red-700">Dispatch Rejected</p>
-                            <p className="text-xs text-slate-500">
-                                <span className="font-semibold">{dispatchedResponderName}</span> is unavailable
+                            <p className="text-sm font-bold text-red-700 uppercase tracking-tight">Dispatch Rejected</p>
+                            <p className="text-xs text-slate-600">
+                                <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is unavailable
                             </p>
                         </div>
-                        <p className="text-[10px] text-slate-400">Selecting another responder...</p>
+                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest animate-pulse">Select Another Responder</p>
                     </div>
                 )}
 
-                {dispatchStatus === "idle" && (
+                {(dispatchStatus === "idle" || dispatchStatus === "waiting") && (
                     <>
+                        <div className="px-1 py-1 flex items-center justify-between mb-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                {dispatchStatus === "waiting" ? "Other Online Responders" : "Available Responders"}
+                            </p>
+                            <span className="text-[9px] font-bold text-slate-300">
+                                {availableResponders?.responders.length} UNITS
+                            </span>
+                        </div>
                         {isLoading ? (
                             <div className="flex-1 flex flex-col items-center justify-center py-8 gap-3">
                                 <div className="relative">
@@ -308,23 +322,41 @@ const DispatchContent = ({
                                                 <Ambulance className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-xs font-bold text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
-                                                {distance ? (
-                                                    <span className="text-[10px] font-semibold text-blue-500">{distance}</span>
-                                                ) : (
-                                                    <span className="text-[10px] font-semibold text-slate-400">Location unavailable</span>
-                                                )}
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <span className="text-[13px] font-black text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
+                                                    {teamAssignments[resp.profiles.id] && (
+                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter ${teamAssignments[resp.profiles.id].role === 'Leader'
+                                                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                                            : 'bg-blue-100 text-blue-700 border border-blue-200'
+                                                            }`}>
+                                                            {teamAssignments[resp.profiles.id].role}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {distance && (
+                                                        <span className="text-[10px] font-bold text-blue-500">{distance}</span>
+                                                    )}
+                                                    {teamAssignments[resp.profiles.id] && (
+                                                        <span className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">
+                                                            {teamAssignments[resp.profiles.id].teamName}
+                                                        </span>
+                                                    )}
+                                                    {!distance && !teamAssignments[resp.profiles.id] && (
+                                                        <span className="text-[10px] font-semibold text-slate-400">Stationary</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <button
                                             disabled={isDispatching !== null}
                                             onClick={() => onDispatch(resp.profiles.id, resp.profiles.name)}
-                                            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.id
+                                            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.profiles.id
                                                 ? "bg-blue-100 text-blue-400 cursor-not-allowed"
                                                 : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
                                                 }`}
                                         >
-                                            {(dispatchLoading || isDispatching === resp.id)
+                                            {isDispatching === resp.profiles.id
                                                 ? <Loader2 className="w-4 h-4 animate-spin" />
                                                 : "Dispatch"}
                                         </button>

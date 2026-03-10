@@ -33,6 +33,11 @@ export interface Report {
     url: string;
     created_at: string;
   }[];
+  accident_responses?: {
+    id: string;
+    response_type: string;
+    responder_id: string;
+  }[];
 }
 
 export interface ReportsResponse {
