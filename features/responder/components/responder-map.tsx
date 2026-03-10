@@ -52,13 +52,6 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
         skip: !user?.id,
     });
 
-    const { data: responderDetails } = useGetResponderDetailsQuery(
-        { responderId: user?.id || "" },
-        { skip: !user?.id }
-    );
-
-    console.log('responderDetails', JSON.stringify(responderDetails, null, 2))
-
     const activeDispatch = dispatchData?.accident;
 
     // Derive status directly from server data — no extra state needed
@@ -108,7 +101,7 @@ export function ResponderMap({ onBack, onDrawerChange }: ResponderMapProps) {
     return (
         <div className="h-full w-full relative">
             <BaseMap>
-                <LocationMarker autoRequest={false} />
+                <LocationMarker autoRequest={true} />
                 {activeDispatch && status === "accepted" && (
                     <>
                         <MapController center={[activeDispatch.latitude, activeDispatch.longitude]} />

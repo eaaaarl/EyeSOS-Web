@@ -12,6 +12,7 @@ import {
     IconTrash,
     IconEye,
     IconAlertTriangle,
+    IconLoader2,
 } from "@tabler/icons-react"
 import { Loader2, Trash2 } from 'lucide-react'
 import { toast } from "sonner"
@@ -331,10 +332,12 @@ export function TeamDataTable({
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    <div className="flex flex-col items-center justify-center gap-2">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                        <p className="text-sm font-medium text-muted-foreground italic">Fetching teams data...</p>
+                                <TableCell
+                                    colSpan={table.getAllColumns().length}
+                                    className="h-24 text-center"
+                                >
+                                    <div className="flex justify-center items-center h-full">
+                                        <IconLoader2 className="animate-spin text-muted-foreground" />
                                     </div>
                                 </TableCell>
                             </TableRow>

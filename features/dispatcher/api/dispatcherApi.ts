@@ -16,7 +16,7 @@ export const dispatcherApi = createApi({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("accidents")
-          .select("*, accident_images(*)")
+          .select("*, accident_images(*), accident_responses(*)")
           .neq("accident_status", "RESOLVED");
         if (error) {
           return {
@@ -54,7 +54,7 @@ export const dispatcherApi = createApi({
                   // Re-fetch the full record with accident_images
                   const { data, error } = await supabase
                     .from("accidents")
-                    .select("*, accident_images(*)")
+                    .select("*, accident_images(*), accident_responses(*)")
                     .eq("id", payload.new.id)
                     .single();
 
@@ -67,7 +67,7 @@ export const dispatcherApi = createApi({
                   // Same issue — re-fetch on UPDATE too
                   const { data, error } = await supabase
                     .from("accidents")
-                    .select("*, accident_images(*)")
+                    .select("*, accident_images(*), accident_responses(*)")
                     .eq("id", payload.new.id)
                     .single();
 
