@@ -1,10 +1,15 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { SignInResponse, UserGetProfileQueryResponse } from "./interface";
+import {
+  Profile,
+  SignInResponse,
+  UserGetProfileQueryResponse,
+} from "./interface";
 import { supabase } from "@/lib/supabase";
 
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fakeBaseQuery(),
+  tagTypes: ["getProfile"],
   endpoints: (builder) => ({
     signIn: builder.mutation<
       SignInResponse,
@@ -106,6 +111,7 @@ export const authApi = createApi({
           },
         };
       },
+      providesTags: ["getProfile"],
     }),
 
     sendPasswordResetEmail: builder.mutation<
@@ -144,6 +150,62 @@ export const authApi = createApi({
         };
       },
     }),
+
+    updateUserProfile: builder.mutation<
+      { success: boolean; message: string },
+      { user_id: string; updates: Partial<Profile> }
+    >({
+      queryFn: async ({ user_id, updates }) => {
+        const { error } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("id", user_id);
+
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+
+        return {
+          data: {
+            success: true,
+            message: "Profile updated successfully",
+          },
+        };
+      },
+      invalidatesTags: ["getProfile"],
+    }),
+
+    verifyOtp: builder.mutation<
+      { success: boolean; message: string },
+      { email: string; token: string }
+    >({
+      queryFn: async ({ email, token }) => {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: "recovery",
+        });
+
+        if (error) {
+          return {
+            error: {
+              message: error.message,
+            },
+          };
+        }
+
+        return {
+          data: {
+            success: true,
+            message: "OTP verified successfully",
+          },
+        };
+      },
+    }),
   }),
 });
 
@@ -152,4 +214,6 @@ export const {
   useGetUserProfileQuery,
   useSendPasswordResetEmailMutation,
   useUpdatePasswordMutation,
+  useUpdateUserProfileMutation,
+  useVerifyOtpMutation,
 } = authApi;

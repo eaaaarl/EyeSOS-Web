@@ -167,11 +167,9 @@ export const createPinMarkerIcon = ({ severity, count = 1, isAdmin = false, isDi
           <!-- Pin body -->
           <path d="M16 0 C7.2 0 0 7.2 0 16 C0 24 16 40 16 40 S32 24 32 16 C32 7.2 24.8 0 16 0 Z" 
                 fill="${color}" />
-          ${isAdmin && isCritical ? '' : `
-            <!-- Inner circles -->
-            <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
-            <circle cx="16" cy="16" r="4" fill="${isDispatched ? '#3B82F6' : color}"/>
-          `}
+          <!-- Inner circles -->
+          <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
+          <circle cx="16" cy="16" r="4" fill="${isDispatched ? '#3B82F6' : color}"/>
         </svg>
 
         ${isDispatched ? `

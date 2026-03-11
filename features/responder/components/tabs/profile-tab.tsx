@@ -10,16 +10,25 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import {
     LogOut, ChevronRight, Shield, Bell, HelpCircle,
-    Mail, Phone, Clock, Edit, User, Siren,
+    Mail, Phone, Clock, Edit, User, Siren, LifeBuoy,
+    MessageCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useGetResponderDetailsQuery, useGetResponderStatsQuery } from "@/features/responder/api/responderApi";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const menuItems = [
     { icon: Bell, label: "Notifications" },
     { icon: Shield, label: "Certifications" },
-    { icon: HelpCircle, label: "Help & Support" },
+    { icon: HelpCircle, label: "Help & Support", isDialog: true },
 ];
 
 export function ProfileTab() {
@@ -195,18 +204,85 @@ export function ProfileTab() {
 
                 {/* Menu items */}
                 <div className="space-y-1">
-                    {menuItems.map(({ icon: Icon, label }) => (
-                        <button
-                            key={label}
-                            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
-                        >
-                            <div className="w-9 h-9 bg-red-500/10 rounded-lg flex items-center justify-center">
-                                <Icon size={18} className="text-red-600" />
-                            </div>
-                            <span className="flex-1 font-medium text-sm text-foreground">{label}</span>
-                            <ChevronRight size={16} className="text-muted-foreground" />
-                        </button>
-                    ))}
+                    {menuItems.map(({ icon: Icon, label, isDialog }) => {
+                        const content = (
+                            <button
+                                key={label}
+                                className="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
+                            >
+                                <div className="w-9 h-9 bg-red-500/10 rounded-lg flex items-center justify-center">
+                                    <Icon size={18} className="text-red-600" />
+                                </div>
+                                <span className="flex-1 font-medium text-sm text-foreground">{label}</span>
+                                <ChevronRight size={16} className="text-muted-foreground" />
+                            </button>
+                        );
+
+                        if (isDialog) {
+                            return (
+                                <Dialog key={label}>
+                                    <DialogTrigger asChild>
+                                        {content}
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle className="flex items-center gap-2">
+                                                <HelpCircle className="w-5 h-5 text-red-600" />
+                                                Help & Support
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Need assistance? Check our FAQs or contact our support team.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4 pt-4">
+                                            {/* FAQ Mock */}
+                                            <div className="space-y-3">
+                                                <h4 className="text-sm font-semibold text-foreground">Frequently Asked Questions</h4>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        "How do I update my availability?",
+                                                        "What do I do in an emergency?",
+                                                        "How to view my performance stats?",
+                                                    ].map((q) => (
+                                                        <div key={q} className="p-3 bg-muted/40 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-muted/60 cursor-pointer transition-colors group">
+                                                            <span>{q}</span>
+                                                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-red-600 transition-colors" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <Separator />
+
+                                            {/* Contact Support Mock */}
+                                            <div className="space-y-3">
+                                                <h4 className="text-sm font-semibold text-foreground">Contact Support</h4>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Button variant="outline" className="h-20 flex flex-col gap-2 items-center justify-center border-dashed">
+                                                        <MessageCircle className="w-5 h-5 text-red-600" />
+                                                        <span className="text-xs">Live Chat</span>
+                                                    </Button>
+                                                    <Button variant="outline" className="h-20 flex flex-col gap-2 items-center justify-center border-dashed">
+                                                        <LifeBuoy className="w-5 h-5 text-red-600" />
+                                                        <span className="text-xs">Help Center</span>
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2">
+                                                <Button className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center gap-2">
+                                                    <Mail className="w-4 h-4" />
+                                                    Email Support
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            );
+                        }
+
+                        return content;
+                    })}
                 </div>
 
                 <Separator />
@@ -214,6 +290,7 @@ export function ProfileTab() {
                 {/* Edit + Logout */}
                 <div className="space-y-2 pt-1">
                     <Button
+                        onClick={() => router.push("/responder/profile/edit")}
                         variant="outline"
                         className="w-full h-10 flex items-center gap-2 font-semibold text-sm"
                     >

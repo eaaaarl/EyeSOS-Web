@@ -25,7 +25,7 @@ export default function ProtectedAdmin({ children }: { children: ReactNode }) {
         if (!isLoading && profile) {
             const userType = profile.profile.user_type;
             if (userType === 'lgu' || userType === 'blgu') {
-                router.replace('/dashboard/map');
+                router.replace('/dispatcher/map');
                 return;
             }
             if (userType === 'responder') {

@@ -10,7 +10,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState("");
@@ -38,11 +37,13 @@ export default function ResetPasswordPage() {
             return;
         }
 
-        // Sign out to clear the recovery session before redirecting to login
+        toast.success("Password updated! You can now log in.");
+        router.push("/login");
+    };
+
+    const handleCancel = async () => {
         const { supabase } = await import("@/lib/supabase");
         await supabase.auth.signOut();
-
-        toast.success("Password updated! You can now log in.");
         router.push("/login");
     };
 
@@ -125,12 +126,13 @@ export default function ResetPasswordPage() {
                                     </Button>
 
                                     <div className="text-center">
-                                        <Link
-                                            href="/"
+                                        <button
+                                            type="button"
+                                            onClick={handleCancel}
                                             className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
                                         >
                                             Cancel and return to login
-                                        </Link>
+                                        </button>
                                     </div>
                                 </form>
                             </div>
