@@ -1,21 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useSendPasswordResetEmailMutation } from "@/features/auth/api/authApi";
+import { useSendPasswordResetEmailMutation, useVerifyOtpMutation } from "@/features/auth/api/authApi";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, KeyRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
+    const [token, setToken] = useState("");
     const [sent, setSent] = useState(false);
     const [sendResetEmail, { isLoading }] = useSendPasswordResetEmailMutation();
+    const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,7 +31,25 @@ export default function ForgotPasswordPage() {
         }
 
         setSent(true);
-        toast.success("Check your inbox for the reset link.");
+        toast.success("Check your inbox for the reset code.");
+    };
+
+    const handleVerifyToken = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || token.length !== 6) {
+            toast.error("Please enter a valid 6-digit code.");
+            return;
+        }
+
+        const result = await verifyOtp({ email, token });
+
+        if ("error" in result) {
+            toast.error("Invalid or expired code. Please try again.");
+            return;
+        }
+
+        toast.success("Code verified! Set your new password.");
+        router.push("/reset-password");
     };
 
     return (
@@ -54,26 +75,64 @@ export default function ForgotPasswordPage() {
                                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">Forgot Password</h1>
                                     <p className="text-sm text-muted-foreground text-balance">
                                         {sent
-                                            ? "Check your inbox for instructions"
-                                            : "Enter your email to receive a reset link"}
+                                            ? "Enter the 6-digit code sent to your email"
+                                            : "Enter your email to receive a reset code"}
                                     </p>
                                 </div>
 
                                 {sent ? (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
-                                            <p className="text-sm text-emerald-800 font-medium">
-                                                Reset link sent to <br />
-                                                <strong className="text-emerald-950">{email}</strong>
+                                    <form onSubmit={handleVerifyToken} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center mb-2">
+                                            <p className="text-xs text-emerald-800 font-medium">
+                                                Code sent to <strong>{email}</strong>
                                             </p>
                                         </div>
-                                        <Button asChild variant="outline" className="w-full rounded-xl">
-                                            <Link href="/" className="flex items-center justify-center gap-2">
-                                                <ArrowLeft className="w-4 h-4" />
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="token" className="text-sm font-semibold text-gray-700">Verification Code</Label>
+                                            <div className="relative">
+                                                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                <Input
+                                                    id="token"
+                                                    type="text"
+                                                    value={token}
+                                                    onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                    placeholder="000000"
+                                                    required
+                                                    className="pl-10 h-11 text-center tracking-[0.5em] text-lg font-bold rounded-xl border-gray-200 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            type="submit"
+                                            className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all duration-200"
+                                            disabled={isVerifying}
+                                        >
+                                            {isVerifying ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                                "Verify Code"
+                                            )}
+                                        </Button>
+
+                                        <div className="text-center flex flex-col gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSent(false)}
+                                                className="text-xs font-medium text-gray-500 hover:text-red-600 transition-colors"
+                                            >
+                                                Didn&apos;t get the code? Try again
+                                            </button>
+                                            <Link
+                                                href="/"
+                                                className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors inline-flex items-center justify-center gap-1"
+                                            >
+                                                <ArrowLeft className="w-3.5 h-3.5" />
                                                 Back to Login
                                             </Link>
-                                        </Button>
-                                    </div>
+                                        </div>
+                                    </form>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         <div className="space-y-2">
@@ -100,7 +159,7 @@ export default function ForgotPasswordPage() {
                                             {isLoading ? (
                                                 <Loader2 className="h-5 w-5 animate-spin" />
                                             ) : (
-                                                "Send Reset Link"
+                                                "Send Reset Code"
                                             )}
                                         </Button>
 
