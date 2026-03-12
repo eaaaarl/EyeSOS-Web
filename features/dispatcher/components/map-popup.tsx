@@ -18,15 +18,15 @@ import { AccidentReportDetailsDialog } from "./accident-report-details-dialog";
 import { ResponderConfirmationDialog } from "../../maps/components/dialogs/responder-confirmation-dialog";
 import { ResponderDispatchDialog } from "./responder-dispatch-dialog";
 import { toast } from "sonner";
-import { AvailableResponders } from "../api/inteface";
+import { ResponderTeamResponse } from "../api/inteface";
 
 interface MapPopupProps {
   accident: Report;
   onGetDirections: (lat: number, lng: number) => void;
   additionalReports?: Report[];
   totalCount?: number;
-  availableResponders?: AvailableResponders;
-  isRespondersLoading?: boolean;
+  responderTeam?: ResponderTeamResponse;
+  responderTeamLoading?: boolean;
   isDispatched?: boolean;
 }
 
@@ -35,8 +35,8 @@ export function MapPopup({
   onGetDirections,
   additionalReports,
   totalCount = 1,
-  availableResponders,
-  isRespondersLoading,
+  responderTeam,
+  responderTeamLoading,
   isDispatched
 }: MapPopupProps) {
   const { user } = useAppSelector((state) => state.auth);
@@ -203,8 +203,8 @@ export function MapPopup({
         isOpen={isDispatchOpen}
         onOpenChange={setIsDispatchOpen}
         report={selectedReport}
-        availableResponders={availableResponders ?? null}
-        isLoading={isRespondersLoading}
+        responderTeam={responderTeam || null}
+        isLoading={responderTeamLoading}
       />
 
       <ResponderConfirmationDialog

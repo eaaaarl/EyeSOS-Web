@@ -9,15 +9,18 @@ import { createPinMarkerIcon } from "../../maps/components/map/marker";
 import { useDirections } from "../../maps/hooks/use-directions";
 import BottomReports from "../../maps/components/shared/bottom-reports";
 import { DispatcherProfileSheet } from "./dispatcher-profile-sheet";
-import { useGetAllReportsBystanderQuery, useGetAvailableRespondersQuery } from "../api/dispatcherApi";
+import { useGetAllReportsBystanderQuery, useGetResponderTeamsQuery } from "../api/dispatcherApi";
 
 export function DispatcherMap() {
     const { openDirections } = useDirections();
     const [isOpen, setIsOpen] = useState(false);
 
     const { data: allReports } = useGetAllReportsBystanderQuery();
-    const { data: availableResponders, isLoading: availableRespondersLoading } = useGetAvailableRespondersQuery();
     const reports = allReports?.reports || [];
+
+    // get responder teams
+    const { data: responderTeam, isLoading: responderTeamLoading } = useGetResponderTeamsQuery();
+    console.log('responderTeam', JSON.stringify(responderTeam, null, 2));
     return (
         <>
             <BaseMap reports={reports}>
@@ -36,8 +39,8 @@ export function DispatcherMap() {
                             })}
                         >
                             <MapPopup
-                                availableResponders={availableResponders}
-                                isRespondersLoading={availableRespondersLoading}
+                                responderTeam={responderTeam}
+                                responderTeamLoading={responderTeamLoading}
                                 accident={report}
                                 onGetDirections={openDirections}
                                 isDispatched={isDispatched}
