@@ -51,17 +51,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (session?.user) {
-        const isLogin = window.location.pathname === "/"
-        // If we land on the login page with an active session, it's either a stale recovery session
-        // or a legitimate session that should probably redirect. 
-        // For EyeSOS, we want to ensure the login page is clean.
-        if (isLogin) {
-          // If it's the login page, we clear the session to be safe, 
-          // especially if it might be a recovery session.
-          supabase.auth.signOut()
-          dispatch(setClearUserSession())
-          return
-        }
         dispatch(setUserSession({ user: session.user, session }))
       } else {
         dispatch(setClearUserSession())

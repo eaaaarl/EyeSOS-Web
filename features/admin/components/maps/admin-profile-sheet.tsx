@@ -38,7 +38,7 @@ export function AdminProfileSheet({ isOpen, onOpenChange }: AdminProfileSheetPro
     );
 
 
-    const { data: accidentsData, isLoading: accidentsLoading } = useGetAllAccidentsQuery();
+    const { data: accidentsData } = useGetAllAccidentsQuery();
 
     const handleLogout = async () => {
         try {
@@ -127,7 +127,7 @@ export function AdminProfileSheet({ isOpen, onOpenChange }: AdminProfileSheetPro
                     </div>
                 ) : (
                     <div className="text-center space-y-1 mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{userName}</h2>
+                        <h2 className="text-lg font-bold text-gray-900 tracking-tight">{userName}</h2>
                         <p className="text-sm font-medium text-gray-500">
                             System Controller • Since {memberSince}
                         </p>

@@ -19,26 +19,24 @@ import { Report } from "@/features/maps/interfaces/get-all-reports-bystander.int
 import { toast } from "sonner";
 import { formatDistance, getDistanceKm } from "../../maps/utils/haversine";
 import { useGetAccidentStatusQuery } from "../../maps/api/mapApi";
-import { AvailableResponders } from "../api/inteface";
+import { ResponderTeamResponse } from "../api/inteface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
 import { useDispatchResponderMutation } from "../api/dispatcherApi";
-import { useGetResponderTeamsQuery } from "@/features/admin/api/adminApi";
 
 interface ResponderDispatchDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     report: Report | null;
-    availableResponders: AvailableResponders | null;
+    responderTeam: ResponderTeamResponse | null;
     isLoading?: boolean;
 }
-
 
 export function ResponderDispatchDialog({
     isOpen,
     onOpenChange,
     report,
-    availableResponders,
+    responderTeam,
     isLoading,
 }: ResponderDispatchDialogProps) {
     const isMobile = useIsMobile();
@@ -51,9 +49,6 @@ export function ResponderDispatchDialog({
         { user_id: user?.id || "" },
         { skip: !user?.id }
     );
-
-    const { data: teamAssignmentsData } = useGetResponderTeamsQuery();
-    const teamAssignments = teamAssignmentsData?.assignments || {};
 
     const dispatcherName = profileData?.profile?.name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Dispatcher";
 
@@ -124,12 +119,10 @@ export function ResponderDispatchDialog({
                             report={report}
                             isDispatching={isDispatching}
                             onDispatch={handleDispatch}
-                            availableResponders={availableResponders}
+                            responderTeam={responderTeam}
                             isLoading={isLoading}
-                            /* dispatchLoading={dispatchResponderLoading} */
                             dispatchStatus={dispatchStatus}
                             dispatchedResponderName={dispatchedResponderName}
-                            teamAssignments={teamAssignments}
                         />
                     </div>
                 </DrawerContent>
@@ -150,21 +143,16 @@ export function ResponderDispatchDialog({
                             Incident ID: #{report.report_number.toUpperCase()}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className={`bg-blue-600 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-tighter shadow-sm`}>
-                        ACTIVE
-                    </div>
                 </div>
-                <div className="px-4 py-6 overflow-y-auto">
+                <div className="px-4 py-4 overflow-y-auto">
                     <DispatchContent
                         report={report}
                         isDispatching={isDispatching}
                         onDispatch={handleDispatch}
-                        availableResponders={availableResponders}
+                        responderTeam={responderTeam}
                         isLoading={isLoading}
-/*                         dispatchLoading={dispatchResponderLoading}
- */                        dispatchStatus={dispatchStatus}
+                        dispatchStatus={dispatchStatus}
                         dispatchedResponderName={dispatchedResponderName}
-                        teamAssignments={teamAssignments}
                     />
                 </div>
             </DialogContent>
@@ -176,197 +164,204 @@ interface DispatchContentProps {
     report: Report;
     isDispatching: string | null;
     onDispatch: (id: string, name: string) => void;
-    availableResponders: AvailableResponders | null;
+    responderTeam: ResponderTeamResponse | null;
     isLoading?: boolean;
-    dispatchStatus: "idle" | "waiting" | "accepted" | "rejected"; // add this
-    dispatchedResponderName: string | null;                        // add this
-    teamAssignments: Record<string, { teamName: string; role: string }>;
+    dispatchStatus: "idle" | "waiting" | "accepted" | "rejected";
+    dispatchedResponderName: string | null;
 }
 
 const DispatchContent = ({
-    report, isDispatching, onDispatch, availableResponders,
+    report, isDispatching, onDispatch, responderTeam,
     isLoading, dispatchStatus, dispatchedResponderName,
-    teamAssignments
-}: DispatchContentProps) => (
-    <div className="space-y-4 px-1 pb-6 font-poppins">
-        <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-start gap-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
-                <MapPin className="w-5 h-5 text-red-600" />
-            </div>
-            <div className="min-w-0">
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest leading-none mb-1.5">
-                    Incident Location
-                </p>
-                <p className="text-[13px] font-bold text-slate-700 truncate leading-tight">
-                    {report.location_address}
-                </p>
-                {report.landmark && (
-                    <p className="text-[11px] font-semibold text-red-600 mt-0.5">Near {report.landmark}</p>
-                )}
-            </div>
-        </div>
-
-        <div className="space-y-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm">
-            <div className="flex items-center justify-between group">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-200">
-                        <Shield className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-tighter">
-                            Dispatch Command
-                        </h3>
-                        <p className="text-[9px] text-blue-600 font-bold uppercase tracking-widest leading-none">
-                            Select Response Unit
-                        </p>
-                    </div>
+}: DispatchContentProps) => {
+    return (
+        <div className="space-y-2 px-1 pb-6 font-poppins">
+            <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl flex items-start gap-2">
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
+                    <MapPin className="w-5 h-5 text-red-600" />
                 </div>
-                {dispatchStatus === "idle" && (
-                    <div className="px-2 py-1 bg-white rounded-md border border-blue-200 shadow-xs">
-                        <span className="text-[10px] font-bold text-blue-700 leading-none">
-                            {availableResponders?.responders.length} ONLINE
-                        </span>
-                    </div>
-                )}
+                <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest leading-none mb-1.5">
+                        Incident Location
+                    </p>
+                    <p className="text-[13px] font-bold text-slate-700 ">
+                        {report.location_address}
+                    </p>
+                    {report.landmark && (
+                        <p className="text-[11px] font-semibold text-red-600 mt-0.5">Near {report.landmark}</p>
+                    )}
+                </div>
             </div>
 
-            <div className="space-y-2 max-h-[350px] overflow-y-auto no-scrollbar pr-0.5 min-h-[100px] flex flex-col">
-                {dispatchStatus === "waiting" && (
-                    <div className="bg-blue-600/10 border border-blue-200 rounded-xl p-4 mb-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
-                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+            <div className="space-y-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm">
+                <div className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-200">
+                            <Shield className="w-4 h-4 text-white" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-blue-900 leading-tight">Waiting for Response</p>
-                            <p className="text-[11px] text-blue-700 font-medium truncate">
-                                Dispatched <span className="font-bold underline">{dispatchedResponderName}</span>
+                        <div>
+                            <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-tighter">
+                                Dispatch Command
+                            </h3>
+                            <p className="text-[9px] text-blue-600 font-bold uppercase tracking-widest leading-none">
+                                Select Response Unit
                             </p>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-blue-100 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-blue-500 animate-pulse" />
-                            <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter">PENDING</span>
                         </div>
                     </div>
-                )}
-
-                {dispatchStatus === "accepted" && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3 bg-green-50 rounded-xl border border-green-100 mb-2">
-                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center shadow-lg shadow-green-100">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
-                        </div>
-                        <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-green-700 uppercase tracking-tight">Dispatch Accepted!</p>
-                            <p className="text-xs text-slate-600">
-                                <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is en route
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 rounded-full shadow-md shadow-green-200">
-                            <Navigation className="w-3.5 h-3.5 text-white animate-pulse" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-wider">UNIT EN ROUTE</span>
-                        </div>
-                    </div>
-                )}
-
-                {dispatchStatus === "rejected" && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-3 bg-red-50 rounded-xl border border-red-100 mb-2">
-                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center shadow-lg shadow-red-100">
-                            <XCircle className="w-8 h-8 text-red-500" />
-                        </div>
-                        <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-red-700 uppercase tracking-tight">Dispatch Rejected</p>
-                            <p className="text-xs text-slate-600">
-                                <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is unavailable
-                            </p>
-                        </div>
-                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest animate-pulse">Select Another Responder</p>
-                    </div>
-                )}
-
-                {(dispatchStatus === "idle" || dispatchStatus === "waiting") && (
-                    <>
-                        <div className="px-1 py-1 flex items-center justify-between mb-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                {dispatchStatus === "waiting" ? "Other Online Responders" : "Available Responders"}
-                            </p>
-                            <span className="text-[9px] font-bold text-slate-300">
-                                {availableResponders?.responders.length} UNITS
+                    {dispatchStatus === "idle" && (
+                        <div className="px-2 py-1 bg-white rounded-md border border-blue-200 shadow-xs">
+                            <span className="text-[10px] font-bold text-blue-700 leading-none">
+                                {responderTeam?.teams?.length} TEAMS
                             </span>
                         </div>
-                        {isLoading ? (
-                            <div className="flex-1 flex flex-col items-center justify-center py-8 gap-3">
-                                <div className="relative">
-                                    <Shield className="w-8 h-8 text-blue-600 animate-pulse" />
-                                    <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20" />
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">
-                                    Searching Responders...
-                                </p>
-                            </div>
-                        ) : availableResponders?.responders.length === 0 ? (
-                            <div className="flex-1 flex flex-col items-center justify-center py-8 gap-2 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                                <Truck className="w-6 h-6 text-slate-300" />
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">
-                                    No Responders Online
-                                </p>
-                            </div>
-                        ) : (
-                            availableResponders?.responders.map((resp) => {
-                                const distance = resp.latitude && resp.longitude
-                                    ? formatDistance(getDistanceKm(resp.latitude, resp.longitude, report.latitude, report.longitude))
-                                    : null;
+                    )}
+                </div>
 
-                                return (
-                                    <div key={resp.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 group transition-all hover:border-blue-300 hover:shadow-md hover:shadow-blue-50/50">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-gray-100 group-hover:bg-blue-50 transition-colors">
-                                                <Ambulance className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    <span className="text-[13px] font-black text-gray-900 truncate tracking-tight">{resp.profiles.name}</span>
-                                                    {teamAssignments[resp.profiles.id] && (
-                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter ${teamAssignments[resp.profiles.id].role === 'Leader'
-                                                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                                            : 'bg-blue-100 text-blue-700 border border-blue-200'
-                                                            }`}>
-                                                            {teamAssignments[resp.profiles.id].role}
-                                                        </span>
-                                                    )}
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-0.5 min-h-[100px] flex flex-col">
+                    {dispatchStatus === "waiting" && (
+                        <div className="bg-blue-600/10 border border-blue-200 rounded-xl p-4 mb-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-blue-900 leading-tight">Waiting for Response</p>
+                                <p className="text-[11px] text-blue-700 font-medium truncate">
+                                    Dispatched <span className="font-bold underline">{dispatchedResponderName}</span>
+                                </p>
+                            </div>
+                            <div className="bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-blue-100 flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-blue-500 animate-pulse" />
+                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter">PENDING</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {dispatchStatus === "accepted" && (
+                        <div className="flex flex-col items-center justify-center py-8 gap-3 bg-green-50 rounded-xl border border-green-100 mb-2">
+                            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center shadow-lg shadow-green-100">
+                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            </div>
+                            <div className="text-center space-y-1">
+                                <p className="text-sm font-bold text-green-700 uppercase tracking-tight">Dispatch Accepted!</p>
+                                <p className="text-xs text-slate-600">
+                                    <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is en route
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 rounded-full shadow-md shadow-green-200">
+                                <Navigation className="w-3.5 h-3.5 text-white animate-pulse" />
+                                <span className="text-[10px] font-black text-white uppercase tracking-wider">UNIT EN ROUTE</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {dispatchStatus === "rejected" && (
+                        <div className="flex flex-col items-center justify-center py-8 gap-3 bg-red-50 rounded-xl border border-red-100 mb-2">
+                            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center shadow-lg shadow-red-100">
+                                <XCircle className="w-8 h-8 text-red-500" />
+                            </div>
+                            <div className="text-center space-y-1">
+                                <p className="text-sm font-bold text-red-700 uppercase tracking-tight">Dispatch Rejected</p>
+                                <p className="text-xs text-slate-600">
+                                    <span className="font-bold text-slate-800">{dispatchedResponderName}</span> is unavailable
+                                </p>
+                            </div>
+                            <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest animate-pulse">Select Another Responder</p>
+                        </div>
+                    )}
+
+                    {(dispatchStatus === "idle" || dispatchStatus === "waiting") && (
+                        <>
+                            <div className="px-1 py-1 flex items-center justify-between mb-1">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    {dispatchStatus === "waiting" ? "Other Online Teams" : "Available Teams"}
+                                </p>
+                                <span className="text-[9px] font-bold text-slate-300">
+                                    {responderTeam?.teams?.length} TEAMS
+                                </span>
+                            </div>
+                            {isLoading ? (
+                                <div className="flex-1 flex flex-col items-center justify-center py-8 gap-3">
+                                    <div className="relative">
+                                        <Shield className="w-8 h-8 text-blue-600 animate-pulse" />
+                                        <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20" />
+                                    </div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+                                        Searching Teams...
+                                    </p>
+                                </div>
+                            ) : responderTeam?.teams?.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center py-8 gap-2 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                    <Truck className="w-6 h-6 text-slate-300" />
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-4">
+                                        No Teams Available
+                                    </p>
+                                </div>
+                            ) : (
+                                responderTeam?.teams?.map((team) => {
+                                    const leaderDistance = team.leader.leader_info?.latitude && team.leader.leader_info?.longitude
+                                        ? formatDistance(getDistanceKm(team.leader.leader_info?.latitude, team.leader.leader_info?.longitude, report.latitude, report.longitude))
+                                        : null;
+
+                                    return (
+                                        <div key={team.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden transition-all hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/50">
+                                            <div className="flex items-center gap-2.5 p-3 border-b border-gray-50">
+                                                <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
+                                                    <Ambulance className="w-4 h-4 text-blue-600" />
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    {distance && (
-                                                        <span className="text-[10px] font-bold text-blue-500">{distance}</span>
-                                                    )}
-                                                    {teamAssignments[resp.profiles.id] && (
-                                                        <span className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">
-                                                            {teamAssignments[resp.profiles.id].teamName}
+                                                <div>
+                                                    <span className="text-[13px] font-black text-gray-900 tracking-tight">{team.name}</span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter ${team.status === 'active'
+                                                            ? 'bg-green-100 text-green-700 border border-green-200'
+                                                            : 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                            }`}>
+                                                            {team.status}
                                                         </span>
-                                                    )}
-                                                    {!distance && !teamAssignments[resp.profiles.id] && (
-                                                        <span className="text-[10px] font-semibold text-slate-400">Stationary</span>
-                                                    )}
+                                                        <span className="text-[9px] text-slate-400 font-semibold">
+                                                            {team.members.length} member{team.members.length !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Leader Row - not indented */}
+                                            <div className="px-3 py-2">
+                                                <div className="flex items-center justify-between p-2.5 bg-amber-50/50 rounded-lg border border-amber-100/50">
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <div className="flex flex-col min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-[12px] font-bold text-gray-900 truncate">{team.leader.name}</span>
+                                                                <span className="text-[7px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200 font-black uppercase">
+                                                                    Leader
+                                                                </span>
+                                                            </div>
+                                                            {leaderDistance && (
+                                                                <span className="text-[10px] font-bold text-blue-500">{leaderDistance}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        disabled={isDispatching !== null}
+                                                        onClick={() => onDispatch(team.leader.id, team.leader.name)}
+                                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === team.leader.id
+                                                            ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                                                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
+                                                            }`}
+                                                    >
+                                                        {isDispatching === team.leader.id
+                                                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            : "Dispatch"}
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <button
-                                            disabled={isDispatching !== null}
-                                            onClick={() => onDispatch(resp.profiles.id, resp.profiles.name)}
-                                            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tight transition-all active:scale-95 shadow-xs ${isDispatching === resp.profiles.id
-                                                ? "bg-blue-100 text-blue-400 cursor-not-allowed"
-                                                : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
-                                                }`}
-                                        >
-                                            {isDispatching === resp.profiles.id
-                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                : "Dispatch"}
-                                        </button>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </>
-                )}
+                                    );
+                                })
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};

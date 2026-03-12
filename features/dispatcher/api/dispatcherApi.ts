@@ -5,7 +5,11 @@ import {
 import { supabase } from "@/lib/supabase";
 import { fakeBaseQuery } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { AvailableResponders, DispatcherStatsResponse } from "./inteface";
+import {
+  AvailableResponders,
+  DispatcherStatsResponse,
+  ResponderTeamResponse,
+} from "./inteface";
 
 export const dispatcherApi = createApi({
   reducerPath: "dispatcherApi",
@@ -247,6 +251,7 @@ export const dispatcherApi = createApi({
         }
       },
     }),
+
     dispatchResponder: builder.mutation<
       { meta: { success: boolean; message: string } },
       {
@@ -288,6 +293,39 @@ export const dispatcherApi = createApi({
       },
       invalidatesTags: ["getAccidents"],
     }),
+
+    getResponderTeams: builder.query<ResponderTeamResponse, void>({
+      queryFn: async () => {
+        try {
+          const { data, error } = await supabase
+            .from("teams")
+            .select(
+              "*,leader:profiles!teams_leader_id_fkey(*,leader_info:responder_details(*)), members:team_members(*, profiles(*, responder_info:responder_details(*)))",
+            );
+
+          if (error) throw error;
+
+          return {
+            data: {
+              teams: data || [],
+              meta: {
+                success: true,
+                message: "Responder teams fetched successfully.",
+              },
+            },
+          };
+        } catch (error: unknown) {
+          return {
+            error: {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to fetch responder teams",
+            },
+          };
+        }
+      },
+    }),
   }),
 });
 
@@ -296,4 +334,5 @@ export const {
   useGetAvailableRespondersQuery,
   useGetDispatcherStatsQuery,
   useDispatchResponderMutation,
+  useGetResponderTeamsQuery,
 } = dispatcherApi;
