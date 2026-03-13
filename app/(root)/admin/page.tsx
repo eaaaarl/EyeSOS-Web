@@ -8,12 +8,11 @@ import { SeverityTab } from "@/features/admin/dashboard/components/severity-tab"
 import { TeamsOverviewTab } from "@/features/admin/dashboard/components/teams-overview-tab"
 import { PredictTab } from "@/features/admin/dashboard/components/predict-tab"
 import { useGetHistoricalAccidentsQuery } from "@/features/admin/api/adminApi"
-import { COLORS, SEVERITY_COLORS } from "@/features/admin/dashboard/constants"
+import { COLORS, DAY_MAP, DAY_ORDER, MONTH_NAMES, SEVERITY_COLORS, TOD_COLORS } from "@/features/admin/dashboard/constants"
+import { useMemo } from "react"
 export default function AdminPage() {
-
-
     const { data } = useGetHistoricalAccidentsQuery()
-
+    console.log(JSON.stringify(data?.historical_accidents[0], null, 2))
     const TotalAccidents = data?.historical_accidents.length ?? 0;
 
     const dates = data?.historical_accidents?.map(a => new Date(a.date_clean).getFullYear()) ?? [];
@@ -65,6 +64,79 @@ export default function AdminPage() {
         value,
         color: SEVERITY_COLORS[name] ?? COLORS.blue,
     }));
+
+    // Cards chart for Day
+    const todData = Object.entries(
+        data?.historical_accidents?.reduce((acc, a) => {
+            acc[a.time_of_day] = (acc[a.time_of_day] ?? 0) + 1;
+            return acc;
+        }, {} as Record<string, number>) ?? {}
+    ).map(([name, value]) => ({
+        name,
+        value,
+        color: TOD_COLORS[name] ?? COLORS.blue,
+    }));
+
+    // for useMemo
+    const historical_accidents = data?.historical_accidents;
+
+    // Charts incidents by hour of day
+    // Derive hourData from historical_accidents
+    const hourData = useMemo(() => {
+        const counts = Array.from({ length: 24 }, (_, i) => ({
+            hour: `${i.toString().padStart(2, '0')}:00`,
+            incidents: 0,
+        }));
+
+        if (!historical_accidents?.length) return counts; // ← guard
+
+        historical_accidents.forEach((acc) => {
+            const h = Number(acc.hour);
+            if (!isNaN(h) && h >= 0 && h <= 23) {
+                counts[h].incidents += 1;
+            }
+        });
+
+        return counts;
+    }, [historical_accidents]);
+
+    // Chart incidents by month
+    const monthData = useMemo(() => {
+        const counts = Array.from({ length: 12 }, (_, i) => ({
+            month: MONTH_NAMES[i],
+            incidents: 0,
+        }));
+
+        if (!historical_accidents?.length) return counts;
+
+        historical_accidents.forEach((acc) => {
+            const m = Number(acc.month);
+            if (!isNaN(m) && m >= 1 && m <= 12) {
+                counts[m - 1].incidents += 1; // ← month is 1-indexed, array is 0-indexed
+            }
+        });
+
+        return counts;
+    }, [historical_accidents]);
+
+    // Chart incidents by day of week
+    const dowData = useMemo(() => {
+        const counts = DAY_ORDER.map(day => ({ day, incidents: 0 }));
+
+        if (!historical_accidents?.length) return counts;
+
+        historical_accidents.forEach((acc) => {
+            const short = DAY_MAP[acc.dayname];
+            if (short) {
+                const entry = counts.find(c => c.day === short);
+                if (entry) entry.incidents += 1;
+            }
+        });
+
+        return counts;
+    }, [historical_accidents]);
+
+
     return (
         <>
             <SiteHeader title="Dashboard" />
@@ -95,7 +167,15 @@ export default function AdminPage() {
                                     severityData={severityData}
                                 />
                             </TabsContent>
-                            <TabsContent value="timePatterns" className="space-y-4"><TimePatternsTab /></TabsContent>
+                            <TabsContent value="timePatterns" className="space-y-4">
+                                <TimePatternsTab
+                                    todData={todData}
+                                    totalAccidents={TotalAccidents as number}
+                                    hourData={hourData}
+                                    monthData={monthData}
+                                    dowData={dowData}
+                                />
+                            </TabsContent>
                             <TabsContent value="hotspots" className="space-y-4"><HotspotsTab /></TabsContent>
                             <TabsContent value="severity" className="space-y-4"><SeverityTab /></TabsContent>
                             <TabsContent value="teamsOverview" className="space-y-4"><TeamsOverviewTab /></TabsContent>
