@@ -20,7 +20,6 @@ export function DispatcherMap() {
 
     // get responder teams
     const { data: responderTeam, isLoading: responderTeamLoading } = useGetResponderTeamsQuery();
-    console.log('responderTeam', JSON.stringify(responderTeam, null, 2));
     return (
         <>
             <BaseMap reports={reports}>

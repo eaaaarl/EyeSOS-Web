@@ -29,7 +29,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useGetUserProfileQuery } from "@/features/auth/api/authApi";
-import { useGetAvailableRespondersQuery } from '@/features/dispatcher/api/dispatcherApi';
+import { useGetResponderTeamsQuery } from '@/features/dispatcher/api/dispatcherApi';
 
 interface BottomReportsProps {
   reports?: Report[];
@@ -79,7 +79,9 @@ export default function BottomReports({ reports = [], isResponder = false }: Bot
     { user_id: user?.id || "" },
     { skip: !user?.id }
   );
-  const { data: availableResponders, isLoading: availableRespondersLoading } = useGetAvailableRespondersQuery();
+
+  //get Responder teams
+  const { data: responderTeam, isLoading: responderTeamLoading } = useGetResponderTeamsQuery();
 
   const isAdmin = profileData?.profile?.user_type === "lgu" || profileData?.profile?.user_type === "blgu";
 
@@ -265,8 +267,8 @@ export default function BottomReports({ reports = [], isResponder = false }: Bot
               isOpen={isDispatchOpen}
               onOpenChange={setIsDispatchOpen}
               report={selectedReport}
-              availableResponders={availableResponders ?? null}
-              isLoading={availableRespondersLoading}
+              responderTeam={responderTeam ?? null}
+              isLoading={responderTeamLoading}
             />
           </>
         )}
@@ -306,8 +308,8 @@ export default function BottomReports({ reports = [], isResponder = false }: Bot
             isOpen={isDispatchOpen}
             onOpenChange={setIsDispatchOpen}
             report={selectedReport}
-            availableResponders={availableResponders ?? null}
-            isLoading={availableRespondersLoading}
+            responderTeam={responderTeam ?? null}
+            isLoading={responderTeamLoading}
           />
         </>
       )}
