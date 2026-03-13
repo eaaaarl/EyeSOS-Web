@@ -1,103 +1,106 @@
 'use client'
-import * as React from "react"
-const SiteHeader = React.lazy(() => import("@/features/admin/components/layouts/site-header").then(module => ({ default: module.SiteHeader })))
-import { AccidentStatsCards } from "@/features/admin/dashboard/components/accident-stats-cards"
-import { AccidentStatusDonut } from "@/features/admin/dashboard/components/accident-status-donut"
-import { AccidentTimeDistribution } from "@/features/admin/dashboard/components/accident-time-distribution"
-import { useGetAllAccidentsQuery } from "@/features/admin/api/adminApi"
-import { AccidentTrendsChart } from "@/features/admin/dashboard/components/accident-trends-chart"
-import { BarangayHotspotChart } from "@/features/admin/dashboard/components/barangay-hotspot-chart"
-import { IncidentsByDayChart } from "@/features/admin/dashboard/components/incidents-by-day-chart"
-import { IncidentsByTimePeriod } from "@/features/admin/dashboard/components/incidents-by-time-period"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+import { SiteHeader } from "@/features/admin/components/layouts/site-header"
+import { OverviewTab } from "@/features/admin/dashboard/components/overview-tab"
+import { TimePatternsTab } from "@/features/admin/dashboard/components/time-patterns-tab"
+import { HotspotsTab } from "@/features/admin/dashboard/components/hotspots-tab"
+import { SeverityTab } from "@/features/admin/dashboard/components/severity-tab"
+import { TeamsOverviewTab } from "@/features/admin/dashboard/components/teams-overview-tab"
+import { PredictTab } from "@/features/admin/dashboard/components/predict-tab"
+import { useGetHistoricalAccidentsQuery } from "@/features/admin/api/adminApi"
+import { COLORS, SEVERITY_COLORS } from "@/features/admin/dashboard/constants"
 export default function AdminPage() {
-    const {
-        data: accidents,
-        isLoading,
-        isError,
-    } = useGetAllAccidentsQuery()
 
-    const countTotalReports = accidents?.accidents.length || 0
-    const countResolveReports = accidents?.accidents.filter((accident) => accident.accident_status === "RESOLVED").length || 0
-    const activeReports = accidents?.accidents.filter((accident) => accident.accident_status === "NEW").length || 0
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const { data } = useGetHistoricalAccidentsQuery()
 
-    const resolvedToday = accidents?.accidents.filter((accident) => {
-        if (accident.accident_status !== "RESOLVED") return false
-        const updatedAt = new Date(accident.updated_at)
-        return updatedAt >= today
-    }).length || 0
+    const TotalAccidents = data?.historical_accidents.length ?? 0;
 
-    const accidentsWithResponse = accidents?.accidents.filter(a => a.accident_responses && a.accident_responses.length > 0) || []
-    const totalResponseTimeMinutes = accidentsWithResponse.reduce((acc, accident) => {
-        const response = accident.accident_responses.find(r => r.response_type === "accepted" || r.response_type === "arrived")
-        if (response && response.responded_at) {
-            const startTime = new Date(accident.created_at).getTime()
-            const endTime = new Date(response.responded_at).getTime()
-            return acc + (endTime - startTime) / (1000 * 60)
-        }
-        return acc
-    }, 0)
+    const dates = data?.historical_accidents?.map(a => new Date(a.date_clean).getFullYear()) ?? [];
+    const minYear = Math.min(...dates);
+    const maxYear = Math.max(...dates);
+    const yearRange = `${minYear}-${maxYear}`;
 
-    const avgResponseTime = accidentsWithResponse.length > 0
-        ? totalResponseTimeMinutes / accidentsWithResponse.length
-        : 0
+    const totalFatalities = data?.historical_accidents?.reduce((acc, a) => acc + a.fatalities, 0);
+    const fatalIncidents = data?.historical_accidents?.filter(a => a.fatalities > 0).length ?? 0;
+    const totalIncidents = data?.historical_accidents?.length ?? 0;
+    const subFatalities = `${(fatalIncidents / totalIncidents * 100).toFixed(1)}% of incidents`;
 
+    const totalInjured = data?.historical_accidents?.reduce((acc, a) => acc + a.injured, 0);
+    const injuredPersons = data?.historical_accidents?.filter(a => a.injured > 0).length ?? 0;
+    const subInjured = `${(injuredPersons / totalIncidents * 100).toFixed(1)}% of incidents`;
+
+    const collisionRate = data?.historical_accidents?.filter(a => a.incident_type === "Collision").length ?? 0;
+    const subCollisionRate = `${(collisionRate / totalIncidents * 100).toFixed(1)}% of incidents`;
+
+    // Chart incidents by year
+    const yearData = Object.entries(
+        data?.historical_accidents?.reduce((acc, a) => {
+            const year = new Date(a.date_clean).getFullYear().toString();
+            acc[year] = (acc[year] ?? 0) + 1;
+            return acc;
+        }, {} as Record<string, number>) ?? {}
+    )
+        .map(([year, incidents]) => ({ year, incidents }))
+        .sort((a, b) => Number(a.year) - Number(b.year));
+
+    // Chart incidents type
+    const collisionCount = data?.historical_accidents?.filter(a => a.incident_type === "Collision").length ?? 0;
+    const nonCollisionCount = data?.historical_accidents?.filter(a => a.incident_type === "Non-Collision").length ?? 0;
+
+    const incidentTypeData = [
+        { name: "Collision", value: collisionCount, color: COLORS.red },
+        { name: "Non-Collision", value: nonCollisionCount, color: COLORS.blue },
+    ];
+
+
+    // Chart severity
+    const severityData = Object.entries(
+        data?.historical_accidents?.reduce((acc, a) => {
+            acc[a.severity] = (acc[a.severity] ?? 0) + 1;
+            return acc;
+        }, {} as Record<string, number>) ?? {}
+    ).map(([name, value]) => ({
+        name,
+        value,
+        color: SEVERITY_COLORS[name] ?? COLORS.blue,
+    }));
     return (
         <>
             <SiteHeader title="Dashboard" />
             <div className="flex flex-1 flex-col">
                 <div className="@container/main flex flex-1 flex-col gap-2">
-                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                        <AccidentStatsCards
-                            countTotalReport={countTotalReports}
-                            countResolvedReport={countResolveReports}
-                            countActiveReport={activeReports}
-                            countResolvedToday={resolvedToday}
-                            countAvgResponseTime={avgResponseTime}
-                            isError={isError}
-                            isLoading={isLoading}
-                        />
-
-                        <div className="px-4 lg:px-6">
-                            <Tabs defaultValue="overview" className="space-y-4">
-                                <TabsList>
-                                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                                    <TabsTrigger value="analytics">Analytics & Hotspots</TabsTrigger>
-                                </TabsList>
-                                
-                                <TabsContent value="overview" className="space-y-4">
-                                    <AccidentTrendsChart
-                                        data={accidents?.accidents}
-                                        isLoading={isLoading}
-                                        isError={isError}
-                                    />
-                                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                                        <AccidentStatusDonut
-                                            data={accidents?.accidents}
-                                            isLoading={isLoading}
-                                            isError={isError}
-                                        />
-                                        <AccidentTimeDistribution
-                                            data={accidents?.accidents}
-                                            isLoading={isLoading}
-                                            isError={isError}
-                                        />
-                                    </div>
-                                </TabsContent>
-                                
-                                <TabsContent value="analytics" className="space-y-4">
-                                    <BarangayHotspotChart />
-                                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                                        <IncidentsByDayChart />
-                                        <IncidentsByTimePeriod />
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-                        </div>
+                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
+                        <Tabs defaultValue="overview" className="space-y-4">
+                            <TabsList className="h-9">
+                                <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+                                <TabsTrigger value="timePatterns" className="text-xs">Time Patterns</TabsTrigger>
+                                <TabsTrigger value="hotspots" className="text-xs">Hotspots</TabsTrigger>
+                                <TabsTrigger value="severity" className="text-xs">Severity</TabsTrigger>
+                                <TabsTrigger value="teamsOverview" className="text-xs">Teams</TabsTrigger>
+                                <TabsTrigger value="predict" className="text-xs">Predict</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="overview" className="space-y-4">
+                                <OverviewTab
+                                    totalAccidents={TotalAccidents as number}
+                                    subDate={yearRange}
+                                    totalFatalities={totalFatalities as number}
+                                    subFatalities={subFatalities}
+                                    totalInjured={totalInjured as number}
+                                    subInjured={subInjured}
+                                    collisionRate={collisionRate as number}
+                                    subCollisionRate={subCollisionRate}
+                                    yearData={yearData}
+                                    incidentTypeData={incidentTypeData}
+                                    severityData={severityData}
+                                />
+                            </TabsContent>
+                            <TabsContent value="timePatterns" className="space-y-4"><TimePatternsTab /></TabsContent>
+                            <TabsContent value="hotspots" className="space-y-4"><HotspotsTab /></TabsContent>
+                            <TabsContent value="severity" className="space-y-4"><SeverityTab /></TabsContent>
+                            <TabsContent value="teamsOverview" className="space-y-4"><TeamsOverviewTab /></TabsContent>
+                            <TabsContent value="predict" className="space-y-4"><PredictTab /></TabsContent>
+                        </Tabs>
                     </div>
                 </div>
             </div>
