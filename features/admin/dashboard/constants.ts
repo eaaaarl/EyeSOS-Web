@@ -11,11 +11,44 @@ export const COLORS = {
   orange: "#f97316",
 };
 
+export const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 export const SEVERITY_COLORS: Record<string, string> = {
   Minor: COLORS.blue,
   Moderate: COLORS.yellow,
   Serious: COLORS.orange,
   Fatal: COLORS.red,
+};
+
+export const TOD_COLORS: Record<string, string> = {
+  Morning: COLORS.yellow,
+  Afternoon: COLORS.orange,
+  Evening: COLORS.blue,
+  Night: COLORS.red,
+};
+
+export const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export const DAY_MAP: Record<string, string> = {
+  Sunday: "Sun",
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
 };
 
 export const severityData = [

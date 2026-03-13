@@ -1,0 +1,70 @@
+diff --git a/features/admin/dashboard/components/time-patterns-tab.tsx b/features/admin/dashboard/components/time-patterns-tab.tsx
+index 61333a4..8c4fd03 100644
+--- a/features/admin/dashboard/components/time-patterns-tab.tsx
++++ b/features/admin/dashboard/components/time-patterns-tab.tsx
+@@ -1,16 +1,35 @@
+ import * as React from "react"
+ import { ResponsiveContainer, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, BarChart, Bar, Cell } from "recharts"
+-import { Sunrise, Sun, Sunset, Moon } from "lucide-react"
++import { Sunrise, Sun, Moon, SunDim } from "lucide-react"
+ import { Card, CardContent } from "@/components/ui/card"
+ import { ChartCard } from "./chart-card"
+ import { CustomTooltip } from "./custom-tooltip"
+-import { COLORS, todData, hourData, monthData, dowData } from "../constants"
++import { COLORS } from "../constants"
++
++interface TimePatternsTabProps {
++    todData: { name: string; value: number; color: string }[];
++    totalAccidents: number;
++    hourData: { hour: string; incidents: number }[];
++    monthData: { month: string; incidents: number }[];
++    dowData: { day: string; incidents: number }[];
++}
++
++export function TimePatternsTab({
++    todData,
++    totalAccidents,
++    hourData,
++    monthData,
++    dowData,
++}: TimePatternsTabProps) {
++    const todIcons: Record<string, React.ElementType> = {
++        Morning: Sunrise,
++        Afternoon: Sun,
++        Evening: SunDim,
++        Night: Moon,
++    }
+ 
+-export function TimePatternsTab() {
+-    const todIcons: Record<string, React.ElementType> = { Morning: Sunrise, Afternoon: Sun, Evening: Sunset, Night: Moon }
+     return (
+         <div className="space-y-4">
+-            {/* Time of day cards */}
+             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                 {todData.map(d => {
+                     const Icon = todIcons[d.name]
+@@ -22,7 +41,9 @@ export function TimePatternsTab() {
+                                     <span className="text-xs font-medium text-muted-foreground">{d.name}</span>
+                                 </div>
+                                 <p className="text-2xl font-semibold" style={{ color: d.color }}>{d.value}</p>
+-                                <p className="text-xs text-muted-foreground">{Math.round(d.value / 606 * 100)}% of incidents</p>
++                                <p className="text-xs text-muted-foreground">
++                                    {Math.round(d.value / totalAccidents * 100)}% of incidents
++                                </p>
+                             </CardContent>
+                         </Card>
+                     )
+@@ -72,9 +93,10 @@ export function TimePatternsTab() {
+                             <YAxis tick={{ fontSize: 11 }} />
+                             <Tooltip content={<CustomTooltip />} />
+                             <Bar dataKey="incidents" radius={[3, 3, 0, 0]}>
+-                                {dowData.map((d, i) => (
+-                                    <Cell key={i} fill={d.day === "Sun" ? COLORS.rose : COLORS.blue} />
+-                                ))}
++                                {dowData.map((d, i) => {
++                                    const maxDay = dowData.reduce((a, b) => a.incidents > b.incidents ? a : b).day;
++                                    return <Cell key={i} fill={d.day === maxDay ? COLORS.rose : COLORS.blue} />
++                                })}
+                             </Bar>
+                         </BarChart>
+                     </ResponsiveContainer>
