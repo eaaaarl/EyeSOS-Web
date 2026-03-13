@@ -6,6 +6,10 @@ import { AccidentStatusDonut } from "@/features/admin/dashboard/components/accid
 import { AccidentTimeDistribution } from "@/features/admin/dashboard/components/accident-time-distribution"
 import { useGetAllAccidentsQuery } from "@/features/admin/api/adminApi"
 import { AccidentTrendsChart } from "@/features/admin/dashboard/components/accident-trends-chart"
+import { BarangayHotspotChart } from "@/features/admin/dashboard/components/barangay-hotspot-chart"
+import { IncidentsByDayChart } from "@/features/admin/dashboard/components/incidents-by-day-chart"
+import { IncidentsByTimePeriod } from "@/features/admin/dashboard/components/incidents-by-time-period"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AdminPage() {
     const {
@@ -59,24 +63,40 @@ export default function AdminPage() {
                         />
 
                         <div className="px-4 lg:px-6">
-                            <AccidentTrendsChart
-                                data={accidents?.accidents}
-                                isLoading={isLoading}
-                                isError={isError}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 xl:grid-cols-2">
-                            <AccidentStatusDonut
-                                data={accidents?.accidents}
-                                isLoading={isLoading}
-                                isError={isError}
-                            />
-                            <AccidentTimeDistribution
-                                data={accidents?.accidents}
-                                isLoading={isLoading}
-                                isError={isError}
-                            />
+                            <Tabs defaultValue="overview" className="space-y-4">
+                                <TabsList>
+                                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                                    <TabsTrigger value="analytics">Analytics & Hotspots</TabsTrigger>
+                                </TabsList>
+                                
+                                <TabsContent value="overview" className="space-y-4">
+                                    <AccidentTrendsChart
+                                        data={accidents?.accidents}
+                                        isLoading={isLoading}
+                                        isError={isError}
+                                    />
+                                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                                        <AccidentStatusDonut
+                                            data={accidents?.accidents}
+                                            isLoading={isLoading}
+                                            isError={isError}
+                                        />
+                                        <AccidentTimeDistribution
+                                            data={accidents?.accidents}
+                                            isLoading={isLoading}
+                                            isError={isError}
+                                        />
+                                    </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="analytics" className="space-y-4">
+                                    <BarangayHotspotChart />
+                                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                                        <IncidentsByDayChart />
+                                        <IncidentsByTimePeriod />
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
                         </div>
                     </div>
                 </div>
