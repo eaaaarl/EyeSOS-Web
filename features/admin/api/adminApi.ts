@@ -11,6 +11,7 @@ import {
   TeamDetailsResponse,
   Member,
   Team,
+  HistoricalAccidentsResponse,
 } from "./interface";
 import { UserFormValues } from "../components/users/edit-user-dialog";
 
@@ -19,6 +20,29 @@ export const adminApi = createApi({
   baseQuery: fakeBaseQuery(),
   tagTypes: ["getAllUsers", "getAllAccidents", "getMembers", "getTeams"],
   endpoints: (builder) => ({
+    // Historical_accidents data analytics
+    getHistoricalAccidents: builder.query<HistoricalAccidentsResponse, void>({
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("historical_accidents")
+          .select("*");
+
+        if (error) {
+          return { error: error.message };
+        }
+
+        return {
+          data: {
+            historical_accidents: data,
+            meta: {
+              success: true,
+              message: "Fetch Historial Accidents.",
+            },
+          },
+        };
+      },
+    }),
+
     //GET ALL USERS
     getAllUsers: builder.query<AllUsersResponse, void>({
       queryFn: async () => {
@@ -498,67 +522,6 @@ export const adminApi = createApi({
       providesTags: (result, error, id) => [{ type: "getTeams", id }],
     }),
 
-    // Update Team
-    /* updateTeam: builder.mutation<
-      { meta: Meta },
-      { id: string; payload: AddTeamPayload }
-    >({
-      queryFn: async ({ id, payload }) => {
-        try {
-          // 1. Update Team Details
-          const { error: teamError } = await supabase
-            .from("teams")
-            .update({
-              name: payload.name,
-              description: payload.description,
-              status: payload.status,
-              leader_id: payload.leader_id,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", id);
-
-          if (teamError) return { error: teamError.message };
-
-          // 2. Clear existing members
-          const { error: deleteError } = await supabase
-            .from("team_members")
-            .delete()
-            .eq("team_id", id);
-
-          if (deleteError) return { error: deleteError.message };
-
-          // 3. Insert fresh members
-          if (payload.member_ids && payload.member_ids.length > 0) {
-            const memberInserts = payload.member_ids.map((mid) => ({
-              team_id: id,
-              member_id: mid,
-            }));
-            const { error: insertError } = await supabase
-              .from("team_members")
-              .insert(memberInserts);
-
-            if (insertError) return { error: insertError.message };
-          }
-
-          return {
-            data: {
-              meta: {
-                success: true,
-                message: "Team updated successfully.",
-              },
-            },
-          };
-        } catch (error: any) {
-          return { error: error.message };
-        }
-      },
-      invalidatesTags: (result, error, { id }) => [
-        { type: "getTeams", id },
-        "getTeams",
-        "getMembers",
-      ],
-    }), */
-
     // Delete Team
     deleteTeam: builder.mutation<{ meta: Meta }, string>({
       queryFn: async (id) => {
@@ -602,4 +565,5 @@ export const {
   useGetTeamDetailsQuery,
   useDeleteTeamMutation,
   useUpdateTeamMutation,
+  useGetHistoricalAccidentsQuery,
 } = adminApi;

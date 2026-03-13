@@ -142,3 +142,40 @@ export interface TeamDetailsResponse {
   members: Member[];
   meta: Meta;
 }
+
+// Historical Accidents
+
+export interface HistoricalAccidentsResponse {
+  historical_accidents: HistoricalAccident[];
+  meta: Meta;
+}
+
+export interface HistoricalAccident {
+  id: string;
+  date_clean: string;
+  time: string;
+  time_of_day: string;
+  hour: number;
+  month: number;
+  dayname: string;
+  barangay: string;
+  incident_type: "Collision" | "Non-Collision";
+  lighting: "Day" | "Night" | "Dusk" | "Dawn" | "Unknown";
+  road_type:
+    | "National Highway"
+    | "Provincial Road"
+    | "Municipal Road"
+    | "Barangay Road"
+    | "Private Road"
+    | "Unknown";
+  weather: "Clear" | "Rainy" | "Cloudy" | "Foggy" | "Unknown";
+  motor_vehicles: number;
+  motorcycles: number;
+  persons_involved: number;
+  injured: number;
+  fatalities: number;
+  severity: "Minor" | "Moderate" | "Fatal" | "Serious";
+  responders: string;
+  data_source: string;
+  created_at: string;
+}
