@@ -5,11 +5,20 @@ import { OverviewTab } from "@/features/admin/dashboard/components/overview-tab"
 import { TimePatternsTab } from "@/features/admin/dashboard/components/time-patterns-tab"
 import { HotspotsTab } from "@/features/admin/dashboard/components/hotspots-tab"
 import { SeverityTab } from "@/features/admin/dashboard/components/severity-tab"
-import { TeamsOverviewTab } from "@/features/admin/dashboard/components/teams-overview-tab"
+import { TeamsOverviewTab, type TeamData } from "@/features/admin/dashboard/components/teams-overview-tab"
 import { PredictTab } from "@/features/admin/dashboard/components/predict-tab"
 import { useGetHistoricalAccidentsQuery } from "@/features/admin/api/adminApi"
 import { COLORS, DAY_MAP, DAY_ORDER, LIGHTING_COLORS, MONTH_NAMES, SEVERITY_COLORS, TOD_COLORS } from "@/features/admin/dashboard/constants"
 import { useMemo } from "react"
+import { 
+  LayoutDashboard, 
+  Clock, 
+  MapPin, 
+  AlertTriangle, 
+  Users, 
+  BarChart3 
+} from "lucide-react"
+
 export default function AdminPage() {
     const { data } = useGetHistoricalAccidentsQuery()
     console.log(JSON.stringify(data?.historical_accidents[0], null, 2))
@@ -285,8 +294,102 @@ export default function AdminPage() {
         });
         const [peakYear, peakYearCount] = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0] ?? ["—", 0];
 
-        return { combinedResponses, unassigned, topBarangay, peakYear, peakYearCount };
+        const fatalUnassigned = acc.filter(a => a.severity === "Fatal" && (!a.responders || a.responders === "Unassigned")).length;
+        const seriousUnassigned = acc.filter(a => a.severity === "Serious" && (!a.responders || a.responders === "Unassigned")).length;
+
+        return { combinedResponses, unassigned, topBarangay, peakYear, peakYearCount, fatalUnassigned, seriousUnassigned };
     }, [historical_accidents, responderCounts]);
+
+    const dynamicTeamData = useMemo(() => {
+        if (!historical_accidents?.length) return [];
+
+        const teams: Record<string, {
+            id: number;
+            name: string;
+            color: string;
+            bg: string;
+            textColor: string;
+            responses: number;
+            collisions: number;
+            peakTimeCounts: Record<string, number>;
+            peakDayCounts: Record<string, number>;
+            brgyCounts: Record<string, number>;
+            yearCounts: Record<string, number>;
+            badge?: string;
+        }> = {};
+        const teamColors: Record<string, { color: string; bg: string; textColor: string }> = {
+            "Team 1": { color: COLORS.blue, bg: "#dbeafe", textColor: "#1e40af" },
+            "Team 2": { color: COLORS.teal, bg: "#ccfbf1", textColor: "#0f766e" },
+            "Team 3": { color: COLORS.amber, bg: "#fef3c7", textColor: "#92400e" },
+            "Team 4": { color: COLORS.purple, bg: "#f3e8ff", textColor: "#6b21a8" },
+        };
+
+        historical_accidents.forEach((acc) => {
+            const teamName = acc.responders;
+            if (!teamName || teamName === "Unassigned") return;
+
+            if (!teams[teamName]) {
+                const teamId = parseInt(teamName.replace(/\D/g, "")) || Object.keys(teams).length + 1;
+                teams[teamName] = {
+                    id: teamId,
+                    name: teamName,
+                    ...(teamColors[teamName] || { color: COLORS.blue, bg: "#dbeafe", textColor: "#1e40af" }),
+                    responses: 0,
+                    collisions: 0,
+                    peakTimeCounts: {} as Record<string, number>,
+                    peakDayCounts: {} as Record<string, number>,
+                    brgyCounts: {} as Record<string, number>,
+                    yearCounts: {} as Record<string, number>,
+                };
+            }
+
+            const t = teams[teamName];
+            t.responses += 1;
+            if (acc.incident_type === "Collision") t.collisions += 1;
+
+            if (acc.time_of_day) t.peakTimeCounts[acc.time_of_day] = (t.peakTimeCounts[acc.time_of_day] ?? 0) + 1;
+            if (acc.dayname) t.peakDayCounts[acc.dayname] = (t.peakDayCounts[acc.dayname] ?? 0) + 1;
+            if (acc.barangay) t.brgyCounts[acc.barangay] = (t.brgyCounts[acc.barangay] ?? 0) + 1;
+            
+            const year = acc.date_clean?.split("-")[0];
+            if (year) t.yearCounts[year] = (t.yearCounts[year] ?? 0) + 1;
+        });
+
+        const sortedTeams = Object.values(teams).sort((a, b) => a.id - b.id);
+
+        // Assign badges based on performance
+        if (sortedTeams.length > 0) {
+            const maxResponses = Math.max(...sortedTeams.map(t => t.responses));
+            const minCollisionRate = Math.min(...sortedTeams.map(t => (t.collisions / t.responses) * 100));
+
+            sortedTeams.forEach(t => {
+                if (t.responses === maxResponses) t.badge = "Most responses";
+                else if ((t.collisions / t.responses) * 100 === minCollisionRate) t.badge = "Lowest collision rate";
+                else t.badge = "Active responder";
+            });
+        }
+
+        return sortedTeams.map(t => ({
+            id: t.id,
+            name: t.name,
+            color: t.color,
+            bg: t.bg,
+            textColor: t.textColor,
+            responses: t.responses,
+            collisionRate: Math.round((t.collisions / t.responses) * 100),
+            peakTime: Object.entries(t.peakTimeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—",
+            peakDay: Object.entries(t.peakDayCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—",
+            badge: t.badge ?? "Active responder",
+            brgys: (Object.entries(t.brgyCounts) as [string, number][])
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5),
+            years: Object.entries(t.yearCounts)
+                .map(([year, r]) => ({ year, r }))
+                .sort((a, b) => Number(a.year) - Number(b.year)),
+            nonCollision: Math.round(((t.responses - t.collisions) / t.responses) * 100),
+            collision: Math.round((t.collisions / t.responses) * 100),
+        } as TeamData));
+    }, [historical_accidents]);
 
     return (
         <>
@@ -294,14 +397,50 @@ export default function AdminPage() {
             <div className="flex flex-1 flex-col">
                 <div className="@container/main flex flex-1 flex-col gap-2">
                     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
-                        <Tabs defaultValue="overview" className="space-y-4">
-                            <TabsList className="h-9">
-                                <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-                                <TabsTrigger value="timePatterns" className="text-xs">Time Patterns</TabsTrigger>
-                                <TabsTrigger value="hotspots" className="text-xs">Hotspots</TabsTrigger>
-                                <TabsTrigger value="severity" className="text-xs">Severity</TabsTrigger>
-                                <TabsTrigger value="teamsOverview" className="text-xs">Teams</TabsTrigger>
-                                <TabsTrigger value="predict" className="text-xs">Predict</TabsTrigger>
+                        <Tabs defaultValue="overview" className="space-y-6">
+                            <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-muted/50 p-1.5 text-muted-foreground backdrop-blur-md border border-border/50 shadow-sm">
+                                <TabsTrigger 
+                                    value="overview" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <LayoutDashboard className="size-4" />
+                                    <span className="text-xs font-semibold">Overview</span>
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="timePatterns" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <Clock className="size-4" />
+                                    <span className="text-xs font-semibold">Time Patterns</span>
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="hotspots" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <MapPin className="size-4" />
+                                    <span className="text-xs font-semibold">Hotspots</span>
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="severity" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <AlertTriangle className="size-4" />
+                                    <span className="text-xs font-semibold">Severity</span>
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="teamsOverview" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <Users className="size-4" />
+                                    <span className="text-xs font-semibold">Teams</span>
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="predict" 
+                                    className="data-[state=active]:bg-white data-[state=active]:text-purple-600 data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-lg gap-2"
+                                >
+                                    <BarChart3 className="size-4" />
+                                    <span className="text-xs font-semibold">Predict</span>
+                                </TabsTrigger>
                             </TabsList>
                             <TabsContent value="overview" className="space-y-4">
                                 <OverviewTab
@@ -345,6 +484,7 @@ export default function AdminPage() {
                                 <TeamsOverviewTab
                                     responderStats={responderStats}
                                     teamNames={teamNames}
+                                    teamData={dynamicTeamData}
                                 />
                             </TabsContent>
                             <TabsContent value="predict" className="space-y-4">
