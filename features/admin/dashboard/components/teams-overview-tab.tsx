@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { StatCard } from "./stat-card"
 import { CustomTooltip } from "./custom-tooltip"
-import { COLORS, teamData } from "../constants"
+import { COLORS } from "../constants"
 
 interface ResponderStats {
     combinedResponses: number;
@@ -13,15 +13,35 @@ interface ResponderStats {
     topBarangay: string;
     peakYear: string;
     peakYearCount: number;
+    fatalUnassigned: number;
+    seriousUnassigned: number;
+}
+
+export interface TeamData {
+    id: number;
+    name: string;
+    color: string;
+    bg: string;
+    textColor: string;
+    responses: number;
+    collisionRate: number;
+    peakTime: string;
+    peakDay: string;
+    badge: string;
+    brgys: [string, number][];
+    years: { year: string; r: number }[];
+    nonCollision: number;
+    collision: number;
 }
 
 interface TeamsOverviewTabProps {
     responderStats: ResponderStats | null;
     teamNames: string;
+    teamData: TeamData[];
 }
 
-export function TeamsOverviewTab({ responderStats, teamNames }: TeamsOverviewTabProps) {
-    const [selected, setSelected] = React.useState(1)
+export function TeamsOverviewTab({ responderStats, teamNames, teamData }: TeamsOverviewTabProps) {
+    const [selected, setSelected] = React.useState(teamData[0]?.id ?? 1)
     const team = teamData.find(t => t.id === selected)
 
     return (
@@ -113,7 +133,7 @@ export function TeamsOverviewTab({ responderStats, teamNames }: TeamsOverviewTab
                             <div>
                                 <p className="text-xs font-medium text-muted-foreground mb-3">Top barangays responded</p>
                                 <div className="space-y-2">
-                                    {team.brgys.map(([name, count]) => {
+                                    {team.brgys.map(([name, count]: [string, number]) => {
                                         const max = team.brgys[0][1]
                                         return (
                                             <div key={name} className="flex items-center gap-2">
@@ -172,15 +192,26 @@ export function TeamsOverviewTab({ responderStats, teamNames }: TeamsOverviewTab
             )}
 
             {/* Note */}
-            <Card className="border border-amber-200 bg-amber-50 shadow-none">
-                <CardContent className="p-3 flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-amber-800">
-                        All <strong>fatal (42)</strong> and <strong>serious (37)</strong> incidents have no responder logged.
-                        Consider updating MDRRMC records to assign the correct team to these cases.
-                    </p>
-                </CardContent>
-            </Card>
+            {responderStats && (responderStats.fatalUnassigned > 0 || responderStats.seriousUnassigned > 0) ? (
+                <Card className="border border-amber-200 bg-amber-50 shadow-none">
+                    <CardContent className="p-3 flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-800">
+                            There are <strong>{responderStats.fatalUnassigned} fatal</strong> and <strong>{responderStats.seriousUnassigned} serious</strong> incidents with no responder logged.
+                            Consider updating MDRRMC records to assign the correct team to these cases.
+                        </p>
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className="border border-green-200 bg-green-50 shadow-none">
+                    <CardContent className="p-3 flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                        <p className="text-xs text-green-800">
+                            <strong>Data Integrity:</strong> All fatal and serious incidents have been assigned to responder teams.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }
