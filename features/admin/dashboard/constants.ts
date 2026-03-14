@@ -9,6 +9,8 @@ export const COLORS = {
   rose: "#e11d48",
   yellow: "#eab308",
   orange: "#f97316",
+  indigo: "#6366f1",
+  gray: "#94a3b8",
 };
 
 export const MONTH_NAMES = [
@@ -49,6 +51,14 @@ export const DAY_MAP: Record<string, string> = {
   Thursday: "Thu",
   Friday: "Fri",
   Saturday: "Sat",
+};
+
+export const LIGHTING_COLORS: Record<string, string> = {
+  Day: COLORS.amber,
+  Night: COLORS.indigo,
+  Dawn: COLORS.rose,
+  Dusk: COLORS.orange,
+  Unknown: COLORS.gray,
 };
 
 export const severityData = [

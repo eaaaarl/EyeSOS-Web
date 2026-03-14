@@ -7,7 +7,20 @@ import { StatCard } from "./stat-card"
 import { CustomTooltip } from "./custom-tooltip"
 import { COLORS, teamData } from "../constants"
 
-export function TeamsOverviewTab() {
+interface ResponderStats {
+    combinedResponses: number;
+    unassigned: number;
+    topBarangay: string;
+    peakYear: string;
+    peakYearCount: number;
+}
+
+interface TeamsOverviewTabProps {
+    responderStats: ResponderStats | null;
+    teamNames: string;
+}
+
+export function TeamsOverviewTab({ responderStats, teamNames }: TeamsOverviewTabProps) {
     const [selected, setSelected] = React.useState(1)
     const team = teamData.find(t => t.id === selected)
 
@@ -15,10 +28,34 @@ export function TeamsOverviewTab() {
         <div className="space-y-4">
             {/* Summary strip */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <StatCard icon={Shield} label="Combined Responses" value="311" sub="Team 1 + 2 + 3" color="blue" />
-                <StatCard icon={Users} label="Unassigned Records" value="238" sub="No responder logged" color="amber" />
-                <StatCard icon={MapPin} label="Top Barangay" value="Payasan" sub="Most responded to" color="green" />
-                <StatCard icon={TrendingUp} label="Peak Year" value="2025" sub="141 combined responses" color="blue" />
+                <StatCard
+                    icon={Shield}
+                    label="Combined Responses"
+                    value={responderStats?.combinedResponses ?? 0}
+                    sub={teamNames}
+                    color="blue"
+                />
+                <StatCard
+                    icon={Users}
+                    label="Unassigned Records"
+                    value={responderStats?.unassigned ?? 0}
+                    sub="No responder logged"
+                    color="amber"
+                />
+                <StatCard
+                    icon={MapPin}
+                    label="Top Barangay"
+                    value={responderStats?.topBarangay ?? "—"}
+                    sub="Most responded to"
+                    color="green"
+                />
+                <StatCard
+                    icon={TrendingUp}
+                    label="Peak Year"
+                    value={responderStats?.peakYear ?? "—"}
+                    sub={`${responderStats?.peakYearCount ?? 0} combined responses`}
+                    color="blue"
+                />
             </div>
 
             {/* Team selector cards */}

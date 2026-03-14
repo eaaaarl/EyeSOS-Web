@@ -2,9 +2,19 @@ import * as React from "react"
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell, PieChart, Pie } from "recharts"
 import { ChartCard } from "./chart-card"
 import { CustomTooltip } from "./custom-tooltip"
-import { COLORS, barangayData, lightingData, roadTypeData } from "../constants"
+import { COLORS, roadTypeData } from "../constants"
 
-export function HotspotsTab() {
+interface HotspotsTabProps {
+    barangayData: { name: string; incidents: number }[];
+    lightingData: { name: string; value: number; color: string }[];
+    roadTypeData: { name: string; value: number }[];
+}
+
+export function HotspotsTab({
+    barangayData,
+    lightingData,
+    roadTypeData
+}: HotspotsTabProps) {
     return (
         <div className="space-y-4">
             <ChartCard title="Incidents per Barangay" description="Payasan and Poblacion are the top hotspots">
@@ -15,9 +25,17 @@ export function HotspotsTab() {
                         <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={70} />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="incidents" radius={[0, 4, 4, 0]}>
-                            {barangayData.map((d, i) => (
-                                <Cell key={i} fill={d.incidents >= 80 ? COLORS.red : d.incidents >= 50 ? COLORS.amber : COLORS.blue} />
-                            ))}
+                            {barangayData.map((d, i) => {
+                                const maxBarangay = Math.max(...barangayData.map(d => d.incidents));
+                                return <Cell
+                                    key={i}
+                                    fill={
+                                        d.incidents >= maxBarangay * 0.75 ? COLORS.red :
+                                            d.incidents >= maxBarangay * 0.5 ? COLORS.amber :
+                                                COLORS.blue
+                                    }
+                                />
+                            })}
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
@@ -46,8 +64,9 @@ export function HotspotsTab() {
                 <ChartCard title="Road Type" description="Barangay roads account for 73% of incidents">
                     <div className="space-y-2.5 mt-1">
                         {roadTypeData.map((d, i) => {
-                            const pct = Math.round(d.value / 606 * 100)
-                            const colors = [COLORS.blue, COLORS.rose, COLORS.amber, COLORS.teal, COLORS.purple]
+                            const total = roadTypeData.reduce((sum, d) => sum + d.value, 0);
+                            const pct = Math.round(d.value / total * 100)
+                            const colors = [COLORS.rose, COLORS.blue, COLORS.amber, COLORS.teal, COLORS.purple]
                             return (
                                 <div key={d.name}>
                                     <div className="flex justify-between text-xs mb-0.5">

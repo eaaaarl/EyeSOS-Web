@@ -3,35 +3,40 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Le
 import { Card, CardContent } from "@/components/ui/card"
 import { ChartCard } from "./chart-card"
 import { CustomTooltip } from "./custom-tooltip"
-import { COLORS, severityByBrgy, barangayData, severityData } from "../constants"
+import { COLORS } from "../constants"
 
-export function SeverityTab() {
-    const fatalRisk = barangayData
-        .map(b => ({ ...b, rate: Math.round(b.fatal / b.incidents * 100) }))
-        .sort((a, b) => b.rate - a.rate)
+interface SeverityTabProps {
+    severityData: { name: string; value: number; color: string }[];
+    severityByBrgy: { name: string; Minor: number; Moderate: number; Serious: number; Fatal: number }[];
+    fatalRisk: { name: string; incidents: number; fatal: number; rate: number }[];
+}
 
+export function SeverityTab({ severityData, severityByBrgy, fatalRisk }: SeverityTabProps) {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {severityData.map(d => (
-                    <Card key={d.name} className="border-0 shadow-sm">
+                {severityData.map(d => {
+                    const total = severityData.reduce((sum, d) => sum + d.value, 0);
+                    return <Card key={d.name} className="border-0 shadow-sm">
                         <CardContent className="p-4">
                             <p className="text-xs font-medium text-muted-foreground mb-1">{d.name}</p>
                             <p className="text-3xl font-semibold" style={{ color: d.color }}>{d.value}</p>
-                            <p className="text-xs text-muted-foreground">{Math.round(d.value / 606 * 100)}% of total</p>
+                            <p className="text-xs text-muted-foreground">
+                                {Math.round(d.value / total * 100)}% of total
+                            </p>
                         </CardContent>
                     </Card>
-                ))}
+                })}
             </div>
 
             <ChartCard title="Severity by Barangay" description="Stacked breakdown — Minor / Moderate / Serious / Fatal">
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={severityByBrgy} margin={{ top: 4, right: 8, left: -20, bottom: 35 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" />
                         <YAxis tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 16 }} />
                         <Bar dataKey="Minor" stackId="a" fill={COLORS.green} radius={[0, 0, 0, 0]} />
                         <Bar dataKey="Moderate" stackId="a" fill={COLORS.amber} />
                         <Bar dataKey="Serious" stackId="a" fill={COLORS.purple} />
@@ -40,7 +45,7 @@ export function SeverityTab() {
                 </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Fatality Rate by Barangay" description="Ganayon has the highest rate despite moderate total incidents">
+            <ChartCard title="Fatality Rate by Barangay" description="Liatimco has the highest rate despite moderate total incidents">
                 <div className="space-y-2">
                     {fatalRisk.filter(b => b.fatal > 0).map(b => (
                         <div key={b.name} className="flex items-center gap-3">
